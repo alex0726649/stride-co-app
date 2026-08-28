@@ -1,0 +1,152 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- PAQUETES Y CONFIGURACIÓN ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage[margin=2.5cm, headheight=28pt]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+% Color primario institucional
+\definecolor{uachpurple}{RGB}{88, 38, 92}
+\definecolor{uachdark}{RGB}{40, 40, 40}
+
+% Configuración de hipervínculos
+\hypersetup{
+    colorlinks=true,
+    linkcolor=uachpurple,
+    urlcolor=uachpurple,
+    citecolor=uachpurple
+}
+
+% Encabezados y pies de página
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small\color{uachdark} Desarrollo de Aplicaciones Web}
+\rhead{\small\color{uachdark} Tarea 2. Sprint 0}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Formato de Títulos
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{uachpurple}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{uachpurple}}{\thesubsection.}{0.5em}{}
+
+\begin{document}
+
+% --- PORTADA ---
+\begin{titlepage}
+    \centering
+    % Descomentar si deseas incluir el logo oficial de la facultad:
+    % \includegraphics[width=0.25\textwidth]{logo_uach.png}\\[1cm]
+    
+    {\Large\bfseries Universidad Autónoma de Chihuahua}\\[0.3cm]
+    {\large Facultad de Ingeniería}\\[0.2cm]
+    {\large Ingeniería en Computación}\\[1.5cm]
+    
+    \rule{\linewidth}{1.5pt}\\[0.4cm]
+    {\huge\bfseries Constitución del Proyecto}\\[0.2cm]
+    {\LARGE (Sprint 0) --- Stride \& Co.}\\[0.4cm]
+    \rule{\linewidth}{1.5pt}\\[1.5cm]
+    
+    \begin{minipage}{0.48\textwidth}
+        \begin{flushleft} \large
+            \textbf{Curso:} Desarrollo de Aplicaciones Web\\
+            \textbf{Docente:} Mtro. Luis Antonio Ramírez Martínez\\
+            \textbf{Fecha:} 10 de agosto de 2026
+        \end{flushleft}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \begin{flushright} \large
+            \textbf{Equipo Scrum:}\\
+            Osvaldo Hernández Juárez (\textit{Product Owner})\\
+            José Alejandro Pérez Millán (\textit{Scrum Master})\\
+            Jenny Guadalupe Quintana Sánchez (\textit{Developer})\\
+            Armando Velázquez Barroso (\textit{Developer})
+        \end{flushright}
+    \end{minipage}
+    
+    \vfill
+    {\small Chihuahua, Chih., México}
+\end{titlepage}
+
+% --- ÍNDICE ---
+\newpage
+\tableofcontents
+\newpage
+
+% --- 1. VISIÓN DEL PRODUCTO ---
+\section{Visión del Producto}
+
+\subsection{Problema a Resolver}
+
+\subsection{Objetivos del Producto}
+
+\subsection{Usuarios Objetivo}
+
+\subsection{Valor de Negocio}
+
+\subsection{Métricas de Éxito}
+
+
+% --- 2. CONSTITUCIÓN DEL EQUIPO SCRUM ---
+\section{Constitución del Equipo Scrum}
+
+\subsection{Integrantes}
+
+\subsection{Roles}
+
+\subsection{Herramientas}
+
+\subsection{Estrategia de Colaboración}
+
+\subsection{Organización del Proyecto}
+
+
+% --- 3. ANÁLISIS DEL PROYECTO ---
+\section{Análisis del Proyecto}
+
+\subsection{Necesidades}
+
+\subsection{Actores}
+
+\subsection{Restricciones}
+
+\subsection{Supuestos}
+
+\subsection{Funcionalidades Esperadas}
+
+
+% --- 4. PRODUCT BACKLOG ---
+\section{Product Backlog}
+
+\subsection{Épicas}
+
+\subsection{Historias de Usuario}
+
+\subsection{Priorización Inicial}
+
+\subsection{Requerimientos No Funcionales}
+
+\subsection{Riesgos}
+
+\subsection{Deuda Técnica Inicial}
+
+
+% --- 5. REPOSITORIO DEL PROYECTO (GITHUB) ---
+\section{Repositorio del Proyecto (GitHub)}
+
+\subsection{URL del Repositorio}
+
+\subsection{Evidencia del Repositorio (README.md)}
+
+\subsection{Evidencia del GitHub Project}
+
+\end{document}
