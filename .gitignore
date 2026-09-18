@@ -1,2 +1,9 @@
 # Dependencias
 node_modules/
+*.aux
+*.log
+*.fls
+*.out
+*.toc
+*.fdb_latexmk
+*.synctex.gz
