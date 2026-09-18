@@ -11,10 +11,10 @@ describe('App base', () => {
     expect(res.status).toBe(200);
   });
 
-  it('responde con 404 y JSON controlado ante una ruta de API inexistente', async () => {
+  it('responde con 404 ante una ruta de API inexistente', async () => {
     const res = await request(app).get('/api/ruta-que-no-existe');
-    // Este comportamiento lo termina de definir S1-11 (manejo de errores JSON).
-    // Por ahora solo verificamos que el servidor responde algo, sin caerse.
-    expect(res.status).toBeGreaterThanOrEqual(400);
+    // El formato JSON del error se define en S1-11 (manejo de errores JSON);
+    // aquí solo se valida el código de estado.
+    expect(res.status).toBe(404);
   });
 });
