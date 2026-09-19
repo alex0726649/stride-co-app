@@ -227,3 +227,28 @@ Los errores inesperados responderán `Error interno del servidor`, sin exponer d
 - Las pruebas automatizadas del recurso y ESLint pasan cuando estén configurados.
 
 Este documento describe el comportamiento acordado. Su existencia no significa que los endpoints ya estén implementados.
+
+## 9. Usuarios implementados (S1-03)
+
+`/api/users` admite GET y POST; `/api/users/:id` admite GET, PUT y DELETE.
+Los registros fijos tienen IDs 1 y 2, ambos con `role_id: 1` como referencia
+para el mock de roles. POST devuelve el ID de ejemplo 3, sin guardarlo.
+
+Los campos públicos son `id`, `first_name`, `last_name`, `email` y `role_id`.
+POST y PUT requieren los cuatro últimos campos: los textos deben ser cadenas
+no vacías (ni solo espacios) y `role_id` un número entero positivo seguro.
+En este sprint no se valida el formato de email ni la existencia del rol.
+Los campos adicionales se ignoran; nunca se reflejan contraseñas, hashes o salts.
+El ID del cuerpo se ignora: POST asigna 3 y PUT conserva el ID de la ruta.
+Los IDs de ruta se comparan con la representación decimal exacta del fixture.
+Un ID desconocido en PUT devuelve 404 antes de validar sus campos.
+
+Ejemplo de cuerpo válido para POST o PUT:
+
+```json
+{"first_name":"Eva","last_name":"Ejemplo","email":"eva@example.com","role_id":1}
+```
+
+Las pruebas en `test/users.test.js` verifican éxito, errores y que ninguna
+escritura modifica los registros originales. Ejecutar `npm run lint` y
+`npm test -- --runInBand` desde la raíz del repositorio.

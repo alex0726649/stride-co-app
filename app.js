@@ -20,7 +20,7 @@ app.use(cookieParser());// req.cookies
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/api/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -28,7 +28,13 @@ app.use(function(req, res, next) {
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function(err, req, res, _next) {
+  if (req.path === '/api' || req.path.startsWith('/api/')) {
+    const status = err.status === 400 || err.status === 404 ? err.status : 500;
+    const message = status === 400 ? 'Cuerpo JSON inválido' :
+      status === 404 ? 'Ruta no encontrada' : 'Error interno del servidor';
+    return res.status(status).json({ message: message, data: null });
+  }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
