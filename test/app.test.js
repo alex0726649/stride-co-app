@@ -13,8 +13,8 @@ describe('App base', () => {
 
   it('responde con 404 ante una ruta de API inexistente', async () => {
     const res = await request(app).get('/api/ruta-que-no-existe');
-    // El formato JSON del error se define en S1-11 (manejo de errores JSON);
-    // aquí solo se valida el código de estado.
     expect(res.status).toBe(404);
+    expect(res.headers['content-type']).toMatch(/json/);
+    expect(res.body).toEqual({ message: 'Ruta no encontrada', data: null });
   });
 });
