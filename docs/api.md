@@ -31,7 +31,7 @@ Esto permite comprobar el flujo petición → ruta → controlador → respuesta
 | Clientes | `/api/customers` | customers, MongoDB |
 | Órdenes | `/api/orders` | orders, MongoDB |
 
-Productos también aparece en el modelo MongoDB del PDF. Usar la forma SQL para estos mocks no decide la persistencia futura. Por ahora se conserva una sola ruta de productos y únicamente los ocho recursos solicitados.
+Productos aparece en ambos modelos del PDF. Por decision del profesor, la coleccion `products` de MongoDB se elimina del modelo final del proyecto: los productos se conservan unicamente en el modelo relacional. Para el Entregable 1 el recurso `/api/products` se entrega como mock porque la rubrica lo solicita de forma explicita, usando la forma SQL. En consecuencia, `ProductVariant.product_id` y el inventario siguen refiriendo a identificadores enteros.
 
 ## 3. Operaciones acordadas
 
@@ -183,6 +183,8 @@ Para mantener sencillo este sprint, POST y PUT exigirán al menos los campos de 
 - Para el mock inicial, `paymentMethod` acepta `efectivo` o `transferencia`. Es una elección provisional del equipo, pues el diagrama indica un enum sin enumerar sus valores.
 - Los IDs del objeto devuelto los determina el controlador; el cliente no los crea ni cambia mediante el cuerpo de POST o PUT.
 - En PUT y DELETE se verifica primero que exista el ID solicitado. No se exige todavía consultar otras bases de datos ni aplicar autenticación, reservas o cobros.
+- Permisos: el modelo marca `key` como UNIQUE. En los mocks esa unicidad se verifica unicamente contra los datos fijos del recurso, no contra una base de datos. Una actualizacion puede conservar su propio `key` sin considerarse duplicado.
+- Roles y permisos tienen una relacion N:M mediante `Role_Permission` en el modelo relacional. El Entregable 1 no solicita ese recurso ni permisos efectivos, por lo que ambos se entregan planos y la relacion se implementara cuando se incorpore la persistencia.
 
 ## 7. Errores
 
