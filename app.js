@@ -10,6 +10,8 @@ var productsRouter = require('./routes/products');
 var rolesRouter = require('./routes/roles');
 var permissionsRouter = require('./routes/permissions');
 var inventoryRouter = require('./routes/inventory');
+var variantsRouter = require('./routes/variants');
+
 var app = express();
 
 // view engine setup
@@ -28,6 +30,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/permissions', permissionsRouter);
 app.use('/api/inventory', inventoryRouter);
+app.use('/api/variants', variantsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
