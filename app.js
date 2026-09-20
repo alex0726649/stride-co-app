@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var response = require('./utils/response');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -44,10 +45,13 @@ app.use(function(req, res, next) {
 // error handler
 app.use(function(err, req, res, _next) {
   if (req.path === '/api' || req.path.startsWith('/api/')) {
-    const status = err.status === 400 || err.status === 404 ? err.status : 500;
+    const status = err.status || 500;
     const message = status === 400 ? 'Cuerpo JSON inválido' :
       status === 404 ? 'Ruta no encontrada' : 'Error interno del servidor';
-    return res.status(status).json({ message: message, data: null });
+
+    if (status === 400) return response.badRequest(res, message);
+    if (status === 404) return response.notFound(res, message);
+    return response.serverError(res, message);
   }
   // set locals, only providing error in development
   res.locals.message = err.message;
