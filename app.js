@@ -11,7 +11,9 @@ var rolesRouter = require('./routes/roles');
 var permissionsRouter = require('./routes/permissions');
 var inventoryRouter = require('./routes/inventory');
 var variantsRouter = require('./routes/variants');
-var ordersRouter = require('./routes/orders')
+var ordersRouter = require('./routes/orders');
+var customersRouter = require('./routes/customers');
+
 var app = express();
 
 // view engine setup
@@ -32,6 +34,8 @@ app.use('/api/permissions', permissionsRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/variants', variantsRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/customers', customersRouter);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
