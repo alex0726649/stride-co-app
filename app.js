@@ -22,9 +22,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
-app.use(express.json()); // si el cliente manda un json este comando lo agrega en req.body
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser()); // req.cookies
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
@@ -46,18 +46,19 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, _next) {
   if (req.path === '/api' || req.path.startsWith('/api/')) {
     const status = err.status || 500;
-    const message = status === 400 ? 'Cuerpo JSON inválido' :
-      status === 404 ? 'Ruta no encontrada' : 'Error interno del servidor';
 
-    if (status === 400) return response.badRequest(res, message);
-    if (status === 404) return response.notFound(res, message);
-    return response.serverError(res, message);
+    // Mapeo de mensajes exactos para que pasen las pruebas de los compañeros
+    let message = 'Error interno del servidor';
+    if (status === 400) message = 'Cuerpo JSON inválido';
+    if (status === 401) message = 'No autorizado';
+    if (status === 403) message = 'Prohibido';
+    if (status === 404) message = 'Ruta no encontrada';
+
+    return res.status(status).json({ message, data: null });
   }
-  // set locals, only providing error in development
+
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
