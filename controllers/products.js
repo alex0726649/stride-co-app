@@ -44,7 +44,8 @@ function publicProduct(id, body) {
 }
 
 function list(req, res) {
-  return response.success(res, 'Lista de productos', products);
+  // Ajustado a "GET products" para que pasen las pruebas del equipo
+  return response.success(res, 'GET products', products);
 }
 
 function find(req, res) {
