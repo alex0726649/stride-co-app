@@ -4,14 +4,19 @@ const customers = [
     userId: 1,
     phone: '6141234567',
     email: 'cliente@example.com',
-    addresses: [],
-  },
-  {
-    _id: 'cliente-2',
-    userId: 2,
-    phone: '6147654321',
-    email: 'luis@example.com',
-    addresses: ['Calle Ejemplo 123'],
+    addresses: [
+      {
+        type: 'shipping',
+        street: 'Calle Universidad',
+        number: '123',
+        city: 'Chihuahua',
+        state: 'Chihuahua',
+        postalCode: '31000',
+        country: 'México'
+      }
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
 ];
 
@@ -25,15 +30,12 @@ function validateCustomer(body) {
   if (!Number.isSafeInteger(userId) || userId <= 0) {
     return 'userId es obligatorio y debe ser un entero positivo';
   }
-
   if (typeof phone !== 'string' || phone.trim() === '') {
     return 'phone es obligatorio y debe ser un texto no vacío';
   }
-
   if (typeof email !== 'string' || email.trim() === '') {
     return 'email es obligatorio y debe ser un texto no vacío';
   }
-
   return null;
 }
 
@@ -69,6 +71,8 @@ function create(req, res) {
     phone,
     email,
     addresses: Array.isArray(addresses) ? addresses : [],
+    createdAt: new Date(),
+    updatedAt: new Date()
   };
 
   return res.status(201).json({
@@ -96,6 +100,7 @@ function update(req, res) {
     phone,
     email,
     addresses: Array.isArray(addresses) ? addresses : customer.addresses,
+    updatedAt: new Date()
   };
 
   return res.status(200).json({
