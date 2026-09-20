@@ -254,3 +254,37 @@ Ejemplo de cuerpo válido para POST o PUT:
 Las pruebas en `test/users.test.js` verifican éxito, errores y que ninguna
 escritura modifica los registros originales. Ejecutar `npm run lint` y
 `npm test -- --runInBand` desde la raíz del repositorio.
+
+## 10. Variantes implementadas (S1-07)
+
+`/api/variants` admite GET (`list`) y POST (`create`);
+`/api/variants/:id` admite GET (`find`), PUT (`update`) y DELETE (`destroy`).
+Las funciones se exportan desde `controllers/variants.js`.
+
+Los campos de ProductVariant en la figura 1 son `id`, `product_id`, `sku`,
+`size`, `color` y `active`. Los fixtures tienen IDs 1 y 2 y referencian el
+producto 1 (Tenis Deportivos Stride). POST asigna el ID fijo 3.
+
+POST y PUT requieren `product_id` como número entero positivo seguro y
+`sku`, `size` y `color` como textos no vacíos ni compuestos solo por espacios.
+`active` es opcional y debe ser booleano: por defecto es `true` al crear;
+al actualizar se conserva el valor del fixture si se omite.
+El SKU es único contra los fixtures mediante comparación exacta, conforme
+al modelo; PUT puede conservar su propio SKU. Un duplicado devuelve 400.
+No se consulta la existencia del producto al escribir en este sprint.
+Los campos adicionales se ignoran y el ID del cuerpo no reemplaza el asignado
+por el controlador. Los IDs de ruta se comparan con su representación decimal
+exacta; cualquier ID no encontrado devuelve 404, antes de validar campos en PUT.
+
+Ejemplo de cuerpo para POST o PUT:
+
+```json
+{"product_id":1,"sku":"STRIDE-28-AZUL","size":"28","color":"Azul","active":true}
+```
+
+POST devuelve 201 con `message: "Creación de variante simulada"` y `data`
+con esos campos e `id: 3`. PUT devuelve 200 con el ID de la ruta; DELETE
+responde 200 con `message: "Eliminación de variante simulada"` y `data: null`.
+Ninguna escritura persiste: GET mantiene los fixtures y GET `/api/variants/3`
+sigue devolviendo 404. Las pruebas en `test/variants.test.js` cubren las cinco
+operaciones, referencias, validaciones y ausencia de persistencia.
