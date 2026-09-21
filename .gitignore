@@ -1,5 +1,10 @@
 # Dependencias
 node_modules/
+# Configuración privada y resultados locales
+.env
+.env.*
+!.env.example
+coverage/
 *.aux
 *.log
 *.fls

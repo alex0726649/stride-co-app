@@ -3,7 +3,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var response = require('./utils/response');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -47,7 +46,7 @@ app.use(function(err, req, res, _next) {
   if (req.path === '/api' || req.path.startsWith('/api/')) {
     const status = err.status || 500;
 
-    // Mapeo de mensajes exactos para que pasen las pruebas de los compañeros
+    // Mensajes públicos del contrato: no exponer el error ni su stack.
     let message = 'Error interno del servidor';
     if (status === 400) message = 'Cuerpo JSON inválido';
     if (status === 401) message = 'No autorizado';

@@ -44,7 +44,7 @@ Estimaciones orientativas de trabajo activo, no compromisos de calendario. Cada 
 | S1-08 | Crear `/api/inventory` y sus pruebas | 01, 02 | 2–3 h | Libre | Por hacer |
 | S1-09 | Crear `/api/customers` y sus pruebas | 01, 02 | 2–3 h | Libre | Por hacer |
 | S1-10 | Crear `/api/orders` y sus pruebas | 01, 02 | 2–4 h | Libre | Por hacer |
-| S1-11 | Unificar errores de API y verificar logging e ignore | 01, 02 | 2–3 h | Libre | Por hacer |
+| S1-11 | Unificar errores de API y verificar logging e ignore | 01, 02 | 2–3 h | — | Implementada y validada localmente; pendiente de PR/revisión e integración |
 | S1-12 | Completar README y matriz de endpoints | 01; cierre tras 03–11 | 1–2 h | Libre | Por hacer |
 | S1-13 | Validar instalación limpia y preparar entrega | 03–12 | 1–2 h | Libre | Por hacer |
 
@@ -98,12 +98,14 @@ Los recursos pueden desarrollarse en paralelo después de S1-01 y S1-02, usando 
 
 ### S1-11 — Errores, logging y archivos ignorados
 
-- [ ] Mantener Morgan y verificar que registra método, ruta y estado HTTP.
-- [ ] Devolver error JSON controlado en rutas API inexistentes; distinguirlo del recurso inexistente dentro de un endpoint válido.
-- [ ] Manejar JSON malformado y errores inesperados con estados correctos; no exponer detalles internos en respuestas de producción.
-- [ ] Agregar pruebas de ruta desconocida, JSON inválido y manejo controlado de errores.
-- [ ] Revisar `.gitignore` para excluir `node_modules/`, `.env` y archivos locales innecesarios. Comprobar también que no estén ya versionados.
-- [ ] Verificar que los cambios no contienen credenciales ni información sensible.
+- [x] Mantener Morgan y verificar que registra método, ruta y estado HTTP.
+- [x] Devolver error JSON controlado en rutas API inexistentes; distinguirlo del recurso inexistente dentro de un endpoint válido.
+- [x] Manejar JSON malformado y errores inesperados con estados correctos; no exponer detalles internos en respuestas de producción.
+- [x] Agregar pruebas de ruta desconocida, JSON inválido y manejo controlado de errores.
+- [x] Revisar `.gitignore` para excluir `node_modules/`, `.env` y archivos locales innecesarios. Comprobar también que no estén ya versionados.
+- [x] Verificar que los cambios no contienen credenciales ni información sensible.
+
+Validación local de S1-11: Node `v24.19.0`; `npm run lint` sin errores ni advertencias; `npm test -- --runInBand --silent`: 9 suites y 235 pruebas aprobadas. Se verifican ruta desconocida, recurso inexistente, JSON malformado, error 500 sin detalles internos en producción y salida real de Morgan. `.env`, sus variantes privadas, dependencias, cobertura y auxiliares de LaTeX quedan ignorados; `main.fdb_latexmk` y `main.synctex.gz` se retiran del índice conservando las copias locales. La revisión de los cambios y búsqueda de patrones comunes no detectó credenciales. Esta validación no sustituye S1-13; falta publicar la rama, revisión por otra persona e integración.
 
 Rama: `fix/s1-11-errores-api`. Commit: `fix(api): unificar manejo de errores JSON`.
 
