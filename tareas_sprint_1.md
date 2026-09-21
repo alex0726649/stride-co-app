@@ -6,7 +6,7 @@ Completar el **Entregable 1: Configuración inicial del backend** de Stride & Co
 
 No se requiere todavía base de datos, ORM/ODM, login real, permisos efectivos, reservas de stock, pagos ni frontend. Los campos de los mocks deberán cotejarse con la figura 1 del PDF antes de implementarlos.
 
-## Punto de partida observado
+## Punto de partida observado (histórico, anterior a la implementación)
 
 - `stride-co-app` contiene el repositorio Git, Express Generator, `controllers/`, Morgan y manejo de errores de Express con vistas HTML.
 - Usuarios ya tiene cinco rutas y controladores iniciales; está montado en `/users`, devuelve datos vacíos y no usa el ID para seleccionar un recurso.
@@ -18,7 +18,7 @@ No se requiere todavía base de datos, ORM/ODM, login real, permisos efectivos, 
 
 ## Cómo tomar una tarea
 
-Todas las tareas están **disponibles y sin asignar**. Las dependencias indican cuáles pueden empezar ya.
+La asignación y el estado colaborativo se consultan en GitHub Project. Las dependencias indican qué tareas deben estar integradas antes de comenzar otras.
 
 1. Elegir una tarjeta lista y anotar responsable en GitHub Project; moverla a **En progreso** antes de programar.
 2. Crear una rama desde la rama base actualizada. Una tarea activa por persona ayuda a terminar antes de abrir más trabajo.
@@ -32,6 +32,8 @@ Estados sugeridos: **Por hacer → En progreso → En revisión → Hecho**. Mar
 
 Estimaciones orientativas de trabajo activo, no compromisos de calendario. Cada fila corresponde a una tarjeta y un PR; todos incluyen revisión por otra persona.
 
+La tabla y las casillas originalmente se usaron para planificar. Los estados que siguen en «Por hacer» no sustituyen una revisión del código ni el estado del Project; consultar también la actualización de cierre al final de este documento.
+
 | ID | Tarea / entregable | Depende de | Tiempo | Responsable | Estado |
 |---|---|---|---|---|---|
 | S1-01 | Acordar contrato de API y operaciones por recurso | — | 1–2 h | Libre | Por hacer |
@@ -44,7 +46,7 @@ Estimaciones orientativas de trabajo activo, no compromisos de calendario. Cada 
 | S1-08 | Crear `/api/inventory` y sus pruebas | 01, 02 | 2–3 h | Libre | Por hacer |
 | S1-09 | Crear `/api/customers` y sus pruebas | 01, 02 | 2–3 h | Libre | Por hacer |
 | S1-10 | Crear `/api/orders` y sus pruebas | 01, 02 | 2–4 h | Libre | Por hacer |
-| S1-11 | Unificar errores de API y verificar logging e ignore | 01, 02 | 2–3 h | — | Implementada y validada localmente; pendiente de PR/revisión e integración |
+| S1-11 | Unificar errores de API y verificar logging e ignore | 01, 02 | 2–3 h | — | Integrada en main mediante PR #43 (2534615) |
 | S1-12 | Completar README y matriz de endpoints | 01; cierre tras 03–11 | 1–2 h | Libre | Por hacer |
 | S1-13 | Validar instalación limpia y preparar entrega | 03–12 | 1–2 h | Libre | Por hacer |
 
@@ -171,4 +173,19 @@ S1-XX — título (enlazar issue/tarjeta)
 
 Una tarea está terminada cuando cumple sus criterios, tiene verificaciones registradas, fue revisada por otra persona, está integrada en la rama base y su tarjeta refleja ese estado. El sprint se cierra con los ocho recursos mock funcionando, los cuatro scripts operativos, instalación limpia comprobada y evidencia colaborativa en GitHub.
 
-**Siguiente trabajo inmediato: tomar S1-01 y S1-02.** Son las tareas que desbloquean la implementación independiente del equipo.
+## Actualización previa al cierre S1-13
+
+S1-11 ya está integrada mediante el merge `2534615`; la nota de validación local de esa tarjeta documenta el estado anterior al PR.
+
+En la rama `fix/sprint-1-alineacion-entregable` se completaron estos ajustes derivados de la revisión del PDF:
+
+- [x] Corregir las referencias de órdenes a productos y de inventario a variantes.
+- [x] Alinear las respuestas de órdenes con `totals`, `shippingAddress`, `statusHistory` y fechas de la figura 1; mantener la simulación sin persistencia.
+- [x] Responder 400 ante artículos nulos o inválidos en órdenes, sin producir un error interno.
+- [x] Completar pruebas de clientes para escrituras, IDs inexistentes, datos inválidos y ausencia de persistencia.
+- [x] Actualizar la matriz del README y el contrato con los campos requeridos de productos y las convenciones de clientes/órdenes.
+- [x] Verificar localmente `npm run lint` (sin errores ni advertencias) y `npm test -- --runInBand` (10 suites, 311 pruebas aprobadas), con Node `v24.19.0`.
+- [ ] Publicar y revisar estos ajustes antes de integrarlos en `main`.
+- [ ] Ejecutar S1-13 sobre la versión final integrada: instalación limpia, arranque con `start` y `dev`, pruebas, evidencia y revisión del Project.
+
+El plan de tarjetas, revisión de PR y archivo de evidencia es organización del equipo. El PDF exige código ejecutable desde una instalación limpia, colaboración, Project y README actualizados; en Moodle se entrega únicamente la URL del repositorio.

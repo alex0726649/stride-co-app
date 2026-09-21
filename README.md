@@ -158,11 +158,13 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Inventario | `/api/inventory` | Sí | Sí | No | Sí | No | Completo |
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | Completo |
 | Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | No | Completo |
-| Productos | `/api/products` | Sí | — | — | — | — | Parcial |
+| Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Completo |
 
 Las operaciones marcadas como `No` corresponden a decisiones de diseño documentadas en el contrato, no a omisiones: el inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante, y las órdenes no se eliminan porque su cancelación se representa mediante un cambio de estado dentro del historial del pedido.
 
-La fila marcada como *Parcial* refleja el avance real del repositorio al momento de esta versión.
+La matriz describe las operaciones implementadas. El cierre de entrega todavía requiere la validación desde una instalación limpia de S1-13 y la revisión del GitHub Project.
+
+Las órdenes siguen la estructura documental de la figura 1: `totals`, `shippingAddress`, `items`, `statusHistory`, `createdAt` y `updatedAt`, además de sus identificadores y método de pago. El total se consulta en `data.totals.total` y el estado actual en la última entrada de `data.statusHistory`. Ya no se devuelven `data.total` ni `data.status` planos. PUT admite `status` en el cuerpo para simular una nueva entrada del historial; los detalles y ejemplos están en el contrato.
 
 El contrato completo de la API —campos, validaciones, identificadores de prueba y relaciones entre recursos— se encuentra en [`docs/api.md`](docs/api.md).
 
@@ -213,6 +215,7 @@ En Windows PowerShell, `curl` es un alias de `Invoke-WebRequest` y no acepta est
 - Las restricciones de unicidad se verifican únicamente contra los datos fijos de cada recurso.
 - No se valida la existencia de los recursos referenciados entre sí.
 - No existe autenticación ni autorización: los permisos se exponen como catálogo, sin efecto sobre el acceso.
+- Clientes y órdenes usan fechas de ejemplo fijas para que las respuestas sean reproducibles. En órdenes, envío y descuento son cero; la dirección por defecto y el responsable del historial son valores mock, no datos derivados de una sesión autenticada.
 
 ## Pruebas
 
@@ -220,7 +223,7 @@ En Windows PowerShell, `curl` es un alias de `Invoke-WebRequest` y no acepta est
 npm test
 ```
 
-Las pruebas usan Jest y Supertest, ejecutando peticiones reales contra la aplicación Express sin necesidad de levantar el servidor. Cada recurso cuenta con su archivo en `test/` y cubre:
+Las pruebas usan Jest y Supertest, ejecutando peticiones reales contra la aplicación Express sin necesidad de levantar el servidor por separado. Cada recurso cuenta con su archivo en `test/`. En conjunto, la suite comprueba:
 
 - Código HTTP esperado en cada operación.
 - Estructura de la respuesta y tipo de contenido JSON.
@@ -228,6 +231,8 @@ Las pruebas usan Jest y Supertest, ejecutando peticiones reales contra la aplica
 - Manejo de recursos inexistentes.
 - Solicitudes incorrectas: campos faltantes, tipos inválidos, cuerpo ausente y JSON malformado.
 - Ausencia de persistencia: los datos fijos no cambian después de una escritura simulada.
+- Coherencia de referencias entre los mocks de usuarios, roles, productos, variantes, inventario, clientes y órdenes (`test/fixtures.test.js`).
+- Estructura documental de órdenes y rechazo con 400 de artículos nulos, tipos incorrectos y totales no finitos.
 
 Para ejecutar un archivo específico:
 

@@ -62,7 +62,7 @@ Todas las respuestas de la API usan JSON y contienen:
 - `message`: texto que explica el resultado.
 - `data`: arreglo al listar, objeto al consultar/crear/actualizar, o `null` al eliminar o responder un error.
 
-Los mensajes se escribirán en español. Los nombres de campos seguirán el modelo del PDF: por ejemplo, `role_id` en usuarios y `userId` en clientes.
+Los mensajes se escriben en español, salvo `GET products`, conservado del ejemplo del profesor. Los nombres de campos siguen el modelo del PDF: por ejemplo, `role_id` en usuarios y `userId` en clientes. Los ejemplos mínimos de clientes siguientes omiten sus fechas de ejemplo; la respuesta completa también contiene `createdAt` y `updatedAt` (sección 12).
 
 ### Listar clientes
 
@@ -169,7 +169,7 @@ Para mantener sencillo este sprint, POST y PUT exigirán al menos los campos de 
 | users | `first_name`, `last_name`, `email`, `role_id` |
 | roles | `name` |
 | permissions | `key`, `description` |
-| products | `name`, `price` |
+| products | `name`, `description`, `brand`, `price` |
 | variants | `product_id`, `sku`, `size`, `color` |
 | inventory | `stock`, `reserved` |
 | customers | `userId`, `phone`, `email` |
@@ -181,6 +181,8 @@ Para mantener sencillo este sprint, POST y PUT exigirán al menos los campos de 
 - `stock` y `reserved` deben ser enteros mayores o iguales a cero; `reserved` no puede superar `stock`.
 - `items` debe ser un arreglo no vacío. Cada artículo debe incluir `productId` entero positivo, `quantity` entero positivo y `unitPrice` numérico mayor o igual a cero.
 - Para el mock inicial, `paymentMethod` acepta `efectivo` o `transferencia`. Es una elección provisional del equipo, pues el diagrama indica un enum sin enumerar sus valores.
+- En órdenes, `items` solo admite objetos; rechaza elementos nulos, arreglos y primitivas. Sus IDs y cantidades deben ser enteros positivos seguros, y los precios y el subtotal deben ser finitos. `shippingAddress` y `status` son opcionales, con las validaciones descritas en la sección 13.
+- En clientes, `addresses` es opcional; si se envía debe ser un arreglo de direcciones completas (puede estar vacío), conforme a la sección 12.
 - Los IDs del objeto devuelto los determina el controlador; el cliente no los crea ni cambia mediante el cuerpo de POST o PUT.
 - En PUT y DELETE se verifica primero que exista el ID solicitado. No se exige todavía consultar otras bases de datos ni aplicar autenticación, reservas o cobros.
 - Permisos: el modelo marca `key` como UNIQUE. En los mocks esa unicidad se verifica unicamente contra los datos fijos del recurso, no contra una base de datos. Una actualizacion puede conservar su propio `key` sin considerarse duplicado.
@@ -288,3 +290,115 @@ responde 200 con `message: "Eliminación de variante simulada"` y `data: null`.
 Ninguna escritura persiste: GET mantiene los fixtures y GET `/api/variants/3`
 sigue devolviendo 404. Las pruebas en `test/variants.test.js` cubren las cinco
 operaciones, referencias, validaciones y ausencia de persistencia.
+
+## 11. Productos implementados (S1-06)
+
+Las funciones exportadas son `list`, `find`, `create`, `update` y `destroy`.
+GET de lista y por ID, POST, PUT y DELETE están implementados. El fixture
+es el producto 1; POST devuelve el ID 2 sin guardarlo. Las escrituras requieren
+`name`, `description` y `brand` como textos no vacíos, además de `price` numérico
+mayor o igual a cero. `category_id` y `active` son opcionales y no tienen validación
+de tipo propia en esta versión: `category_id` usa 1 si recibe un valor falsy,
+y `active` usa `true` si se omite. El ID del cuerpo se ignora.
+
+```json
+{"name":"Tenis de Prueba","description":"Calzado deportivo","brand":"Stride & Co.","price":500,"category_id":1,"active":true}
+```
+
+## 12. Clientes implementados (S1-09)
+
+Las funciones son `list`, `find`, `create`, `update` y `destroy`.
+GET consulta `cliente-1`; POST devuelve `cliente-nuevo`. PUT y DELETE
+validan primero el ID de ruta; uno desconocido responde 404.
+
+POST y PUT requieren `userId` entero positivo seguro, `phone` y `email`
+como textos no vacíos. No se valida todavía el formato del correo ni se busca
+el usuario referenciado al escribir. Un cuerpo ausente, arreglo o JSON malformado
+responde 400.
+
+`addresses` es opcional. Cada dirección debe tener `type` igual a `shipping`
+o `billing` y los textos no vacíos `street`, `number`, `city`, `state`,
+`postalCode` y `country`. Incluso `number` y `postalCode` se envían como cadenas.
+Se rechazan direcciones nulas, incompletas o de otro tipo con 400.
+Al crear, omitir `addresses` devuelve `[]`; al actualizar, conserva las del
+fixture. Enviar `[]` simula quitarlas. Los campos adicionales, incluso dentro
+de una dirección, se ignoran; el controlador determina `_id` y las fechas.
+
+Las fechas son valores mock ISO: creación `2026-09-01T12:00:00.000Z` y
+actualización simulada `2026-09-02T12:00:00.000Z`. Las escrituras no cambian
+el fixture. Las pruebas cubren las cinco operaciones, errores, estructura,
+parámetros, filtrado de campos y ausencia de persistencia.
+
+## 13. Órdenes implementadas (S1-10)
+
+Las funciones son `listOrders`, `getOrderById`, `createOrder` y `updateOrder`.
+Los fixtures `orden-1` y `orden-2` referencian `cliente-1`, al usuario 1 y
+al producto 1. El inventario tiene un registro por cada variante existente
+(1 y 2). `test/fixtures.test.js` comprueba estas relaciones.
+
+Las respuestas siguen la figura 1: `_id`, `customerId`, `salesPersonId`,
+`paymentMethod`, `totals`, `shippingAddress`, `items`, `statusHistory`,
+`createdAt` y `updatedAt`. El modelo de respuesta reemplaza los antiguos
+campos planos `total` y `status`: ahora se consultan `totals.total` y
+`statusHistory[statusHistory.length - 1].status`.
+
+Ejemplo de cuerpo POST o PUT:
+
+```json
+{
+  "customerId": "cliente-1",
+  "salesPersonId": 1,
+  "paymentMethod": "efectivo",
+  "items": [{ "productId": 1, "quantity": 2, "unitPrice": 1299 }],
+  "shippingAddress": {
+    "street": "Calle Universidad", "number": "123", "city": "Chihuahua",
+    "state": "Chihuahua", "postalCode": "31000", "country": "México"
+  }
+}
+```
+
+POST devuelve 201 con `message: "Creación de orden simulada"` y este `data`:
+
+```json
+{
+  "_id": "orden-nueva",
+  "customerId": "cliente-1",
+  "salesPersonId": 1,
+  "paymentMethod": "efectivo",
+  "items": [{ "productId": 1, "quantity": 2, "unitPrice": 1299 }],
+  "totals": { "subtotal": 2598, "shipping": 0, "discount": 0, "total": 2598 },
+  "shippingAddress": {
+    "street": "Calle Universidad", "number": "123", "city": "Chihuahua",
+    "state": "Chihuahua", "postalCode": "31000", "country": "México"
+  },
+  "statusHistory": [{
+    "status": "Pendiente de pago", "changedById": 1,
+    "changedAt": "2026-09-01T12:00:00.000Z"
+  }],
+  "createdAt": "2026-09-01T12:00:00.000Z",
+  "updatedAt": "2026-09-01T12:00:00.000Z"
+}
+```
+
+Convenciones de simulación del equipo:
+
+- El subtotal suma `quantity * unitPrice`. `shipping` y `discount` son cero;
+  `total` es igual al subtotal. No hay cobros, cálculo real de envío ni reservas.
+- Si se omite `shippingAddress` en POST se usa la dirección del ejemplo; en
+  PUT se conserva la del fixture. Si se envía, debe contener los seis campos
+  de texto no vacíos del ejemplo. No se consulta la dirección real de otro cliente.
+- POST siempre inicia en `Pendiente de pago`. PUT admite el campo opcional
+  `status`: `Pendiente de pago`, `Pagado` o `Cancelado`. Son valores provisionales
+  del equipo; el PDF marca un enum sin enumerarlos. Un valor inválido responde
+  400 en POST o PUT; uno válido en POST no cambia el estado inicial.
+- PUT añade una entrada al historial de la respuesta únicamente si el estado
+  cambia. Omitir `status` o repetir el actual conserva el historial original.
+  `changedById` usa `salesPersonId` como referencia mock, sin autenticación.
+- Las fechas son fijas: creación `2026-09-01T12:00:00.000Z` y actualización
+  `2026-09-02T12:00:00.000Z`. No representan la hora real de la petición.
+- El controlador determina `_id`, `totals`, `statusHistory` y fechas. Los
+  valores enviados para esos campos se ignoran, al igual que campos extras
+  de artículos y direcciones. PUT conserva el ID y fecha de creación originales.
+- Cada petición se calcula sobre los fixtures: ninguna escritura modifica
+  los datos. GET de `orden-nueva` sigue dando 404. No se consultan referencias
+  externas al validar escrituras; la coherencia se garantiza para los fixtures.
