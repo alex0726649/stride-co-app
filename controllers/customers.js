@@ -1,4 +1,7 @@
 const response = require('../utils/response');
+const { isValidAddress, publicAddress } = require('../utils/address');
+const MOCK_DATE = '2026-09-01T12:00:00.000Z';
+const MOCK_UPDATE_DATE = '2026-09-02T12:00:00.000Z';
 
 const customers = [
   {
@@ -17,8 +20,8 @@ const customers = [
         country: 'México'
       }
     ],
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: MOCK_DATE,
+    updatedAt: MOCK_DATE
   },
 ];
 
@@ -27,11 +30,20 @@ function findCustomerById(id) {
 }
 
 function validateCustomer(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return 'El cuerpo debe ser un objeto JSON';
   const { userId, phone, email } = body;
   if (!Number.isSafeInteger(userId) || userId <= 0) return 'userId es obligatorio y debe ser un entero positivo';
   if (typeof phone !== 'string' || phone.trim() === '') return 'phone es obligatorio y debe ser un texto no vacío';
   if (typeof email !== 'string' || email.trim() === '') return 'email es obligatorio y debe ser un texto no vacío';
+  if (body.addresses !== undefined && (!Array.isArray(body.addresses)
+    || !body.addresses.every(address => isValidAddress(address) && ['shipping', 'billing'].includes(address.type)))) {
+    return 'addresses debe ser un arreglo de direcciones completas con type shipping o billing';
+  }
   return null;
+}
+
+function publicAddresses(addresses) {
+  return addresses.map(address => ({ type: address.type, ...publicAddress(address) }));
 }
 
 function list(req, res) {
@@ -54,9 +66,9 @@ function create(req, res) {
     userId,
     phone,
     email,
-    addresses: Array.isArray(addresses) ? addresses : [],
-    createdAt: new Date(),
-    updatedAt: new Date()
+    addresses: addresses === undefined ? [] : publicAddresses(addresses),
+    createdAt: MOCK_DATE,
+    updatedAt: MOCK_DATE
   };
   return response.created(res, 'Creación de cliente simulada', newCustomer);
 }
@@ -74,8 +86,8 @@ function update(req, res) {
     userId,
     phone,
     email,
-    addresses: Array.isArray(addresses) ? addresses : customer.addresses,
-    updatedAt: new Date()
+    addresses: addresses === undefined ? customer.addresses : publicAddresses(addresses),
+    updatedAt: MOCK_UPDATE_DATE
   };
   return response.success(res, 'Actualización de cliente simulada', updatedCustomer);
 }

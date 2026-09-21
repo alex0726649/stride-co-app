@@ -6,7 +6,6 @@
 const inventoryRecords = [
 { id: 1, variant_id: 1, stock: 20, reserved: 0 },
 { id: 2, variant_id: 2, stock: 15, reserved: 3 },
-{ id: 3, variant_id: 3, stock: 0, reserved: 0 },
 ];
 
 function findInventoryById(id) {

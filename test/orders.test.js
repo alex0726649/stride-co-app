@@ -39,8 +39,8 @@ describe('POST /api/orders', () => {
     expect(res.body.data).toMatchObject({
       customerId: 'cliente-1',
       paymentMethod: 'efectivo',
-      status: 'Pendiente de pago',
-      total: 1000,
+      statusHistory: [{ status: 'Pendiente de pago', changedById: 1, changedAt: '2026-09-01T12:00:00.000Z' }],
+      totals: { subtotal: 1000, shipping: 0, discount: 0, total: 1000 },
     });
     expect(res.body.data._id).toBeDefined();
   });
@@ -92,9 +92,10 @@ describe('PUT /api/orders/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.data).toMatchObject({
       _id: 'orden-1',
-      status: 'Pagado',
-      total: 750,
+      totals: { subtotal: 750, shipping: 0, discount: 0, total: 750 },
     });
+    expect(res.body.data.statusHistory.at(-1)).toEqual({ status: 'Pagado', changedById: 1,
+      changedAt: '2026-09-02T12:00:00.000Z' });
   });
 
   it('devuelve 404 al actualizar un ID inexistente', async () => {
@@ -110,21 +111,84 @@ describe('PUT /api/orders/:id', () => {
   });
 
   it('no modifica los datos fijos: un GET posterior sigue devolviendo el original', async () => {
-    // orden-2 original: paymentMethod "transferencia", status "Pagado", total 1599.
+    const original = (await request(app).get('/api/orders/orden-2')).body.data;
     // Se envían valores deliberadamente distintos para que la comparación sea concluyente.
-    await request(app).put('/api/orders/orden-2').send({
+    const updated = await request(app).put('/api/orders/orden-2').send({
       customerId: 'cliente-1',
       salesPersonId: 1,
       paymentMethod: 'efectivo',
       items: [{ productId: 9, quantity: 3, unitPrice: 100 }],
       status: 'Cancelado',
     });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.statusHistory.at(-1).status).toBe('Cancelado');
 
     const res = await request(app).get('/api/orders/orden-2');
-    expect(res.body.data).toMatchObject({
-      status: 'Pagado',
-      paymentMethod: 'transferencia',
-      total: 1599.0,
+    expect(res.body.data).toEqual(original);
+  });
+});
+
+describe('Contrato documental de órdenes', () => {
+  const validOrder = { customerId: 'cliente-1', salesPersonId: 1, paymentMethod: 'efectivo',
+    items: [{ productId: 1, quantity: 2, unitPrice: 500 }] };
+  const shippingAddress = { street: 'Calle Ejemplo', number: '10', city: 'Chihuahua',
+    state: 'Chihuahua', postalCode: '31000', country: 'México' };
+
+  it('devuelve la estructura de la figura 1 y no permite inyectar campos calculados', async () => {
+    const body = { ...validOrder, _id: 'otro', totals: { total: -1 }, status: 'Pagado',
+      statusHistory: [], createdAt: 'falsa', shippingAddress: { ...shippingAddress, extra: true },
+      items: [{ ...validOrder.items[0], extra: true }] };
+    const res = await request(app).post('/api/orders').send(body);
+    expect(res.status).toBe(201);
+    expect(res.body.data).toEqual({ ...validOrder, _id: 'orden-nueva', shippingAddress,
+      totals: { subtotal: 1000, shipping: 0, discount: 0, total: 1000 },
+      statusHistory: [{ status: 'Pendiente de pago', changedById: 1, changedAt: '2026-09-01T12:00:00.000Z' }],
+      createdAt: '2026-09-01T12:00:00.000Z', updatedAt: '2026-09-01T12:00:00.000Z' });
+    expect((await request(app).get('/api/orders/orden-nueva')).status).toBe(404);
+  });
+
+  it('conserva historial y dirección al omitirlos, y permite cambiar la dirección', async () => {
+    const original = (await request(app).get('/api/orders/orden-1')).body.data;
+    const omitted = await request(app).put('/api/orders/orden-1').send(validOrder);
+    expect(omitted.status).toBe(200);
+    expect(omitted.body.data.statusHistory).toEqual(original.statusHistory);
+    expect(omitted.body.data.shippingAddress).toEqual(original.shippingAddress);
+    const sameStatus = await request(app).put('/api/orders/orden-1')
+      .send({ ...validOrder, status: 'Pendiente de pago', shippingAddress });
+    expect(sameStatus.status).toBe(200);
+    expect(sameStatus.body.data.statusHistory).toEqual(original.statusHistory);
+    expect(sameStatus.body.data.shippingAddress).toEqual(shippingAddress);
+    expect((await request(app).get('/api/orders/orden-1')).body.data).toEqual(original);
+  });
+
+  describe.each(['post', 'put'])('%s rechaza solicitudes incorrectas', method => {
+    const url = method === 'post' ? '/api/orders' : '/api/orders/orden-1';
+    it.each([
+      ['cuerpo vacío', {}], ['cuerpo arreglo', []],
+      ['item nulo', { ...validOrder, items: [null] }],
+      ['item arreglo', { ...validOrder, items: [[]] }],
+      ['item texto', { ...validOrder, items: ['incorrecto'] }],
+      ['item incompleto', { ...validOrder, items: [{}] }],
+      ['cantidad fraccionaria', { ...validOrder, items: [{ productId: 1, quantity: 1.5, unitPrice: 1 }] }],
+      ['precio negativo', { ...validOrder, items: [{ productId: 1, quantity: 1, unitPrice: -1 }] }],
+      ['precio textual', { ...validOrder, items: [{ productId: 1, quantity: 1, unitPrice: '1' }] }],
+      ['total desbordado', { ...validOrder, items: [{ productId: 1, quantity: 2, unitPrice: 1e308 }] }],
+      ['vendedor fraccionario', { ...validOrder, salesPersonId: 1.5 }],
+      ['cliente vacío', { ...validOrder, customerId: '  ' }],
+      ['dirección nula', { ...validOrder, shippingAddress: null }],
+      ['dirección incompleta', { ...validOrder, shippingAddress: {} }],
+      ['estado inválido', { ...validOrder, status: 'inexistente' }],
+    ])('devuelve 400 para %s', async (_label, body) => {
+      const res = await request(app)[method](url).send(body);
+      expect(res.status).toBe(400);
+      expect(res.headers['content-type']).toMatch(/json/);
+      expect(res.body).toEqual({ message: expect.any(String), data: null });
+    });
+    it('rechaza cuerpo ausente, JSON malformado y números no finitos', async () => {
+      expect((await request(app)[method](url)).status).toBe(400);
+      expect((await request(app)[method](url).set('Content-Type', 'application/json').send('{')).status).toBe(400);
+      const raw = JSON.stringify(validOrder).replace('500', '1e400');
+      expect((await request(app)[method](url).set('Content-Type', 'application/json').send(raw)).status).toBe(400);
     });
   });
 });
