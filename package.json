@@ -6,7 +6,7 @@
     "start": "node ./bin/www",
     "dev": "supervisor ./bin/www",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
