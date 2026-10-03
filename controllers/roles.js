@@ -1,13 +1,6 @@
-const roles = Object.freeze([
-  Object.freeze({ id: 1, name: 'Vendedor', description: 'Consulta y administra sus pedidos asignados' }),
-  Object.freeze({ id: 2, name: 'Operaciones', description: 'Controla inventario y prepara pedidos' }),
-  Object.freeze({ id: 3, name: 'Administrador', description: 'Acceso total al catalogo y a la operacion' }),
-  Object.freeze({ id: 4, name: 'Cliente', description: 'Consulta el catalogo y da seguimiento a sus pedidos' }),
-]);
+const { Role, Permission } = require('../models/relationals');
 
-function findRole(id) {
-  return roles.find(role => String(role.id) === id);
-}
+
 
 function validate(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -19,48 +12,108 @@ function validate(body) {
   if (body.description !== undefined && typeof body.description !== 'string') {
     return 'El description debe ser un texto';
   }
+  if (body.permission_ids !== undefined) {
+    if (!Array.isArray(body.permission_ids) ||
+        !body.permission_ids.every(id => Number.isSafeInteger(id) && id > 0)) {
+      return 'El permission_ids debe ser un arreglo de enteros positivos';
+    }
+  }
   return null;
 }
 
-function publicRole(id, body) {
-  return {
-    id,
-    name: body.name,
-    description: typeof body.description === 'string' ? body.description : '',
-  };
-}
+
 
 function notFound(res) {
   return res.status(404).json({ message: 'Rol no encontrado', data: null });
 }
+async function list(req, res, next) {
+  try {
+    const roles = await Role.findAll({
+      include: { model: Permission, as: 'permissions' }
+    });
 
-function list(req, res) {
-  res.json({ message: 'Lista de roles', data: roles });
+    res.json({ message: 'Lista de roles', data: roles });
+  } catch (error) {
+    next(error);
+  }
 }
 
-function find(req, res) {
-  const role = findRole(req.params.id);
-  if (!role) return notFound(res);
-  res.json({ message: 'Rol encontrado', data: role });
+async function find(req, res, next) {
+  try {
+    const role = await Role.findByPk(req.params.id, {
+      include: { model: Permission, as: 'permissions' }
+    });
+
+    if (!role) return notFound(res);
+
+    res.json({ message: 'Rol encontrado', data: role });
+  } catch (error) {
+    next(error);
+  }
 }
 
-function create(req, res) {
-  const error = validate(req.body);
-  if (error) return res.status(400).json({ message: error, data: null });
-  res.status(201).json({ message: 'Creacion de rol simulada', data: publicRole(5, req.body) });
+async function create(req, res, next) {
+  try {
+    const error = validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error, data: null });
+    }
+
+    const role = await Role.create({
+      name: req.body.name,
+      description: req.body.description
+    });
+
+    // Si se envia el arreglo, reemplaza las asignaciones; [] las elimina.
+    if (req.body.permission_ids !== undefined) {
+      await role.setPermissions(req.body.permission_ids);
+    }
+
+    res.status(201).json({ message: 'Rol creado', data: role });
+  } catch (error) {
+    next(error);
+  }
 }
 
-function update(req, res) {
-  const role = findRole(req.params.id);
-  if (!role) return notFound(res);
-  const error = validate(req.body);
-  if (error) return res.status(400).json({ message: error, data: null });
-  res.json({ message: 'Actualizacion de rol simulada', data: publicRole(role.id, req.body) });
+async function update(req, res, next) {
+  try {
+    const role = await Role.findByPk(req.params.id);
+
+    if (!role) return notFound(res);
+
+    const error = validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error, data: null });
+    }
+
+    await role.update({
+      name: req.body.name,
+      description: req.body.description
+    });
+
+    // Si se envia el arreglo, reemplaza las asignaciones; [] las elimina.
+    if (req.body.permission_ids !== undefined) {
+      await role.setPermissions(req.body.permission_ids);
+    }
+
+    res.json({ message: 'Rol actualizado', data: role });
+  } catch (error) {
+    next(error);
+  }
 }
 
-function destroy(req, res) {
-  if (!findRole(req.params.id)) return notFound(res);
-  res.json({ message: 'Eliminacion de rol simulada', data: null });
+async function destroy(req, res, next) {
+  try {
+    const role = await Role.findByPk(req.params.id);
+
+    if (!role) return notFound(res);
+
+    await role.destroy();
+
+    res.json({ message: 'Rol eliminado', data: null });
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = { list, find, create, update, destroy };

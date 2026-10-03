@@ -6,13 +6,14 @@
 
 const app = require('../app');
 const debug = require('debug')('stride-co:server');
-const http = require('http');
-
+const http = require('http');// esta herramienta ya viene en Node.js
+const { sequelize }=require ('../models/relationals');
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
+var port = normalizePort(process.env.PORT || '3000');// revisa PORT, si no hay nada se usa 3000
+// nomrmalizePort es una funcion definida mas abajo ,string a int y lo guarda en port
 app.set('port', port);
 
 /**
@@ -21,22 +22,29 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+async function start(){
+  await sequelize.authenticate();
+  await sequelize.sync();
+  debug('conexion a mysql generada correctamente.');
+  server.listen(port);
+}
+
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+start();
+server.on('error', onError);//onError, funcion definida mas abajo 
+server.on('listening', onListening);//cuando ya este escuchando ejecuta onListening, definida abajo
 
 /**
  * Normalize a port into a number, string, or false.
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+  var port = parseInt(val, 10);//aqui la variable port es local no igual a la de arriba
 
-  if (isNaN(port)) {
+  if (isNaN(port)) {//la conversion fallo, NaN not a number
     // named pipe
     return val;
   }
@@ -53,19 +61,19 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
+function onError(error) {//error es el objeto que creo server
+  if (error.syscall !== 'listen') {//error.syscall el tipo de error,¿el error ocurrio en una
+    throw error; //operacion distinta a listen si es asi lanza el error para que se propague
   }
-
-  var bind = typeof port === 'string'
+//si el error sucedio al intentar escuchar conexiones seguimo con las sig lineas
+  var bind = typeof port === 'string'//si port es string o si no es; bind = 
     ? 'Pipe ' + port
     : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      console.error(bind + ' requires elevated privileges');// parecido a console.log pero para errores stderr
       process.exit(1);
       break;
     case 'EADDRINUSE':
@@ -86,5 +94,6 @@ function onListening() {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  debug('Listening on ' + bind);// si debug esta encendido cuando el servidor este escuchando saldra un mensanje 
+  //stride-co:server Listenins on port 3000 o algo parecido
 }
