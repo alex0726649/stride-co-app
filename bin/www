@@ -8,6 +8,7 @@ const app = require('../app');
 const debug = require('debug')('stride-co:server');
 const http = require('http');// esta herramienta ya viene en Node.js
 const { sequelize }=require ('../models/relationals');
+const connectMongo = require('../config/mongoose');
 /**
  * Get port from environment and store in Express.
  */
@@ -26,6 +27,9 @@ async function start(){
   await sequelize.authenticate();
   await sequelize.sync();
   debug('conexion a mysql generada correctamente.');
+
+  await connectMongo();
+  debig('Conexion a mongodb hecha');
   server.listen(port);
 }
 
