@@ -1,5 +1,6 @@
 const response = require('../utils/response');
 const { isValidAddress, publicAddress } = require('../utils/address');
+const { Order } = require('../models/documents')
 
 const VALID_PAYMENT_METHODS = ['efectivo', 'transferencia'];
 const VALID_STATUSES = ['Pendiente de pago', 'Pagado', 'Cancelado'];
@@ -73,8 +74,9 @@ function orderData(body, shippingAddress) {
   };
 }
 
-function listOrders(req, res) {
-  return response.success(res, 'Lista de órdenes', orders);
+async function listOrders(req, res) {
+  const orders = await Order.find().populate('customerId')
+  res.json({ message: 'GET orders', data: orders});
 }
 
 function getOrderById(req, res) {
@@ -83,7 +85,9 @@ function getOrderById(req, res) {
   return response.success(res, 'Orden encontrada', order);
 }
 
-function createOrder(req, res) {
+async function createOrder(req, res) {
+  const order = await Order.create(req.body);
+
   const error = validateOrderBody(req.body);
   if (error) return response.badRequest(res, error);
   return response.created(res, 'Creación de orden simulada', {

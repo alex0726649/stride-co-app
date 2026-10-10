@@ -2,6 +2,7 @@ const response = require('../utils/response');
 const { isValidAddress, publicAddress } = require('../utils/address');
 const MOCK_DATE = '2026-09-01T12:00:00.000Z';
 const MOCK_UPDATE_DATE = '2026-09-02T12:00:00.000Z';
+const { Customer } = require('../models/documents');
 
 const customers = [
   {
@@ -46,18 +47,21 @@ function publicAddresses(addresses) {
   return addresses.map(address => ({ type: address.type, ...publicAddress(address) }));
 }
 
-function list(req, res) {
+async function list(req, res) {
+  const customer = await Customer.find();
   return response.success(res, 'Lista de clientes', customers);
 }
 
-function find(req, res) {
+async function find(req, res) {
   const customer = findCustomerById(req.params.id);
+  const customer = await Customer.findCustomerById(req.params.id);
   if (!customer) return response.notFound(res, 'Cliente no encontrado');
   return response.success(res, 'Cliente encontrado', customer);
 }
 
-function create(req, res) {
+async function create(req, res) {
   const error = validateCustomer(req.body);
+  const customer = await Customer.create(req.body)
   if (error) return response.badRequest(res, error);
 
   const { userId, phone, email, addresses } = req.body;
@@ -73,7 +77,8 @@ function create(req, res) {
   return response.created(res, 'Creación de cliente simulada', newCustomer);
 }
 
-function update(req, res) {
+async function update(req, res) {
+  const customer = await Customer.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true});
   const customer = findCustomerById(req.params.id);
   if (!customer) return response.notFound(res, 'Cliente no encontrado');
 
@@ -90,12 +95,15 @@ function update(req, res) {
     updatedAt: MOCK_UPDATE_DATE
   };
   return response.success(res, 'Actualización de cliente simulada', updatedCustomer);
+  //res.json({ message: 'Customer updated', data: customer});
 }
 
 function destroy(req, res) {
+   const customer = await Customer.findByIdAndDelete(req.params.id, req.body, { new: true, runValidators: true});
   const customer = findCustomerById(req.params.id);
   if (!customer) return response.notFound(res, 'Cliente no encontrado');
   return response.success(res, 'Eliminación de cliente simulada', null);
+    //res.json({ message: 'Customer deleted', data: { id: customer._id} });
 }
 
 module.exports = { list, find, create, update, destroy };
