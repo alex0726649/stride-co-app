@@ -14,6 +14,7 @@ var inventoryRouter = require('./routes/inventory');
 var variantsRouter = require('./routes/variants');
 var ordersRouter = require('./routes/orders');
 var customersRouter = require('./routes/customers');
+var authRouter =require('./routes/auth');
 
 var app = express();// crea y devuelve la aplicacion*** importante ***
 
@@ -29,6 +30,7 @@ app.use(cookieParser());// arriba lo requerimos aqui lo activamos
 app.use(express.static(path.join(__dirname, 'public'))); // para servir doc estaticos publicos
 
 app.use('/', indexRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/roles', rolesRouter);
