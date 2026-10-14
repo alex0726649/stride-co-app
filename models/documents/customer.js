@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 
 const customerSchema = new mongoose.Schema({
-    userId: {type: Number, require: true},
+    userId: {type: Number, required: true},
     phone: String,
     email: String,
 
     //Lista de direcciones del cliente Embebido (vive dentro de otra entidad)
     addresses : [
         {
-            type:{ type: String, enum: ['SHIPPING', 'BILLING'], require: true},
-            stret: String,
+            type:{ type: String, enum: ['SHIPPING', 'BILLING'], required: true},
+            street: String,
             number: String,
             city: String,
             state: String,
@@ -23,4 +23,4 @@ const customerSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.export = mongoose.model('Customer', customerSchema);
+module.exports = mongoose.model('Customer', customerSchema);

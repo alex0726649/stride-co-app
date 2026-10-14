@@ -24,7 +24,7 @@ app.set('view engine', 'pug'); //express,  usa pug para interpretar las plantill
 
 app.use(logger('dev'));//middleware, activa a morgan que jalamos arriba 'dev' es un formtato de morgan
 app.use(express.json());//middleware, lee el cuerpo de la solicitudes enviadas en json y lo concvierte en un valor de JS que podemos consultar e req.body
-app.use(express.urlencoded({ extended: false }));//lo mismo que el de arriba pero enviadas en url
+app.use(express.urlencoded({ extended: true }));//lo mismo que el de arriba pero enviadas en url
 app.use(cookieParser());// arriba lo requerimos aqui lo activamos
 app.use(express.static(path.join(__dirname, 'public'))); // para servir doc estaticos publicos
 
