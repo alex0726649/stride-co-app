@@ -29,7 +29,7 @@ async function start(){
   debug('conexion a mysql generada correctamente.');
 
   await connectMongo();
-  debig('Conexion a mongodb hecha');
+  debug('Conexion a mongodb correcta');
   server.listen(port);
 }
 

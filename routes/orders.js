@@ -1,11 +1,11 @@
-// routes/orders.js
 const express = require('express');
 const router = express.Router();
-const ordersController = require('../controllers/orders');
+const controller = require('../controllers/orders');
 
-router.get('/', ordersController.listOrders);
-router.get('/:id', ordersController.getOrderById);
-router.post('/', ordersController.createOrder);
-router.put('/:id', ordersController.updateOrder);
+router.get('/', controller.list);
+router.get('/:id', controller.find);
+router.post('/', controller.create);
+router.put('/:id', controller.update);
+router.delete('/:id', controller.destroy);
 
 module.exports = router;

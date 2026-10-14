@@ -2,29 +2,6 @@ const { User, Role } = require('../models/relationals');
 const { hashPassword }= require('../utils/password');
 
 
-function findUser(id) {
-  return users.find(user => String(user.id) === id);
-}
-
-function validate(body) {//valida que el body del req sea un bojeto correcto, no un arreglo o un undefined o null
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return 'El cuerpo debe ser un objeto JSON';
-  }
-  for (const field of ['first_name', 'last_name', 'email']) {//este for confirma que los campos sean texto y recorta los espacion antes y despues del texto
-    if (typeof body[field] !== 'string' || !body[field].trim()) {
-      return `El ${field} es obligatorio y debe ser un texto no vacío`;
-    }
-  }
- // if (!Number.isSafeInteger(body.role_id) || body.role_id <= 0) {//confirma que sea entero valido positivo
-   // return 'El role_id debe ser un entero positivo';
-  //}
-  return null;// se devuelve null cuando se ha validado el body
-}
-
-function publicUser(id, body) {
-  return { id, first_name: body.first_name, last_name: body.last_name, email: body.email, role_id: body.role_id };
-}
-
 function notFound(res) {
   return res.status(404).json({ message: 'Usuario no encontrado', data: null });
 }
@@ -61,9 +38,7 @@ async function find(req, res) {
   });
 }
 //create
-async function create(req, res) { 
-  const error = validate(req.body);
-  if (error) return res.status(400).json({ message: error, data: null });
+ async function create(req, res) { //a la funcion le tengo que agregar async
   const name= req.body.first_name;
   const lastName=req.body.last_name;
   const roleId = req.body.role_id;
@@ -110,3 +85,4 @@ async function destroy(req, res) {
 }
 
 module.exports = { list, find, create, update, destroy };
+
