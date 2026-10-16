@@ -2,9 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('../controllers/inventory');
+const { authorize } = require('../middleware/authorize');
 
-router.get('/', inventoryController.listInventory);
-router.get('/:id', inventoryController.getInventoryById);
-router.put('/:id', inventoryController.updateInventory);
+router.get('/', authorize('inventory', 'read', 'any'), inventoryController.listInventory);
+router.get('/:id', authorize('inventory', 'read', 'any'), inventoryController.getInventoryById);
+router.put('/:id', authorize('inventory', 'update', 'any'), inventoryController.updateInventory);
 
 module.exports = router;

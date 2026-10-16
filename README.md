@@ -248,6 +248,32 @@ npm run lint
 
 La configuración se encuentra en `eslint.config.js`. El comando debe finalizar sin errores antes de abrir cualquier Pull Request.
 
+## Control de acceso basado en roles
+
+La autorización reutiliza las entidades relacionales existentes `User`, `Role`, `Permission` y `role_permission`; no crea tablas RBAC duplicadas. La base de datos es la fuente de verdad: el middleware consulta el rol y sus permisos para cada solicitud protegida y construye las reglas de AccessControl desde esos registros.
+
+Las llaves de permiso siguen `recurso:acción:alcance`, por ejemplo `products:read:any`, `orders:update:own` y `users:read:own`. Los alcances son `any` para cualquier recurso del tipo indicado y `own` para un recurso cuya propiedad se comprueba con datos del proyecto. En órdenes, la propiedad se obtiene de `Order.customerId` y `Customer.userId`; para clientes, de `Customer.userId`; para usuarios, del identificador del usuario autenticado.
+
+La matriz inicial se puede cargar de forma idempotente con `npm run seed:rbac` después de configurar MySQL. El seed agrega roles `admin`, `sales` y `user`, sus permisos y las relaciones en `role_permission`, sin eliminar asignaciones previas.
+
+| Recurso / operación | ADMIN | SALES | USER |
+|---|---|---|---|
+| Products — read any | ✓ | ✓ | ✓ |
+| Products — create/update/delete any | ✓ | — | — |
+| Orders — create any | ✓ | ✓ | — |
+| Orders — create own | ✓ | — | ✓ |
+| Orders — read/update own | ✓ | ✓ | ✓ |
+| Orders — read/delete any | ✓ | — | — |
+| Customers — read/create/update own | ✓ | read | ✓ |
+| Users — read own | ✓ | ✓ | ✓ |
+| Roles, permissions, variants, inventory — any operation | ✓ | — | — |
+
+Los endpoints protegidos incluyen CRUD en `/api/products`, `/api/orders`, `/api/users`, `/api/customers`, `/api/roles`, `/api/permissions`, `/api/variants` y las consultas/actualizaciones de `/api/inventory`. Los permisos disponibles se cargan en la base con `npm run seed:rbac`; se pueden verificar en `GET /api/roles` y `GET /api/permissions` una vez que la autenticación del proyecto esté conectada.
+
+El middleware `authorize(resource, action, possession)` protege los endpoints de productos, órdenes, usuarios, clientes, roles, permisos, variantes e inventario. Un usuario sin autenticación recibe `401`; si está autenticado pero no tiene el permiso, recibe `403`. La integración requiere que el middleware de autenticación existente establezca `req.user.id`; este cambio no implementa ni modifica JWT.
+
+La ruta `GET /api/orders` requiere `orders:read:any`. Para operaciones sobre una orden individual se aceptan permisos `own` (solo si pertenece al usuario) o `any`. Así, un permiso `own` nunca permite consultar órdenes de otro usuario.
+
 ## Estructura del proyecto
 
 ```text
