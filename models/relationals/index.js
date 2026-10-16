@@ -2,6 +2,9 @@ const sequelize = require('../../config/sequelize');
 const User = require('./User');
 const Role = require('./Role');
 const Permission = require('./Permission');
+const Product = require('./Product');
+const ProductVariant = require('./ProductVariant');
+const Inventory = require('./Inventory');
 
 
 Role.hasMany(User, {
@@ -30,4 +33,10 @@ Permission.belongsToMany(Role, {
   timestamps: false
 });
 
-module.exports={sequelize,User,Role,Permission};
+Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants' });
+ProductVariant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+ProductVariant.hasOne(Inventory, { foreignKey: 'variant_id', as: 'inventory' });
+Inventory.belongsTo(ProductVariant, { foreignKey: 'variant_id', as: 'variant' });
+
+module.exports = { sequelize, User, Role, Permission, Product, ProductVariant, Inventory };
