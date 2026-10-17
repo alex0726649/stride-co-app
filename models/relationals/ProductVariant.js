@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/sequelize');
+const Inventory = require('./Inventory');
 
 const ProductVariant = sequelize.define('ProductVariant', {
   id: { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true },
@@ -11,6 +12,21 @@ const ProductVariant = sequelize.define('ProductVariant', {
 }, {
   tableName: 'product_variants',
   timestamps: true,
+  hooks: {
+    afterCreate: async (variant, options) => {
+      await Inventory.findOrCreate({
+        where: { variant_id: variant.id },
+        defaults: { stock: 0, reserved: 0 },
+        transaction: options.transaction,
+      });
+    },
+  },
+});
+
+ProductVariant.createWithInventory = async (values, options = {}) => sequelize.transaction(async (transaction) => {
+  const variant = await ProductVariant.create(values, { ...options, transaction });
+  const inventory = await Inventory.findOne({ where: { variant_id: variant.id }, transaction });
+  return { variant, inventory };
 });
 
 module.exports = ProductVariant;
