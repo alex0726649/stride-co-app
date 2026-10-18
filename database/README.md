@@ -1,11 +1,12 @@
 # Esquema relacional de catálogo e inventario
 
-## Aporte de Jenny durante el trabajo en equipo de la Actividad 4
+## Mi aporte al proyecto
 
-Como parte de la colaboración acordada por el equipo, Jenny agregó los modelos
-Sequelize y las relaciones de catálogo e inventario descritas abajo. Este es su
-aporte de base de datos al proyecto; complementa el trabajo de la actividad y no
-sustituye los requisitos de autenticación con bcrypt y JWT indicados en la guía.
+Como parte del trabajo en equipo de la Actividad 4, agregué los modelos Sequelize
+de productos, variantes e inventario, definí sus relaciones y restricciones, y
+documenté cómo comprobar las tablas en MySQL. Esta fue mi contribución de base de
+datos al proyecto. La autenticación con bcrypt y JWT corresponde a los otros
+requisitos de la actividad.
 
 Este aporte agrega los modelos Sequelize de `Product`, `ProductVariant` e `Inventory`.
 Al iniciar la aplicación, `bin/www` autentica la conexión MySQL y ejecuta
