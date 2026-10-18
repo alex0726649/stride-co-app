@@ -66,11 +66,28 @@ async function update(req, res) {
   const roleId = req.body.role_id;
 
   if (!user)return res.status(404).json({message:'User not found'});
-  let changes = {};
+  const changes = {};
   changes.first_name= name ? name: user.first_name;
   changes.last_name=lastName ? lastName:user.last_name;
   changes.email=email ? email :user.email;
   changes.role_id = roleId ? roleId : user.role_id;
+ //actividad 4 si se cambia de pw se regenera salt key
+  if (req.body.password !== undefined) {
+    if (
+        typeof req.body.password !== 'string' ||
+        !req.body.password.trim()
+    ) {
+        return res.status(400).json({
+            message: 'La contraseña no puede estar vacía'
+        });
+    }
+
+    const passwordData = await hashPassword(req.body.password);
+
+    changes.password_hash = passwordData.securePassword;
+    changes.salt_key = passwordData.saltKey;
+}
+
   await user.update(changes);
 
   res.json({ message: 'user updated', data: user });
