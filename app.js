@@ -1,22 +1,30 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');//es de node.js, permite juntas directorios con archivos y lo hace respetando las reglas de casa SO; hablamo de rutas de disco
-var cookieParser = require('cookie-parser');//cookie , pequeños datos que guarda el navegador y los puede enviar despues a la aplicacion 
+require('dotenv').config();
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');//es de node.js, permite juntas directorios con archivos y lo hace respetando las reglas de casa SO; hablamo de rutas de disco
+const cookieParser = require('cookie-parser');//cookie , pequeños datos que guarda el navegador y los puede enviar despues a la aplicacion
 //cooke-parser organiza las cookies que llegan para poder leerlas despues en nuestra aplicacion
-var logger = require('morgan');//morgan es una dependencia que registra en la terminal las solicitudes http que recibe la aplicacion
+const logger = require('morgan');//morgan es una dependencia que registra en la terminal las solicitudes http que recibe la aplicacion
+//const {expressjwt}=require('express-jwt');
+const indexRouter = require('./routes/index');// en estos estamos guardando un router, el cual es un objeto que exporta ./routes/index
+const usersRouter = require('./routes/users');
+const productsRouter = require('./routes/products');
+const rolesRouter = require('./routes/roles');
+const permissionsRouter = require('./routes/permissions');
+const inventoryRouter = require('./routes/inventory');
+const variantsRouter = require('./routes/variants');
+const ordersRouter = require('./routes/orders');
+const customersRouter = require('./routes/customers');
+const authRouter =require('./routes/auth');
 
-var indexRouter = require('./routes/index');// en estos estamos guardando un router, el cual es un objeto que exporta ./routes/index
-var usersRouter = require('./routes/users');
-var productsRouter = require('./routes/products');
-var rolesRouter = require('./routes/roles');
-var permissionsRouter = require('./routes/permissions');
-var inventoryRouter = require('./routes/inventory');
-var variantsRouter = require('./routes/variants');
-var ordersRouter = require('./routes/orders');
-var customersRouter = require('./routes/customers');
-var authRouter =require('./routes/auth');
+const app = express();// crea y devuelve la aplicacion*** importante ***
 
-var app = express();// crea y devuelve la aplicacion*** importante ***
+// Código de clase: la verificación JWT ahora está en
+// middlewares/authenticate.js y se aplica a /api/auth/me
+// desde routes/auth.js. Se comenta para evitar verificar dos veces.
+
+//const secret = process.env.JWT_SECRET;
+//app.use(expressjwt({secret,algorithms:["HS256"]}).unless({path:['/api/auth/login']}));
 
 // view engine setup
 //vistas son archivos que se usan como plantillas para generar pag html

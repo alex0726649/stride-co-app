@@ -6,7 +6,7 @@ const User=sequelize.define('User',{  //es un objeta para la base de datos
     last_name:{type:DataTypes.STRING(100),allowNull:false},
     email:{type:DataTypes.STRING(150),allowNull:false},
     active:{type:DataTypes.BOOLEAN,defaultValue:true},
-    password: {type:DataTypes.STRING(100), allowNull:false},
+    password_hash: {type:DataTypes.STRING(100), allowNull:false},
     salt_key: {type: DataTypes.STRING(100), allowNull: false}
 
 },{
@@ -17,8 +17,10 @@ const User=sequelize.define('User',{  //es un objeta para la base de datos
 });
 User.prototype.toJSON = function(){
     const values = {...this.get()};
+    delete values.password;
     delete values.password_hash;
     delete values.salt_key;
+
     return values;
 };
 module.exports = User;

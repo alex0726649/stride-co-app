@@ -223,16 +223,24 @@ En Windows PowerShell, `curl` es un alias de `Invoke-WebRequest` y no acepta est
 npm test
 ```
 
-Las pruebas usan Jest y Supertest, ejecutando peticiones reales contra la aplicación Express sin necesidad de levantar el servidor por separado. Cada recurso cuenta con su archivo en `test/`. En conjunto, la suite comprueba:
+Las pruebas usan Jest y Supertest, ejecutando peticiones HTTP locales contra la aplicación Express sin levantar el servidor por separado. `jest.config.js` carga `test/setup.js`, que sustituye las consultas de Sequelize y Mongoose por dobles de prueba. No se necesita Docker ni se escriben datos en MySQL o MongoDB; las consultas SQL reales se bloquean como protección adicional. La suite no lee el `.env` local: usa configuración exclusiva de pruebas y un costo bcrypt de 4 para reducir el tiempo de ejecución.
+
+En conjunto, la suite comprueba:
 
 - Código HTTP esperado en cada operación.
 - Estructura de la respuesta y tipo de contenido JSON.
 - Funcionamiento de los parámetros de ruta.
 - Manejo de recursos inexistentes.
 - Solicitudes incorrectas: campos faltantes, tipos inválidos, cuerpo ausente y JSON malformado.
-- Ausencia de persistencia: los datos fijos no cambian después de una escritura simulada.
-- Coherencia de referencias entre los mocks de usuarios, roles, productos, variantes, inventario, clientes y órdenes (`test/fixtures.test.js`).
-- Estructura documental de órdenes y rechazo con 400 de artículos nulos, tipos incorrectos y totales no finitos.
+- Consultas y escrituras mediante los modelos actuales de usuarios, roles, permisos, clientes y órdenes, con persistencia aislada.
+- Generación y comparación reales con bcrypt, regeneración del hash y salt al cambiar contraseña y conservación del hash al editar otros campos.
+- Exclusión de `password`, `password_hash` y `salt_key` usando la serialización real de User.
+- Login JSON y formulario, validación de credenciales y firma real de JWT.
+- Rechazo de tokens ausentes, malformados, expirados o con firma, algoritmo, issuer o audience incorrectos.
+- Consulta de `/api/auth/me` y rechazo del mismo token cuando el usuario se desactiva o deja de existir.
+- Comportamiento de productos, variantes e inventario, cuyos controladores todavía usan datos fijos. `test/fixtures.test.js` comprueba las relaciones entre esos tres recursos.
+
+Estas pruebas no verifican el esquema SQL, las restricciones de la base ni la conexión real. Esas comprobaciones se realizan por separado, por ejemplo con Postman sobre una base de desarrollo.
 
 Para ejecutar un archivo específico:
 
@@ -306,3 +314,84 @@ test(inventory): agregar pruebas de actualización
 ```
 
 La descripción se escribe en minúscula, en imperativo y sin punto final.
+
+## Autenticación
+
+La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contraseñas. Esta sección describe la implementación actual de autenticación; las referencias anteriores a la ausencia de autenticación corresponden al Entregable 1. La autorización por roles y permisos (RBAC) queda fuera de esta actividad.
+
+### Contraseñas
+
+Las funciones reutilizables de `utils/password.js` utilizan `bcrypt.genSalt`, `bcrypt.hash` y `bcrypt.compare`. Al crear un usuario o actualizar su contraseña mediante `PUT /api/users/:id`, se generan un nuevo salt y un nuevo hash, que se almacenan en las columnas `salt_key` y `password_hash` de la tabla `users`. El factor de costo se obtiene de `BCRYPT_SALT_ROUNDS`; la plantilla propone `10`.
+
+La base de datos local debe tener ambas columnas. Los usuarios anteriores sin hash necesitan una contraseña configurada antes de probar el login. La contraseña en texto plano no se almacena; `User.toJSON()` excluye `password`, `password_hash` y `salt_key` de las respuestas JSON.
+
+### Variables de entorno
+
+Copiar `.env.example` a `.env` en la raíz del proyecto y completar la configuración. En PowerShell, si todavía no existe `.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+| Variable | Uso | Valor de la plantilla |
+|---|---|---|
+| `JWT_SECRET` | Clave compartida para firmar y verificar tokens; configurar un valor privado. | Vacío, debe completarse |
+| `JWT_EXPIRES_IN` | Tiempo de expiración del token. | `15m` (15 minutos) |
+| `JWT_ISSUER` | Emisor esperado. | `stride-co` |
+| `JWT_AUDIENCE` | Destinatario esperado. | `stride-co-api` |
+| `BCRYPT_SALT_ROUNDS` | Factor de costo de bcrypt. | `10` |
+
+`dotenv` carga estas variables al iniciar la aplicación. Reiniciar el servidor después de modificar `.env`. El archivo `.env` está excluido de Git; únicamente se comparte `.env.example`, sin secretos reales.
+
+### Inicio de sesión
+
+Enviar `POST /api/auth/login` sin token, con `email` y `password`. Se acepta JSON o `application/x-www-form-urlencoded`. Ejemplo con datos ficticios de un usuario que debe existir y tener contraseña configurada:
+
+```json
+{
+  "email": "ana@example.com",
+  "password": "Ejemplo123!"
+}
+```
+
+Si el usuario existe, está activo y la contraseña coincide, el servidor responde `200`:
+
+```json
+{
+  "message": "Login succesful",
+  "data": {
+    "token": "<token generado>",
+    "token_type": "Bearer",
+    "expiresIn": "15m"
+  }
+}
+```
+
+`jsonwebtoken` firma el token con `HS256`. El identificador del usuario se incluye en `sub`, junto con los claims de emisión, expiración, emisor y destinatario; no se incluyen contraseñas, hashes ni salts. La duración de la respuesta procede de `JWT_EXPIRES_IN`.
+
+### Usuario autenticado
+
+Enviar `GET /api/auth/me` con el encabezado:
+
+```http
+Authorization: Bearer <token>
+```
+
+En Postman, seleccionar **Authorization → Bearer Token** y pegar únicamente el token obtenido en el login.
+
+La ruta utiliza `authenticate`, definido en `middlewares/authenticate.js`. Primero, `express-jwt` verifica la firma, el algoritmo `HS256`, la expiración, el emisor y el destinatario. Después, el middleware busca al usuario mediante `req.auth.sub`, comprueba que exista y esté activo, y lo asigna a `req.user`.
+
+La respuesta `200` contiene directamente los datos seguros del usuario, sin `password`, `password_hash` ni `salt_key`. Los errores de autenticación se responden con `401` en formato JSON. Un usuario eliminado o desactivado no puede utilizar un token previamente emitido, aunque todavía no haya expirado.
+
+### Estados HTTP
+
+| Prueba | Resultado esperado |
+|---|---|
+| Login con credenciales correctas y usuario activo | `200`, con token |
+| Login con email o contraseña incompletos | `400` |
+| Login con credenciales incorrectas | `401`, mensaje genérico |
+| Login con usuario inactivo | `401` |
+| `/api/auth/me` sin token | `401` |
+| `/api/auth/me` con token inválido o expirado | `401` |
+| `/api/auth/me` con token válido y usuario activo | `200` |
+| `/api/auth/me` con token de un usuario inexistente o inactivo | `401` |

@@ -1,74 +1,81 @@
+const { jest: mock } = require('@jest/globals');
 const request = require('supertest');
+const bcrypt = require('bcrypt');
 const app = require('../app');
-const valid = { first_name: 'Eva', last_name: 'Ejemplo', email: 'eva@example.com', role_id: 1 };
-const original = { id: 1, first_name: 'Ana', last_name: 'Ejemplo', email: 'ana@example.com', role_id: 1 };
+const { User } = require('../models/relationals');
 
-function expectError(res, status) {
-  expect(res.status).toBe(status);
-  expect(res.headers['content-type']).toMatch(/json/);
-  expect(res.body).toEqual({ message: expect.any(String), data: null });
-  expect(res.body.message.length).toBeGreaterThan(0);
+const profile = { id: 7, first_name: 'Ana', last_name: 'Prueba', email: 'ana@example.com', active: true, role_id: 1 };
+function user() {
+  const record = User.build({ ...profile, password_hash: 'old-hash', salt_key: 'old-salt' });
+  record.update = mock.fn().mockImplementation(async changes => { record.set(changes); return record; });
+  record.destroy = mock.fn().mockResolvedValue();
+  return record;
+}
+function safe(data) {
+  for (const key of ['password', 'password_hash', 'salt_key']) expect(data).not.toHaveProperty(key);
 }
 
-describe('/api/users', () => {
-  it('lista usuarios públicos y consulta cada ID', async () => {
-    const res = await request(app).get('/api/users');
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ message: 'Lista de usuarios', data: [original, {
-      id: 2, first_name: 'Luis', last_name: 'Ejemplo', email: 'luis@example.com', role_id: 1,
-    }] });
-    for (const user of res.body.data) {
-      const found = await request(app).get(`/api/users/${user.id}`);
-      expect(found.status).toBe(200);
-      expect(found.body).toEqual({ message: 'Usuario encontrado', data: user });
-    }
-  });
+it('consulta usuarios mediante el modelo y oculta campos sensibles', async () => {
+  const record = user();
+  User.findAll.mockResolvedValue([record]);
+  User.findByPk.mockResolvedValue(record);
+  const list = await request(app).get('/api/users').expect(200);
+  safe(list.body.data[0]);
+  const found = await request(app).get('/api/users/7').expect(200);
+  expect(found.body.data.email).toBe(profile.email);
+  safe(found.body.data);
+  expect(User.findByPk).toHaveBeenCalledWith('7', expect.any(Object));
+});
 
-  it.each(['get', 'put', 'delete'])('%s rechaza IDs inexistentes antes de validar campos', async method => {
-    for (const id of ['999', 'no-existe', '0', '-1', '1.5', '1abc']) {
-      const res = await request(app)[method](`/api/users/${id}`).send({});
-      expectError(res, 404);
-      expect(res.body.message).toBe('Usuario no encontrado');
-    }
-  });
+it('crea el usuario con hash y salt reales, sin almacenar password', async () => {
+  User.create.mockImplementation(async values => User.build({ id: 7, ...values }));
+  const res = await request(app).post('/api/users').send({ ...profile, password: 'Clave123!' }).expect(201);
+  const saved = User.create.mock.calls[0][0];
+  expect(saved).not.toHaveProperty('password');
+  expect(await bcrypt.compare('Clave123!', saved.password_hash)).toBe(true);
+  expect(await bcrypt.hash('Clave123!', saved.salt_key)).toBe(saved.password_hash);
+  expect(bcrypt.getRounds(saved.password_hash)).toBe(4);
+  safe(res.body.data);
+});
 
-  it('simula escrituras sin modificar fixtures ni reflejar campos privados o IDs enviados', async () => {
-    const before = await request(app).get('/api/users');
-    const body = { ...valid, id: 99, password: 'privado', hash: 'privado', salt: 'privado', extra: true };
-    const created = await request(app).post('/api/users').send(body);
-    expect(created.status).toBe(201);
-    expect(created.body).toEqual({ message: 'Creación de usuario simulada', data: { id: 3, ...valid } });
-    expectError(await request(app).get('/api/users/3'), 404);
-    const updated = await request(app).put('/api/users/1').send(body);
-    expect(updated.status).toBe(200);
-    expect(updated.body).toEqual({ message: 'Actualización de usuario simulada', data: { id: 1, ...valid } });
-    const deleted = await request(app).delete('/api/users/1');
-    expect(deleted.status).toBe(200);
-    expect(deleted.body).toEqual({ message: 'Eliminación de usuario simulada', data: null });
-    expect((await request(app).get('/api/users/1')).body.data).toEqual(original);
-    expect((await request(app).get('/api/users')).body).toEqual(before.body);
-  });
+it('regenera hash y salt al cambiar contraseña; conserva contraseña al editar nombre', async () => {
+  const record = user();
+  User.findByPk.mockResolvedValue(record);
+  const first = await request(app).put('/api/users/7').send({ password: 'Nueva123!' }).expect(200);
+  const firstHash = record.password_hash;
+  const firstSalt = record.salt_key;
+  safe(first.body.data);
+  await request(app).put('/api/users/7').send({ password: 'Nueva123!' }).expect(200);
+  expect(record.password_hash).not.toBe(firstHash);
+  expect(record.salt_key).not.toBe(firstSalt);
+  expect(await bcrypt.compare('Nueva123!', record.password_hash)).toBe(true);
+  const hash = record.password_hash;
+  await request(app).put('/api/users/7').send({ first_name: 'Eva' }).expect(200);
+  expect(record.password_hash).toBe(hash);
+  expect(record.first_name).toBe('Eva');
+});
 
-  describe.each(['post', 'put'])('validaciones de %s', method => {
-    const url = method === 'post' ? '/api/users' : '/api/users/1';
-    it.each(['first_name', 'last_name', 'email', 'role_id'])('requiere %s', async field => {
-      const body = { ...valid };
-      delete body[field];
-      expectError(await request(app)[method](url).send(body), 400);
-    });
-    it.each(['first_name', 'last_name', 'email'])('valida texto no vacío en %s', async field => {
-      for (const value of ['', '   ', null, 123, {}, []]) {
-        expectError(await request(app)[method](url).send({ ...valid, [field]: value }), 400);
-      }
-    });
-    it.each([0, -1, 1.5, '1', null, true, {}, [], 9007199254740992])('rechaza role_id inválido: %j', async value => {
-      expectError(await request(app)[method](url).send({ ...valid, role_id: value }), 400);
-    });
-    it('rechaza cuerpo ausente, arreglo, primitivo y JSON malformado', async () => {
-      expectError(await request(app)[method](url), 400);
-      for (const body of ['[]', 'null', '"texto"', '{']) {
-        expectError(await request(app)[method](url).set('Content-Type', 'application/json').send(body), 400);
-      }
-    });
-  });
+it.each(['', '   ', null, 123])('rechaza contraseña inválida %p al actualizar', async password => {
+  const record = user();
+  User.findByPk.mockResolvedValue(record);
+  await request(app).put('/api/users/7').send({ password }).expect(400);
+  expect(record.update).not.toHaveBeenCalled();
+});
+
+it.each(['get', 'put', 'delete'])('responde 404 para usuario inexistente: %s', async method => {
+  await request(app)[method]('/api/users/999').send({}).expect(404);
+});
+
+it('elimina mediante el modelo sin revelar el hash', async () => {
+  const record = user();
+  User.findByPk.mockResolvedValue(record);
+  const res = await request(app).delete('/api/users/7').expect(200);
+  expect(record.destroy).toHaveBeenCalledTimes(1);
+  safe(res.body.data);
+});
+
+it('toJSON elimina los tres campos sensibles incluso si password está presente', () => {
+  const record = user();
+  record.setDataValue('password', 'privada');
+  safe(record.toJSON());
 });
