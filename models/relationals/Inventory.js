@@ -9,6 +9,13 @@ const Inventory = sequelize.define('Inventory', {
 }, {
   tableName: 'inventory',
   timestamps: true,
+  validate: {
+    reservedCannotExceedStock() {
+      if (this.reserved > this.stock) {
+        throw new Error('reserved no puede ser mayor que stock');
+      }
+    },
+  },
 });
 
 module.exports = Inventory;
