@@ -31,7 +31,7 @@ it.each(['desconocido', 'inactivo', 'contraseña incorrecta'])('rechaza %s con m
   User.findOne.mockResolvedValue(reason === 'desconocido' ? null : record);
   const res = await request(app).post('/api/auth/login')
     .send({ ...credentials, password: reason === 'contraseña incorrecta' ? 'mal' : credentials.password }).expect(401);
-  expect(res.body).toEqual({ message: 'Invalid Credentials' });
+  expect(res.body).toEqual({ message: 'Invalid credentials' });
 });
 
 it.each(['json', 'form'])('login %s firma JWT verificable con los claims requeridos', async type => {
@@ -84,5 +84,11 @@ it('login seguido de /me devuelve usuario seguro; rechaza el mismo token al desa
 it('errores de consulta en authenticate producen 500 sin detalles privados', async () => {
   User.findByPk.mockRejectedValue(new Error('detalle privado'));
   const res = await request(app).get('/api/auth/me').auth(token(), { type: 'bearer' }).expect(500);
+  expect(res.body).toEqual({ message: 'Error interno del servidor', data: null });
+});
+
+it('login responde 500 JSON (no se queda colgado) si falla la consulta', async () => {
+  User.findOne.mockRejectedValue(new Error('detalle privado'));
+  const res = await request(app).post('/api/auth/login').send(credentials).expect(500);
   expect(res.body).toEqual({ message: 'Error interno del servidor', data: null });
 });
