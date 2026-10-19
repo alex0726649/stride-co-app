@@ -1,6 +1,6 @@
 // test/app.test.js
 // Prueba inicial real de la aplicación: importa app.js directamente
-// (sin levantar servidor/puerto) y usa Supertest para hacer la petición HTTP.
+// (sin ejecutar npm start) y usa Supertest con un puerto HTTP local temporal.
 
 const request = require('supertest');
 const app = require('../app');
