@@ -3,7 +3,7 @@ const { verifyPassword} = require('../utils/password');
 const jwt = require ('jsonwebtoken');
 
 
-const INVALID_CREDENTIALS = { message : "Invalid Credentials"}
+const INVALID_CREDENTIALS = { message : "Invalid credentials"}
 
 function signToken(user){
     const jwtuser = {
@@ -19,7 +19,8 @@ return jwt.sign({sub:String(user.id)},secret,jwtuser);
 
 
 
-async function login(req, res){
+async function login(req, res, next){
+  try {
     const { email, password } = req.body || {};
 
 
@@ -44,15 +45,17 @@ if (
     if (!valid ) return res.status(401).json(INVALID_CREDENTIALS);
 
     res.json({
-        message : "Login succesful",
+        message : "Login successful",
         data:{
             token:signToken(user),
             token_type:"Bearer",
             expiresIn:process.env.JWT_EXPIRES_IN
         }
     });
-
-
+  } catch (error) {
+    // Express 4 no atrapa errores de funciones async: sin esto la petición se queda colgada
+    next(error);
+  }
 }
 function me(req, res) {
     return res.json(req.user);

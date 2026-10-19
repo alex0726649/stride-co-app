@@ -358,7 +358,7 @@ Si el usuario existe, está activo y la contraseña coincide, el servidor respon
 
 ```json
 {
-  "message": "Login succesful",
+  "message": "Login successful",
   "data": {
     "token": "<token generado>",
     "token_type": "Bearer",

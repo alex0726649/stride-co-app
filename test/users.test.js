@@ -79,3 +79,28 @@ it('toJSON elimina los tres campos sensibles incluso si password está presente'
   record.setDataValue('password', 'privada');
   safe(record.toJSON());
 });
+
+it.each([undefined, '', '   ', null, 123])('rechaza crear usuario con contraseña inválida %p sin llamar a la BD', async password => {
+  const body = { ...profile };
+  if (password !== undefined) body.password = password;
+  await request(app).post('/api/users').send(body).expect(400);
+  expect(User.create).not.toHaveBeenCalled();
+});
+
+it('responde 409 si el email ya está registrado', async () => {
+  const duplicate = Object.assign(new Error('Validation error'), { name: 'SequelizeUniqueConstraintError' });
+  User.create.mockRejectedValue(duplicate);
+  await request(app).post('/api/users').send({ ...profile, password: 'Clave123!' }).expect(409);
+});
+
+it('errores de BD en usuarios responden 500 JSON sin colgarse', async () => {
+  User.create.mockRejectedValue(new Error('detalle privado'));
+  const res = await request(app).post('/api/users').send({ ...profile, password: 'Clave123!' }).expect(500);
+  expect(res.body).toEqual({ message: 'Error interno del servidor', data: null });
+  User.findAll.mockRejectedValue(new Error('detalle privado'));
+  await request(app).get('/api/users').expect(500);
+});
+
+it('el email del modelo User es único', () => {
+  expect(User.rawAttributes.email.unique).toBe(true);
+});
