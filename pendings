@@ -1,3 +1,0 @@
-Pendientes:
-    Hacer el orm de (Product, ProductVariant e Inventory) de la misma forma que se hizo con (User, Role, Permission, Role_Permission)
-    Completar el eschema de C:\stride-co-app\models\documents\order.js
