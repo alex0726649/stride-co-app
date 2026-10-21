@@ -13,7 +13,7 @@ El proyecto se desarrolla como parte del curso Desarrollo de Aplicaciones Web, a
 | **Carrera** | Ingeniería en Computación |
 | **Materia** | Desarrollo de Aplicaciones Web |
 | **Docente** | Mtro. Luis Antonio Ramírez Martínez |
-| **Actividad** | Proyecto Integrador — Entregable 1. Configuración inicial del backend |
+| **Actividad** | Proyecto Integrador — Actividad 4. Autenticación con JWT y almacenamiento seguro de contraseñas |
 
 ## Equipo
 
@@ -24,28 +24,33 @@ El proyecto se desarrolla como parte del curso Desarrollo de Aplicaciones Web, a
 | Jenny Guadalupe Quintana Sánchez | Developer |
 | Armando Velázquez Barroso | Developer |
 
-Tablero de trabajo: [GitHub Project — Sprint 1](https://github.com/users/alex0726649/projects/1/views/10)
+Tablero de trabajo: [GitHub Project](https://github.com/users/alex0726649/projects/1)
 
 ## Estado actual
 
-Este repositorio corresponde al **Entregable 1**, cuyo alcance es la arquitectura inicial del backend:
+El backend sigue esta arquitectura:
 
 ```
-HTTP Request → Express → Route → Controller → Response Mock
+HTTP Request → Express → Middleware → Route → Controller → Modelo (Sequelize / Mongoose) → MySQL / MongoDB
 ```
 
-Los ocho recursos de la API están montados y cuentan con pruebas automatizadas. Todas las respuestas provienen de datos fijos definidos en los controladores: **todavía no existe persistencia, autenticación ni autorización**, elementos que se incorporarán en los siguientes entregables.
+- **Persistencia relacional (MySQL + Sequelize):** usuarios, roles y permisos, incluida la relación N:M entre roles y permisos.
+- **Persistencia documental (MongoDB + Mongoose):** clientes y órdenes.
+- **Autenticación:** contraseñas protegidas con bcrypt, login que emite un JWT y middleware `authenticate` con `express-jwt` para las rutas protegidas. Los detalles están en [Autenticación](#autenticación).
+- **Pendiente:** productos, variantes e inventario ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se incorporará en una actividad posterior.
 
-## Objetivo
-
-Configurar la base técnica del backend con Node.js y Express, estableciendo una separación clara entre rutas y controladores, junto con control de versiones, logging, análisis estático y pruebas automatizadas.
+Las entregas anteriores se conservan en el historial de Git. El estado del Entregable 1 puede consultarse en la etiqueta `entregable-1`.
 
 ## Tecnologías utilizadas
 
 **Ejecución**
 
-- Node.js
-- Express — servidor web y enrutamiento
+- Node.js y Express — servidor web y enrutamiento
+- MySQL con Sequelize — modelo relacional
+- MongoDB con Mongoose — modelo documental
+- bcrypt — hash y salt de contraseñas
+- jsonwebtoken y express-jwt — emisión y verificación de JWT
+- dotenv — carga de variables de entorno
 - Morgan — registro de solicitudes HTTP
 - Pug — vistas del proyecto base
 - cookie-parser, debug, http-errors
@@ -56,12 +61,14 @@ Configurar la base técnica del backend con Node.js y Express, estableciendo una
 - Supertest — pruebas sobre los endpoints HTTP
 - ESLint — análisis estático de código
 - Supervisor — reinicio automático durante el desarrollo
+- Docker — bases de datos locales y despliegue
 
 ## Requisitos previos
 
 - **Node.js** `^20.19.0 || ^22.13.0 || >=24` (definido en `engines` de `package.json`)
 - **npm** (incluido con Node.js)
 - **Git**
+- **Docker**, para levantar MySQL y MongoDB en local
 
 Verifica tu versión antes de instalar:
 
@@ -79,13 +86,45 @@ npm ci
 
 Se usa `npm ci` en lugar de `npm install` porque instala exactamente las versiones registradas en `package-lock.json` sin modificar el archivo, lo que garantiza que todos los integrantes trabajen con las mismas dependencias.
 
+Después se crea el archivo `.env` a partir de la plantilla y se completa `JWT_SECRET`, como se explica en [Variables de entorno](#variables-de-entorno):
+
+```bash
+cp .env.example .env
+```
+
+## Bases de datos
+
+La conexión está definida en `config/sequelize.js` (MySQL: base `stride_co`, usuario `root`, puerto `3306`) y en `config/mongoose.js` (MongoDB: `mongodb://localhost:27017/stride_co`).
+
+La primera vez se crean los contenedores:
+
+```bash
+docker run -d --name stride-mysql \
+  -e MYSQL_ROOT_PASSWORD=abcd1234 \
+  -e MYSQL_DATABASE=stride_co \
+  -p 3306:3306 \
+  mysql:8
+
+docker run -d --name stride-mongo -p 27017:27017 mongo:7
+```
+
+En las siguientes sesiones basta con iniciarlos:
+
+```bash
+docker start stride-mysql stride-mongo
+```
+
+Al arrancar, el servidor ejecuta `sequelize.sync()` para crear las tablas que no existen y `database/ensure-constraints.js` para aplicar las restricciones de catálogo e inventario. `sync()` no modifica tablas existentes: si la base se creó antes de agregar una columna, por ejemplo `password_hash` y `salt_key` en `users`, se debe recrear la base de desarrollo o agregar la columna manualmente. El esquema relacional está documentado en [`database/README.md`](database/README.md).
+
 ## Ejecución
+
+Con ambas bases de datos en ejecución:
 
 ```bash
 npm start
 ```
 
-La aplicación queda disponible en `http://localhost:3000` y la API bajo el prefijo `/api`.
+La aplicación queda disponible en `http://localhost:3000` y la API bajo el prefijo `/api`. Si alguna de las bases no está disponible, el servidor no inicia.
 
 Para cambiar el puerto se utiliza la variable de entorno `PORT`:
 
@@ -106,7 +145,7 @@ $env:PORT=4000; npm start
 | `npm start` | Inicia el servidor con `node ./bin/www`. |
 | `npm run dev` | Inicia el servidor con Supervisor y lo reinicia al detectar cambios en el código. |
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. Debe finalizar sin errores. |
-| `npm test` | Ejecuta la suite completa de pruebas con Jest. |
+| `npm test` | Ejecuta la suite completa de pruebas con Jest. No requiere bases de datos. |
 
 ## Arquitectura
 
@@ -114,9 +153,12 @@ La aplicación mantiene una separación estricta de responsabilidades:
 
 | Capa | Ubicación | Responsabilidad |
 |---|---|---|
+| Montaje | `app.js` | Carga `.env`, registra middlewares y asocia cada router a su ruta base. |
+| Middleware | `middlewares/` | Lógica transversal reutilizable, como `authenticate`. |
 | Ruta | `routes/` | Define los endpoints y delega al controlador. No contiene lógica. |
 | Controlador | `controllers/` | Valida la solicitud, resuelve la operación y construye la respuesta. |
-| Montaje | `app.js` | Registra middlewares y asocia cada router a su ruta base. |
+| Modelo | `models/relationals/`, `models/documents/` | Define las entidades de Sequelize (MySQL) y Mongoose (MongoDB). |
+| Utilidades | `utils/` | Funciones compartidas, como el hash de contraseñas. |
 
 Cada recurso tiene un archivo en `routes/` y otro en `controllers/` con el mismo nombre.
 
@@ -135,54 +177,58 @@ Las respuestas siguen una estructura uniforme:
 }
 ```
 
-El campo `data` contiene un objeto, un arreglo o `null` según la operación. En las respuestas de error `data` siempre es `null`.
+El campo `data` contiene un objeto, un arreglo o `null` según la operación. En las respuestas de error `data` es `null`.
 
 ### Códigos de estado
 
 | Código | Situación |
 |---|---|
 | `200` | Consulta, actualización o eliminación correcta. |
-| `201` | Creación simulada correcta. |
+| `201` | Creación correcta. |
 | `400` | Cuerpo ausente, campos faltantes, tipos incorrectos o violación de unicidad. |
+| `401` | Credenciales inválidas, token ausente o inválido, o usuario inactivo. |
 | `404` | Recurso inexistente o ruta de API no registrada. |
+| `409` | Email de usuario ya registrado. |
 | `500` | Error inesperado controlado. |
 
 ### Matriz de endpoints
 
-| Recurso | Base | GET lista | GET `:id` | POST | PUT | DELETE | Estado |
+| Recurso | Base | GET lista | GET `:id` | POST | PUT | DELETE | Datos |
 |---|---|---|---|---|---|---|---|
-| Usuarios | `/api/users` | Sí | Sí | Sí | Sí | Sí | Completo |
-| Roles | `/api/roles` | Sí | Sí | Sí | Sí | Sí | Completo |
-| Permisos | `/api/permissions` | Sí | Sí | Sí | Sí | Sí | Completo |
-| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | Completo |
-| Inventario | `/api/inventory` | Sí | Sí | No | Sí | No | Completo |
-| Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | Completo |
-| Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | No | Completo |
-| Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Completo |
+| Autenticación | `/api/auth` | — | — | `/login` | — | — | MySQL |
+| Usuarios | `/api/users` | Sí | Sí | Sí | Sí | Sí | MySQL |
+| Roles | `/api/roles` | Sí | Sí | Sí | Sí | Sí | MySQL |
+| Permisos | `/api/permissions` | Sí | Sí | Sí | Sí | Sí | MySQL |
+| Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
+| Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
+| Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
+| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
+| Inventario | `/api/inventory` | Sí | Sí | No | Sí | No | Datos fijos |
 
-Las operaciones marcadas como `No` corresponden a decisiones de diseño documentadas en el contrato, no a omisiones: el inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante, y las órdenes no se eliminan porque su cancelación se representa mediante un cambio de estado dentro del historial del pedido.
+Además, `GET /api/auth/me` devuelve el usuario autenticado y requiere un token Bearer.
 
-La matriz describe las operaciones implementadas. El cierre de entrega todavía requiere la validación desde una instalación limpia de S1-13 y la revisión del GitHub Project.
+El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante.
 
-Las órdenes siguen la estructura documental de la figura 1: `totals`, `shippingAddress`, `items`, `statusHistory`, `createdAt` y `updatedAt`, además de sus identificadores y método de pago. El total se consulta en `data.totals.total` y el estado actual en la última entrada de `data.statusHistory`. Ya no se devuelven `data.total` ni `data.status` planos. PUT admite `status` en el cuerpo para simular una nueva entrada del historial; los detalles y ejemplos están en el contrato.
+El modelo actual de órdenes (`models/documents/order.js`) guarda `customerId`, que referencia al cliente, y `totals` (`subtotal`, `shipping`, `discount`, `total`), además de `createdAt` y `updatedAt`. Los artículos, la dirección de envío y el historial de estados del diagrama todavía no forman parte del esquema.
 
-El contrato completo de la API —campos, validaciones, identificadores de prueba y relaciones entre recursos— se encuentra en [`docs/api.md`](docs/api.md).
+El contrato de la API se encuentra en [`docs/api.md`](docs/api.md).
+
+### Recursos con datos fijos
+
+Productos, variantes e inventario todavía no usan sus modelos de Sequelize. Mientras se completa esa integración:
+
+- Los datos viven en memoria y las operaciones de escritura devuelven la respuesta esperada, pero **no modifican los datos**.
+- Los identificadores devueltos al crear son valores de ejemplo y no quedan registrados.
+- La unicidad se verifica solo contra los datos fijos de cada recurso.
 
 ### Peticiones de ejemplo
 
-Consultar la lista de roles:
+Crear un rol:
 
 ```bash
-curl http://localhost:3000/api/roles
-```
-
-```json
-{
-  "message": "Lista de roles",
-  "data": [
-    { "id": 1, "name": "Vendedor", "description": "Consulta y administra sus pedidos asignados" }
-  ]
-}
+curl -X POST http://localhost:3000/api/roles \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Vendedor","description":"Equipo de ventas"}'
 ```
 
 Consultar un recurso inexistente:
@@ -198,24 +244,9 @@ curl http://localhost:3000/api/roles/99
 }
 ```
 
-Crear un permiso:
-
-```bash
-curl -X POST http://localhost:3000/api/permissions \
-  -H "Content-Type: application/json" \
-  -d '{"key":"reports.read","description":"Consultar reportes de venta"}'
-```
+Los ejemplos de login y de `/api/auth/me` se encuentran en [Autenticación](#autenticación).
 
 En Windows PowerShell, `curl` es un alias de `Invoke-WebRequest` y no acepta estas opciones. Usa `curl.exe` de forma explícita.
-
-### Limitaciones de los mocks
-
-- Los datos son fijos y viven en memoria. Las operaciones de creación, actualización y eliminación devuelven la respuesta que correspondería, pero **no modifican los datos**: una consulta posterior devuelve siempre el estado original.
-- Los identificadores devueltos al crear un recurso son valores de ejemplo y no quedan registrados.
-- Las restricciones de unicidad se verifican únicamente contra los datos fijos de cada recurso.
-- No se valida la existencia de los recursos referenciados entre sí.
-- No existe autenticación ni autorización: los permisos se exponen como catálogo, sin efecto sobre el acceso.
-- Clientes y órdenes usan fechas de ejemplo fijas para que las respuestas sean reproducibles. En órdenes, envío y descuento son cero; la dirección por defecto y el responsable del historial son valores mock, no datos derivados de una sesión autenticada.
 
 ## Pruebas
 
@@ -232,13 +263,15 @@ En conjunto, la suite comprueba:
 - Funcionamiento de los parámetros de ruta.
 - Manejo de recursos inexistentes.
 - Solicitudes incorrectas: campos faltantes, tipos inválidos, cuerpo ausente y JSON malformado.
-- Consultas y escrituras mediante los modelos actuales de usuarios, roles, permisos, clientes y órdenes, con persistencia aislada.
+- Consultas y escrituras mediante los modelos de usuarios, roles, permisos, clientes y órdenes, con persistencia aislada.
+- Errores de base de datos respondidos como `500` en JSON, sin dejar la petición sin respuesta.
 - Generación y comparación reales con bcrypt, regeneración del hash y salt al cambiar contraseña y conservación del hash al editar otros campos.
+- Rechazo de contraseñas ausentes o vacías al crear usuarios, y de emails duplicados.
 - Exclusión de `password`, `password_hash` y `salt_key` usando la serialización real de User.
 - Login JSON y formulario, validación de credenciales y firma real de JWT.
 - Rechazo de tokens ausentes, malformados, expirados o con firma, algoritmo, issuer o audience incorrectos.
 - Consulta de `/api/auth/me` y rechazo del mismo token cuando el usuario se desactiva o deja de existir.
-- Comportamiento de productos, variantes e inventario, cuyos controladores todavía usan datos fijos. `test/fixtures.test.js` comprueba las relaciones entre esos tres recursos.
+- Comportamiento de productos, variantes e inventario. `test/fixtures.test.js` comprueba las relaciones entre esos tres recursos.
 
 Estas pruebas no verifican el esquema SQL, las restricciones de la base ni la conexión real. Esas comprobaciones se realizan por separado, por ejemplo con Postman sobre una base de desarrollo.
 
@@ -261,19 +294,38 @@ La configuración se encuentra en `eslint.config.js`. El comando debe finalizar 
 ```text
 stride-co-app/
 |-- bin/
-|   `-- www                  Punto de entrada del servidor
-|-- controllers/             Lógica de cada recurso
-|-- routes/                  Definición de endpoints
-|-- test/                    Pruebas con Jest y Supertest
+|   `-- www                    Punto de entrada: conecta MySQL y MongoDB e inicia el servidor
+|-- config/
+|   |-- sequelize.js           Conexión a MySQL
+|   `-- mongoose.js            Conexión a MongoDB
+|-- controllers/               Lógica de cada recurso
+|-- database/
+|   |-- schema.sql             Tablas de catálogo e inventario
+|   |-- ensure-constraints.js  Restricciones aplicadas al iniciar
+|   `-- README.md              Documentación del esquema relacional
 |-- docs/
-|   `-- api.md               Contrato de la API
-|-- public/                  Archivos estáticos
-|-- views/                   Plantillas Pug
-|-- app.js                   Middlewares y montaje de routers
+|   |-- api.md                 Contrato de la API
+|   |-- product-backlog.md     Product Backlog
+|   `-- transcripcion-cliente.md  Entrevista con el cliente (fuente de requisitos)
+|-- middlewares/
+|   `-- authenticate.js        Verificación de JWT y carga del usuario
+|-- models/
+|   |-- relationals/           Modelos de Sequelize
+|   `-- documents/             Modelos de Mongoose
+|-- routes/                    Definición de endpoints
+|-- test/                      Pruebas con Jest y Supertest
+|-- utils/
+|   |-- password.js            Hash y verificación con bcrypt
+|   `-- response.js            Respuestas de los recursos con datos fijos
+|-- public/                    Archivos estáticos
+|-- views/                     Plantillas Pug
+|-- app.js                     Middlewares y montaje de routers
+|-- .env.example               Plantilla de variables de entorno
+|-- Dockerfile                 Imagen para despliegue
 |-- eslint.config.js
+|-- jest.config.js
 |-- package.json
 |-- package-lock.json
-|-- .gitignore
 `-- README.md
 ```
 
@@ -287,7 +339,7 @@ El trabajo se organiza en tarjetas dentro del GitHub Project. Para tomar una tar
    ```bash
    git switch main
    git pull
-   git switch -c feat/s1-00-recurso
+   git switch -c feat/nombre-de-la-tarea
    ```
 
 3. Trabajar únicamente el alcance de la tarjeta. Agregar los archivos por nombre en lugar de usar `git add .`.
@@ -295,20 +347,20 @@ El trabajo se organiza en tarjetas dentro del GitHub Project. Para tomar una tar
 5. Publicar la rama y abrir el Pull Request:
 
    ```bash
-   git push -u origin feat/s1-00-recurso
+   git push -u origin feat/nombre-de-la-tarea
    gh pr create
    ```
 
-6. Solicitar revisión a un integrante distinto del autor. El merge lo realiza quien revisa.
+6. Solicitar revisión a un integrante distinto del autor. El merge lo realiza quien revisa, con la opción **Create a merge commit** para conservar los commits y su autoría.
 
 ### Convención de commits
 
 Se utiliza [Conventional Commits](https://www.conventionalcommits.org/) con el formato `tipo(ámbito): descripción`:
 
 ```
-feat(roles): agregar rutas y controladores mock
-fix(api): unificar manejo de errores JSON
-docs(readme): documentar instalación API y colaboración
+feat(auth): emitir JWT en el login
+fix(users): validar contraseña al crear usuario
+docs(readme): documentar bases de datos locales
 chore(tooling): declarar supervisor como dependencia
 test(inventory): agregar pruebas de actualización
 ```
@@ -317,7 +369,7 @@ La descripción se escribe en minúscula, en imperativo y sin punto final.
 
 ## Autenticación
 
-La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contraseñas. Esta sección describe la implementación actual de autenticación; las referencias anteriores a la ausencia de autenticación corresponden al Entregable 1. La autorización por roles y permisos (RBAC) queda fuera de esta actividad.
+La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contraseñas. La autorización por roles y permisos (RBAC) queda fuera de esta actividad.
 
 ### Contraseñas
 
