@@ -6,7 +6,8 @@
     "start": "node ./bin/www",
     "dev": "supervisor ./bin/www",
     "lint": "eslint .",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "seed:rbac": "node database/seed-rbac.js"
   },
   "dependencies": {
     "accesscontrol": "^3.1.1",
