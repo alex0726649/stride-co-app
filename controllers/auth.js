@@ -3,7 +3,7 @@ const { verifyPassword} = require('../utils/password');
 const jwt = require ('jsonwebtoken');
 
 
-const INVALID_CREDENTIALS = { message : "Invalid credentials"}
+//const INVALID_CREDENTIALS = { message : "Invalid credentials"}
 
 function signToken(user){
     const jwtuser = {
@@ -40,9 +40,9 @@ if (
 
 
     const user = await User.findOne({ where: {email} });
-    if (!user || !user.active) return res.status(401).json(INVALID_CREDENTIALS);
+    if (!user || !user.active) return res.status(401).json({message:req.__('auth.invalidCredentials')});
     const valid = await verifyPassword(password, user.password_hash);
-    if (!valid ) return res.status(401).json(INVALID_CREDENTIALS);
+    if (!valid ) return res.status(401).json({message:req.__('auth.invalidCredentials')});
 
     res.json({
         message : "Login successful",
