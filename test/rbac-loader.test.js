@@ -62,4 +62,32 @@ describe('loadRoleAccess', () => {
     expect(await loadRoleAccess(99)).toBeNull();
     expect(await loadRoleAccess(null)).toBeNull();
   });
+
+  it('deja de conceder un permiso retirado de la base de datos', async () => {
+    Role.findByPk
+      .mockResolvedValueOnce({
+        id: 2,
+        name: 'sales',
+        permissions: [
+          { key: 'products:read:any' },
+          { key: 'orders:read:own' },
+        ],
+      })
+      .mockResolvedValueOnce({
+        id: 2,
+        name: 'sales',
+        permissions: [{ key: 'products:read:any' }],
+      });
+
+    const before = await loadRoleAccess(2);
+    const after = await loadRoleAccess(2);
+
+    expect(before.accessControl.can('sales').readOwn('orders').granted)
+      .toBe(true);
+    expect(after.accessControl.can('sales').readOwn('orders').granted)
+      .toBe(false);
+    expect(after.accessControl.can('sales').readAny('products').granted)
+      .toBe(true);
+    expect(Role.findByPk).toHaveBeenCalledTimes(2);
+  });
 });
