@@ -12,3 +12,4 @@ coverage/
 *.toc
 *.fdb_latexmk
 *.synctex.gz
+/config/production.json

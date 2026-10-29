@@ -6,6 +6,9 @@ const cookieParser = require('cookie-parser');//cookie , pequeños datos que gua
 //cooke-parser organiza las cookies que llegan para poder leerlas despues en nuestra aplicacion
 const logger = require('morgan');//morgan es una dependencia que registra en la terminal las solicitudes http que recibe la aplicacion
 //const {expressjwt}=require('express-jwt');
+
+const i18n = require('./config/i18n');
+
 const indexRouter = require('./routes/index');// en estos estamos guardando un router, el cual es un objeto que exporta ./routes/index
 const usersRouter = require('./routes/users');
 const productsRouter = require('./routes/products');
@@ -16,6 +19,8 @@ const variantsRouter = require('./routes/variants');
 const ordersRouter = require('./routes/orders');
 const customersRouter = require('./routes/customers');
 const authRouter =require('./routes/auth');
+
+
 
 const app = express();// crea y devuelve la aplicacion*** importante ***
 
@@ -36,6 +41,8 @@ app.use(express.json());//middleware, lee el cuerpo de la solicitudes enviadas e
 app.use(express.urlencoded({ extended: true }));//lo mismo que el de arriba pero enviadas en url
 app.use(cookieParser());// arriba lo requerimos aqui lo activamos
 app.use(express.static(path.join(__dirname, 'public'))); // para servir doc estaticos publicos
+app.use(i18n.init);
+
 
 app.use('/', indexRouter);
 app.use('/api/auth', authRouter);
