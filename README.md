@@ -447,3 +447,60 @@ La respuesta `200` contiene directamente los datos seguros del usuario, sin `pas
 | `/api/auth/me` con token inválido o expirado | `401` |
 | `/api/auth/me` con token válido y usuario activo | `200` |
 | `/api/auth/me` con token de un usuario inexistente o inactivo | `401` |
+
+## Control de Acceso
+
+El sistema implementa control de acceso basado en roles y permisos (RBAC), con dos niveles de **posesión** por cada permiso:
+
+- **`any`** — el usuario puede operar sobre cualquier recurso de ese tipo, sin importar quién sea el dueño.
+- **`own`** — el usuario solo puede operar sobre recursos que le pertenecen a él mismo (verificado dinámicamente contra la base de datos, no solo contra el token).
+
+### Middleware `authorize`
+
+Ubicado en `middlewares/authorize.js`, se usa como una fábrica de middleware: recibe `resource`, `action` y `possession`, y devuelve el middleware real que se monta en la ruta.
+
+```javascript
+authorize(resource, action, possession)
+```
+
+- `resource` — el recurso sobre el que se actúa (ej. `'products'`, `'orders'`, `'customers'`, `'users'`).
+- `action` — una de `create`, `read`, `update`, `delete`.
+- `possession` — `'own'` o `'any'`.
+
+Ejemplo real, de `routes/products.js`:
+```javascript
+const { authenticate } = require('../middlewares/authenticate');
+const { authorize } = require('../middlewares/authorize');
+
+router.get('/', authenticate, authorize('products', 'read', 'any'), controller.list);
+router.get('/:id', authenticate, authorize('products', 'read', 'any'), controller.find);
+router.post('/', authenticate, authorize('products', 'create', 'any'), controller.create);
+router.put('/:id', authenticate, authorize('products', 'update', 'any'), controller.update);
+router.delete('/:id', authenticate, authorize('products', 'delete', 'any'), controller.destroy);
+```
+
+Todas las operaciones sobre `products` requieren el permiso `any` del rol correspondiente — es un recurso administrativo, sin lógica de propiedad individual (a diferencia de `orders` o `customers`, donde un usuario puede tener acceso `own` sobre sus propios registros).
+
+### Cómo funciona internamente
+
+1. Toma el usuario autenticado desde `req.user` (ya establecido por el middleware `authenticate`).
+2. Carga los permisos del rol del usuario mediante `loadRoleAccess(roleId)`.
+3. Verifica si el rol tiene el permiso `any` solicitado. Si lo tiene, autoriza de inmediato.
+4. Si solo tiene permiso `own`, verifica además que el usuario sea realmente el dueño del recurso específico que está solicitando (por ejemplo, que una orden le pertenezca como vendedor o cliente, revisando la base de datos — no solo el payload del token).
+5. Si ninguna de las verificaciones anteriores se cumple, responde `403 Forbidden`.
+
+### Estados HTTP relevantes
+
+| Situación | Código | Mensaje |
+|---|---|---|
+| Sin usuario autenticado (`req.user` vacío) o sin rol | 401 | `"No autorizado"` |
+| Autenticado, pero sin el permiso `any`/`own` requerido | 403 | `"Prohibido"` |
+| Autenticado con permiso `own`, pero el recurso no le pertenece | 403 | `"Prohibido"` |
+| Autenticado y con el permiso correspondiente | — | continúa a la ruta protegida |
+
+### Recursos con lógica de propiedad (`own`)
+
+El middleware verifica la propiedad real del recurso (no solo el payload del JWT) para:
+- **`users`** — un usuario solo puede operar sobre sí mismo.
+- **`customers`** — un usuario solo puede operar sobre el customer vinculado a su propio `userId`.
+- **`orders`** — un usuario puede operar sobre una orden si es el vendedor asignado (`salesPersonId`) o si la orden pertenece a un customer vinculado a su propia cuenta.
