@@ -52,8 +52,8 @@ async function ownsResource(resource, action, req, userId) {
 
   if (resource === 'orders') {
     if (action === 'create') {
-      return sameId(req.body?.salesPersonId, userId)
-        || customerBelongsToUser(req.body?.customerId, userId);
+      // Solo cuenta el customer real en la BD; nunca un salesPersonId enviado en el body.
+      return customerBelongsToUser(req.body?.customerId, userId);
     }
 
     const order = resourceId ? await Order.findById(resourceId) : null;
@@ -91,7 +91,10 @@ function authorize(resource, action, possession) {
 
     try {
       const roleAccess = await loadRoleAccess(roleId);
-      if (!roleAccess) return response(res, 403, 'Prohibido');
+      // Rol inexistente, o rol sin ningún permiso (accesscontrol no lo registra): 403.
+      if (!roleAccess || !roleAccess.accessControl.hasRole(roleAccess.roleName)) {
+        return response(res, 403, 'Prohibido');
+      }
 
       const checker = roleAccess.accessControl.can(roleAccess.roleName);
       const anyPermission = checker[`${action}Any`](resource).granted;
