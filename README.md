@@ -37,7 +37,7 @@ HTTP Request → Express → Middleware → Route → Controller → Modelo (Seq
 - **Persistencia relacional (MySQL + Sequelize):** usuarios, roles y permisos, incluida la relación N:M entre roles y permisos.
 - **Persistencia documental (MongoDB + Mongoose):** clientes y órdenes.
 - **Autenticación:** contraseñas protegidas con bcrypt, login que emite un JWT y middleware `authenticate` con `express-jwt` para las rutas protegidas. Los detalles están en [Autenticación](#autenticación).
-- **Pendiente:** productos, variantes e inventario ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se incorporará en una actividad posterior.
+- **Pendiente:** productos, variantes e inventario ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se describe en [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
 
 Las entregas anteriores se conservan en el historial de Git. El estado del Entregable 1 puede consultarse en la etiqueta `entregable-1`.
 
@@ -146,6 +146,7 @@ $env:PORT=4000; npm start
 | `npm run dev` | Inicia el servidor con Supervisor y lo reinicia al detectar cambios en el código. |
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. Debe finalizar sin errores. |
 | `npm test` | Ejecuta la suite completa de pruebas con Jest. No requiere bases de datos. |
+| `npm run seed:rbac` | Carga roles, permisos y sus relaciones (matriz RBAC) en MySQL. Ver [Carga de permisos desde la base de datos](#carga-de-permisos-desde-la-base-de-datos). |
 
 ## Arquitectura
 
@@ -369,7 +370,7 @@ La descripción se escribe en minúscula, en imperativo y sin punto final.
 
 ## Autenticación
 
-La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contraseñas. La autorización por roles y permisos (RBAC) queda fuera de esta actividad.
+La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contraseñas. La autorización por roles y permisos (RBAC) se agregó en la Tarea 6; ver [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
 
 ### Contraseñas
 
@@ -447,3 +448,175 @@ La respuesta `200` contiene directamente los datos seguros del usuario, sin `pas
 | `/api/auth/me` con token inválido o expirado | `401` |
 | `/api/auth/me` con token válido y usuario activo | `200` |
 | `/api/auth/me` con token de un usuario inexistente o inactivo | `401` |
+
+## Control de acceso basado en roles
+
+La Tarea 6 agrega autorización por roles (RBAC) sobre la autenticación JWT existente. La autenticación responde **quién eres** (`401` si no hay sesión válida); RBAC responde **qué puedes hacer** (`403` si el rol no tiene el permiso).
+
+```
+User -> Role -> Role_Permission -> Permission -> accesscontrol -> authorize() -> endpoint
+```
+
+### Roles utilizados
+
+| Rol | Quién es en Stride & Co. | Resumen |
+|---|---|---|
+| `admin` | Dueña del negocio | Acceso total a catálogo, inventario, órdenes, clientes, usuarios, roles y permisos. |
+| `sales` | Vendedor | Consulta catálogo e inventario, crea órdenes y consulta o actualiza **solo las órdenes que tiene asignadas** (`salesPersonId`). |
+| `user` | Cliente | Consulta el catálogo, crea órdenes para su propio perfil de cliente y consulta **solo sus órdenes**. |
+
+### Convención de `Permission.key`
+
+Cada permiso se identifica con `recurso:acción:alcance`:
+
+```
+orders:read:own
+  |     |    |
+  |     |    +-- alcance (possession): own | any
+  |     +------- acción (action): create | read | update | delete
+  +------------- recurso (resource): products, orders, customers, ...
+```
+
+- `any`: puede operar sobre **cualquier** recurso de ese tipo.
+- `own`: solo sobre recursos **relacionados con el usuario**. Un permiso `any` incluye al `own` correspondiente.
+
+### Permisos definidos y matriz RBAC
+
+La matriz completa son 36 permisos. Es la misma que cargan las tablas `roles`, `permissions` y `role_permission` (ver [Carga de permisos desde la base de datos](#carga-de-permisos-desde-la-base-de-datos)).
+
+| Permission.key | admin | sales | user |
+|---|:-:|:-:|:-:|
+| `products:read:any` | ✓ | ✓ | ✓ |
+| `products:create:any` | ✓ | — | — |
+| `products:update:any` | ✓ | — | — |
+| `products:delete:any` | ✓ | — | — |
+| `variants:read:any` | ✓ | ✓ | ✓ |
+| `variants:create:any` | ✓ | — | — |
+| `variants:update:any` | ✓ | — | — |
+| `variants:delete:any` | ✓ | — | — |
+| `inventory:read:any` | ✓ | ✓ | — |
+| `inventory:update:any` | ✓ | — | — |
+| `orders:create:any` | ✓ | ✓ | — |
+| `orders:create:own` | — | — | ✓ |
+| `orders:read:any` | ✓ | — | — |
+| `orders:read:own` | — | ✓ | ✓ |
+| `orders:update:any` | ✓ | — | — |
+| `orders:update:own` | — | ✓ | — |
+| `orders:delete:any` | ✓ | — | — |
+| `customers:create:any` | ✓ | — | — |
+| `customers:read:any` | ✓ | ✓ | — |
+| `customers:update:any` | ✓ | — | — |
+| `customers:delete:any` | ✓ | — | — |
+| `customers:create:own` | — | — | ✓ |
+| `customers:read:own` | — | — | ✓ |
+| `customers:update:own` | — | — | ✓ |
+| `users:create:any` | ✓ | — | — |
+| `users:read:any` | ✓ | — | — |
+| `users:update:any` | ✓ | — | — |
+| `users:delete:any` | ✓ | — | — |
+| `roles:create:any` | ✓ | — | — |
+| `roles:read:any` | ✓ | — | — |
+| `roles:update:any` | ✓ | — | — |
+| `roles:delete:any` | ✓ | — | — |
+| `permissions:create:any` | ✓ | — | — |
+| `permissions:read:any` | ✓ | — | — |
+| `permissions:update:any` | ✓ | — | — |
+| `permissions:delete:any` | ✓ | — | — |
+
+**Decisión de dominio:** a diferencia del ejemplo de la tarea, `sales` **no** tiene `orders:read:any`. La historia HU-11 (*Aislamiento de pedidos por vendedor*) exige que un vendedor solo vea y modifique sus propios pedidos y reciba `403` al abrir por URL un pedido de otro vendedor.
+
+### Qué significa "propio" (`own`)
+
+La pertenencia se comprueba contra el documento **guardado en la base de datos**, nunca contra datos enviados en el body o la URL:
+
+| Recurso | Es propio si... |
+|---|---|
+| `orders` (rol `sales`) | `order.salesPersonId === req.user.id` |
+| `orders` (rol `user`) | la orden apunta a un `customer` cuyo `userId === req.user.id` |
+| `orders` al crear (`orders:create:own`) | el `customerId` enviado corresponde a un `customer` cuyo `userId === req.user.id` |
+| `customers` | `customer.userId === req.user.id` |
+
+### Endpoints protegidos
+
+Todas estas rutas pasan primero por `authenticate` (JWT, `401`) y después por `authorize` (RBAC, `403`):
+
+| Método y ruta | Permiso requerido |
+|---|---|
+| `GET /api/products` | `products:read:any` |
+| `GET /api/products/:id` | `products:read:any` |
+| `POST /api/products` | `products:create:any` |
+| `PUT /api/products/:id` | `products:update:any` |
+| `DELETE /api/products/:id` | `products:delete:any` |
+| `GET /api/orders` | `orders:read:any` |
+| `GET /api/orders/:id` | `orders:read:own` |
+| `POST /api/orders` | `orders:create:own` |
+| `PUT /api/orders/:id` | `orders:update:own` |
+| `DELETE /api/orders/:id` | `orders:delete:any` |
+
+Uso en una ruta (`routes/orders.js`):
+
+```javascript
+router.get('/', authenticate, authorize('orders', 'read', 'any'), controller.list);
+router.get('/:id', authenticate, authorize('orders', 'read', 'own'), controller.find);
+```
+
+En las rutas que piden `own`, un rol con el permiso `any` pasa directo (por ejemplo, `admin` en `GET /api/orders/:id`); un rol que solo tiene `own` debe además ser dueño del recurso.
+
+### Ejemplo de permiso `any`
+
+`DELETE /api/products/1` requiere `products:delete:any`:
+
+| Rol | ¿Tiene `products:delete:any`? | Respuesta |
+|---|---|---|
+| `admin` | Sí | `200` |
+| `sales` | No | `403 { "message": "Prohibido", "data": null }` |
+
+### Ejemplo de permiso `own`
+
+`GET /api/orders/:id` requiere `orders:read:own`. El cliente con `id = 10` es dueño del customer `A`; el cliente `11` es dueño del customer `B`:
+
+| Usuario (rol `user`) | Orden solicitada | Comprobación en la BD | Respuesta |
+|---|---|---|---|
+| `10` | Orden del customer `A` | `A.userId (10) === 10` | `200` |
+| `10` | Orden del customer `B` | `B.userId (11) !== 10` | `403` |
+| `10` | `GET /api/orders` (todas) | `user` no tiene `orders:read:any` | `403` |
+
+### Carga de permisos desde la base de datos
+
+La **fuente de verdad es la base de datos**; el código no contiene permisos por rol.
+
+1. **Carga inicial (seed).** `database/rbac-matrix.json` describe la matriz como datos y `database/seed-rbac.js` la escribe en `roles`, `permissions` y `role_permission`. Se ejecuta a mano, una vez por base de datos:
+
+   ```bash
+   npm run seed:rbac
+   ```
+
+   El seed valida el formato de cada key, es idempotente (se puede repetir sin duplicar) y usa una transacción: si algo falla, no deja la matriz a medias. La aplicación **nunca** importa el JSON ni el seed.
+
+2. **Lectura en cada petición.** `loadRoleAccess(roleId)` en `utils/rbac.js` consulta el rol del usuario con sus permisos mediante Sequelize; la consulta une `roles`, `role_permission` y `permissions`. Cada `Permission.key` se separa en `resource`, `action` y `possession` y se convierte en un *grant* de `accesscontrol`:
+
+   ```
+   'orders:read:own'  ->  { role: 'user', resource: 'orders', action: 'read:own', attributes: '*' }
+   ```
+
+3. **Decisión.** `authorize(resource, action, possession)` en `middlewares/authorize.js` pregunta a `accesscontrol` si el rol tiene el permiso; si el alcance es `own`, además comprueba la pertenencia real del recurso. Si no se cumple, responde `403`.
+
+Como los permisos se leen en cada petición, un cambio en `role_permission` se aplica de inmediato, sin cambiar código ni reiniciar el servidor (lo comprueba `test/rbac-loader.test.js`).
+
+### Códigos de respuesta
+
+| Situación | Código | Cuerpo |
+|---|---|---|
+| Sin token, token inválido o expirado, usuario inexistente o inactivo | `401` | `message: "No autorizado"` |
+| Autenticado, pero el rol no tiene el permiso (o no tiene permisos) | `403` | `message: "Prohibido"` |
+| Autenticado con `own`, pero el recurso no le pertenece | `403` | `message: "Prohibido"` |
+| Autenticado y autorizado | — | Continúa al controller |
+
+### Pruebas de RBAC
+
+| Archivo | Qué comprueba |
+|---|---|
+| `test/rbac-loader.test.js` | Separación de keys, construcción de grants y lectura desde la BD. |
+| `test/authorize.test.js` | El middleware con `any`, `own`, `401` y `403`. |
+| `test/rbac.test.js` | `admin` borra un producto (permitido), `sales` borra un producto (`403`) y los casos `401` sin token. |
+| `test/rbac-user.test.js` | Rol `user`: lee su orden (permitido), lee la de otro (`403`), lista todas (`403`), y `own` no se puede saltar con datos del body. |

@@ -1,5 +1,23 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const app = require('../app');
+const { User, Role } = require('../models/relationals');
+
+const accessToken = jwt.sign({ sub: '7' }, process.env.JWT_SECRET, {
+  algorithm: 'HS256',
+  expiresIn: '15m',
+  issuer: process.env.JWT_ISSUER,
+  audience: process.env.JWT_AUDIENCE,
+});
+
+beforeEach(() => {
+  User.findByPk.mockResolvedValue({ id: 7, active: true, role_id: 1 });
+  Role.findByPk.mockResolvedValue({
+    id: 1,
+    name: 'admin',
+    permissions: [{ key: 'products:read:any' }],
+  });
+});
 
 const base = '/api/variants';
 const valid = { product_id: 1, sku: 'STRIDE-28-AZUL', size: '28', color: 'Azul' };
@@ -12,7 +30,9 @@ describe('/api/variants', () => {
   it('lista las variantes con referencias a productos existentes', async () => {
     const response = await request(app).get(base).expect(200).expect('Content-Type', /json/);
     expect(response.body).toEqual({ message: 'Lista de variantes', data: fixtures });
-    const products = await request(app).get('/api/products').expect(200);
+    const products = await request(app).get('/api/products')
+      .auth(accessToken, { type: 'bearer' })
+      .expect(200);
     for (const variant of response.body.data) {
       expect(products.body.data.map(product => product.id)).toContain(variant.product_id);
     }

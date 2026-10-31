@@ -1,0 +1,52 @@
+{
+  "roles": [
+    { "name": "admin", "description": "Administración: dueña del negocio, acceso total" },
+    { "name": "sales", "description": "Vendedor: gestiona los pedidos que tiene asignados" },
+    { "name": "user", "description": "Cliente: compra y consulta sus propios pedidos" }
+  ],
+  "permissions": [
+    { "key": "products:read:any",      "description": "Consultar cualquier producto",          "roles": ["admin", "sales", "user"] },
+    { "key": "products:create:any",    "description": "Crear productos",                       "roles": ["admin"] },
+    { "key": "products:update:any",    "description": "Editar cualquier producto",             "roles": ["admin"] },
+    { "key": "products:delete:any",    "description": "Eliminar cualquier producto",           "roles": ["admin"] },
+
+    { "key": "variants:read:any",      "description": "Consultar cualquier variante",          "roles": ["admin", "sales", "user"] },
+    { "key": "variants:create:any",    "description": "Crear variantes",                       "roles": ["admin"] },
+    { "key": "variants:update:any",    "description": "Editar cualquier variante",             "roles": ["admin"] },
+    { "key": "variants:delete:any",    "description": "Eliminar cualquier variante",           "roles": ["admin"] },
+
+    { "key": "inventory:read:any",     "description": "Consultar el inventario",               "roles": ["admin", "sales"] },
+    { "key": "inventory:update:any",   "description": "Ajustar el inventario",                 "roles": ["admin"] },
+
+    { "key": "orders:create:any",      "description": "Crear órdenes para cualquier cliente",  "roles": ["admin", "sales"] },
+    { "key": "orders:create:own",      "description": "Crear órdenes propias",                 "roles": ["user"] },
+    { "key": "orders:read:any",        "description": "Consultar cualquier orden",             "roles": ["admin"] },
+    { "key": "orders:read:own",        "description": "Consultar órdenes propias o asignadas", "roles": ["sales", "user"] },
+    { "key": "orders:update:any",      "description": "Editar cualquier orden",                "roles": ["admin"] },
+    { "key": "orders:update:own",      "description": "Editar órdenes asignadas",              "roles": ["sales"] },
+    { "key": "orders:delete:any",      "description": "Eliminar cualquier orden",              "roles": ["admin"] },
+
+    { "key": "customers:create:any",   "description": "Registrar cualquier cliente",           "roles": ["admin"] },
+    { "key": "customers:read:any",     "description": "Consultar cualquier cliente",           "roles": ["admin", "sales"] },
+    { "key": "customers:update:any",   "description": "Editar cualquier cliente",              "roles": ["admin"] },
+    { "key": "customers:delete:any",   "description": "Eliminar cualquier cliente",            "roles": ["admin"] },
+    { "key": "customers:create:own",   "description": "Registrar su propio perfil de cliente", "roles": ["user"] },
+    { "key": "customers:read:own",     "description": "Consultar su propio perfil de cliente", "roles": ["user"] },
+    { "key": "customers:update:own",   "description": "Editar su propio perfil de cliente",    "roles": ["user"] },
+
+    { "key": "users:create:any",       "description": "Crear usuarios",                        "roles": ["admin"] },
+    { "key": "users:read:any",         "description": "Consultar cualquier usuario",           "roles": ["admin"] },
+    { "key": "users:update:any",       "description": "Editar cualquier usuario",              "roles": ["admin"] },
+    { "key": "users:delete:any",       "description": "Eliminar cualquier usuario",            "roles": ["admin"] },
+
+    { "key": "roles:create:any",       "description": "Crear roles",                           "roles": ["admin"] },
+    { "key": "roles:read:any",         "description": "Consultar roles",                       "roles": ["admin"] },
+    { "key": "roles:update:any",       "description": "Editar roles",                          "roles": ["admin"] },
+    { "key": "roles:delete:any",       "description": "Eliminar roles",                        "roles": ["admin"] },
+
+    { "key": "permissions:create:any", "description": "Crear permisos",                        "roles": ["admin"] },
+    { "key": "permissions:read:any",   "description": "Consultar permisos",                    "roles": ["admin"] },
+    { "key": "permissions:update:any", "description": "Editar permisos",                       "roles": ["admin"] },
+    { "key": "permissions:delete:any", "description": "Eliminar permisos",                     "roles": ["admin"] }
+  ]
+}
