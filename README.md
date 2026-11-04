@@ -620,3 +620,31 @@ Como los permisos se leen en cada petición, un cambio en `role_permission` se a
 | `test/authorize.test.js` | El middleware con `any`, `own`, `401` y `403`. |
 | `test/rbac.test.js` | `admin` borra un producto (permitido), `sales` borra un producto (`403`) y los casos `401` sin token. |
 | `test/rbac-user.test.js` | Rol `user`: lee su orden (permitido), lee la de otro (`403`), lista todas (`403`), y `own` no se puede saltar con datos del body. |
+
+## Internacionalización base (S2-03)
+
+Los idiomas disponibles son español (`es`, predeterminado) e inglés (`en`).
+El orden de selección es `?lang` → `Accept-Language` → español. Una consulta
+explícita no soportada (`?lang=fr`) usa español, incluso si el header solicita inglés.
+Las variantes regionales, como `es-MX`, se resuelven al idioma base. Las cookies
+no participan en la selección. La respuesta incluye `Content-Language`.
+
+Ejemplos sin credenciales:
+
+```bash
+curl "http://localhost:3000/api/no-existe?lang=en"
+curl -H "Accept-Language: es-MX" http://localhost:3000/api/no-existe
+```
+
+Los catálogos están en `locales/es.json` y `locales/en.json`, organizados por
+recurso. Usar `req.__('recurso.clave')` en los controllers y `__('clave')` en Pug.
+Agregar cada clave simultáneamente en ambos catálogos. Para incorporar otro
+idioma, crear su catálogo con las mismas claves, registrarlo en `config/i18n.js`
+y ampliar las pruebas de detección y paridad.
+
+S2-03 cubre la detección, autenticación, errores comunes, autorización y vistas.
+Las traducciones propias de users, roles, permissions, products, variants,
+inventory, customers y orders se completan en las tarjetas S2-05 a S2-12.
+
+Ejecutar `npm test -- --runTestsByPath test/i18n.test.js` para comprobar la base;
+`npm test` conserva todas las pruebas con mocks y no requiere bases de datos.

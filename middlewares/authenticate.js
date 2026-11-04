@@ -14,7 +14,8 @@ async function loadUser(req, res, next) {
 
         if (!user || !user.active) {
             return res.status(401).json({
-                message: 'No autorizado'
+                message: req.__('errors.unauthorized'),
+                data: null
             });
         }
 
