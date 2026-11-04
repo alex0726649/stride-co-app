@@ -1,27 +1,25 @@
+const assertJwtSecret = require('../utils/assertJwtSecret');
+
 describe('Arranque del servidor', () => {
-  afterEach(() => {
-    jest.resetModules();
+  test('lanza error si falta jwt.secret (config real sin el valor)', () => {
+    const configSinSecreto = { has: () => false, get: () => undefined };
+    expect(() => assertJwtSecret(configSinSecreto)).toThrow(/jwt\.secret/);
   });
 
-  test('config.get lanza/falla si falta jwt.secret', () => {
-    jest.resetModules();
-    jest.doMock('config', () => ({
-      has: () => false,
-      get: () => { throw new Error('jwt.secret no definido'); },
-    }));
-
-    expect(() => {
-      const config = require('config');
-      if (!config.has('jwt.secret')) {
-        throw new Error('No se pudo iniciar el servidor: falta "jwt.secret"');
-      }
-    }).toThrow(/jwt.secret/);
+  test('no lanza error si jwt.secret sí está definido', () => {
+    const configConSecreto = { has: () => true, get: () => 'algun-secreto' };
+    expect(() => assertJwtSecret(configConSecreto)).not.toThrow();
   });
 
-  test('respeta PORT cuando está definido vía config (custom-environment-variables)', () => {
+  test('respeta PORT: custom-environment-variables.json mapea PORT a server.port', () => {
+    const originalPort = process.env.PORT;
+    process.env.PORT = '4321';
+    jest.resetModules();
+
     const config = require('config');
-    // En el entorno de test, server.port viene de config/test.json o default.json
-    const port = config.get('server.port');
-    expect(port).toBeDefined();
+    expect(config.get('server.port')).toBe(4321);
+
+    process.env.PORT = originalPort;
+    jest.resetModules();
   });
 });

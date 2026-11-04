@@ -5,7 +5,7 @@
  */
 
 const config = require('config');
-
+const assertJwtSecret = require('../utils/assertJwtSecret');
 /**
  * Validar que el secreto de JWT exista antes de arrancar.
  * Esto debe ir ANTES de requerir '../app', porque app.js carga las rutas y
@@ -13,6 +13,16 @@ const config = require('config');
  * config.get('jwt.secret') en cuanto se requieren. Si la validación fuera
  * posterior, el error real ocurriría antes de mostrar este mensaje claro.
  */
+try {assertJwtSecret(config);
+} catch (error) {
+  console.error(
+    error.message + '\n' +
+    'Crea config/local-development.json (copiando config/local-development.example.json) ' +
+    'y define jwt.secret con un valor propio.'
+  );
+  process.exit(1);
+}
+
 if (!config.has('jwt.secret') || !config.get('jwt.secret')) {
   console.error(
     'No se pudo iniciar el servidor: falta "jwt.secret" en la configuración.\n' +
