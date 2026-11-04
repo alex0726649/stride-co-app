@@ -1,0 +1,20 @@
+{
+  "jwt": {
+    "secret": "test-secret-not-for-production",
+    "expiresIn": "15m",
+    "issuer": "stride-co",
+    "audience": "stride-co-api"
+  },
+  "bcrypt": {
+    "saltRounds": 1
+  },
+  "db": {
+    "mysql": {
+      "host": "localhost",
+      "port": 3306,
+      "database": "stride_co_test",
+      "user": "root",
+      "password": "test"
+    }
+  }
+}
