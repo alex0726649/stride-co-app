@@ -5,17 +5,13 @@
  */
 
 const config = require('config');
-const app = require('../app');
-const debug = require('debug')('stride-co:server');
-const http = require('http');// esta herramienta ya viene en Node.js
-const { sequelize }=require ('../models/relationals');
-const ensureConstraints = require('../database/ensure-constraints');
-const connectMongo = require('../config/mongoose');
 
 /**
  * Validar que el secreto de JWT exista antes de arrancar.
- * Sin esto, cualquier petición autenticada fallaría de forma confusa en tiempo
- * de ejecución; preferimos que el servidor no arranque y avise claramente.
+ * Esto debe ir ANTES de requerir '../app', porque app.js carga las rutas y
+ * estas, a través de middlewares/authenticate.js, ya intentan leer
+ * config.get('jwt.secret') en cuanto se requieren. Si la validación fuera
+ * posterior, el error real ocurriría antes de mostrar este mensaje claro.
  */
 if (!config.has('jwt.secret') || !config.get('jwt.secret')) {
   console.error(
@@ -25,6 +21,13 @@ if (!config.has('jwt.secret') || !config.get('jwt.secret')) {
   );
   process.exit(1);
 }
+
+const app = require('../app');
+const debug = require('debug')('stride-co:server');
+const http = require('http');// esta herramienta ya viene en Node.js
+const { sequelize }=require ('../models/relationals');
+const ensureConstraints = require('../database/ensure-constraints');
+const connectMongo = require('../config/mongoose');
 
 /**
  * Get port from config (lee server.port; en producción, Render lo sobreescribe
