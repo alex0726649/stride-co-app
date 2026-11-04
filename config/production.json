@@ -1,0 +1,5 @@
+{
+  "bcrypt": {
+    "saltRounds": 12
+  }
+}

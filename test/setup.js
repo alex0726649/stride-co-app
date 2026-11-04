@@ -1,15 +1,5 @@
 const { jest: mock, beforeEach } = require('@jest/globals');
 
-// Configuración exclusiva de pruebas: no leer secretos del .env local.
-Object.assign(process.env, {
-  JWT_SECRET: 'test-only-secret-never-use-in-production',
-  JWT_EXPIRES_IN: '15m',
-  JWT_ISSUER: 'stride-co-test',
-  JWT_AUDIENCE: 'stride-co-test-api',
-  BCRYPT_SALT_ROUNDS: '4',
-});
-mock.mock('dotenv', () => ({ config: () => ({ parsed: {} }) }));
-
 // Mantener modelos/serialización reales, sustituyendo solo el acceso a SQL.
 mock.mock('../models/relationals', () => {
   const actual = mock.requireActual('../models/relationals');
