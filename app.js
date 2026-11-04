@@ -1,4 +1,4 @@
-require('dotenv').config();
+
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');//es de node.js, permite juntas directorios con archivos y lo hace respetando las reglas de casa SO; hablamo de rutas de disco
@@ -27,9 +27,6 @@ const app = express();// crea y devuelve la aplicacion*** importante ***
 // Código de clase: la verificación JWT ahora está en
 // middlewares/authenticate.js y se aplica a /api/auth/me
 // desde routes/auth.js. Se comenta para evitar verificar dos veces.
-
-//const secret = process.env.JWT_SECRET;
-//app.use(expressjwt({secret,algorithms:["HS256"]}).unless({path:['/api/auth/login']}));
 
 // view engine setup
 //vistas son archivos que se usan como plantillas para generar pag html

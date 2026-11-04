@@ -1,0 +1,10 @@
+{
+  "jwt": {
+    "secret": "REEMPLAZA CON TU PROPIO SECRETO"
+  },
+  "db": {
+    "mysql": {
+      "password": "REEMPLAZA CON TUC ONTRASEÑA MYSQL"
+    }
+  }
+}
