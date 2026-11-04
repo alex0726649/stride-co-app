@@ -10,7 +10,7 @@ function isValidPassword(password) {
   return typeof password === 'string' && password.trim() !== '';
 }
 
-// El email es UNIQUE: si ya existe, MySQL rechaza el insert/update.
+// El email es UNIQUE: si ya existe, PostgreSQL rechaza el insert/update.
 function emailTaken(error, res) {
   if (error.name !== 'SequelizeUniqueConstraintError') return false;
   res.status(409).json({ message: 'El email ya está registrado', data: null });

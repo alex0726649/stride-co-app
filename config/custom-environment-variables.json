@@ -1,5 +1,18 @@
 {
   "server": {
     "port": "PORT"
+  },
+  "db": {
+    "postgres": {
+      "host": "PGHOST",
+      "port": "PGPORT",
+      "database": "PGDATABASE",
+      "user": "PGUSER",
+      "password": "PGPASSWORD",
+      "ssl": {
+        "enabled": "DB_POSTGRES_SSL",
+        "rejectUnauthorized": "DB_POSTGRES_SSL_REJECT_UNAUTHORIZED"
+      }
+    }
   }
 }

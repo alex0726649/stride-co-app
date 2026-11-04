@@ -49,7 +49,7 @@ async function start(){
   await sequelize.authenticate();
   await sequelize.sync();
   await ensureConstraints();
-  debug('conexion a mysql generada correctamente.');
+  debug('conexion a PostgreSQL generada correctamente.');
 
   await connectMongo();
   debug('Conexion a mongodb correcta');

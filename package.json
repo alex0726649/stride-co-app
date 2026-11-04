@@ -22,7 +22,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.11.1",
     "morgan": "~1.9.1",
-    "mysql2": "^3.24.4",
+    "pg": "^8.23.1",
+    "pg-hstore": "^2.3.4",
     "pug": "2.0.0-beta11",
     "sequelize": "^6.37.8"
   },
