@@ -1,6 +1,20 @@
 {
-    "auth":{
-        "invalidCredentials":"Invalid Credentials"
-    }
-
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "notFound": "Route not found",
+    "badRequest": "Invalid request",
+    "invalidJson": "Invalid JSON body",
+    "internal": "Internal server error"
+  },
+  "auth": {
+    "invalidCredentials": "Invalid Credentials",
+    "requiredCredentials": "Email and password are required",
+    "loginSuccess": "Login successful"
+  },
+  "views": {
+    "welcome": "Welcome to %s",
+    "errorTitle": "Error",
+    "status": "Status"
+  }
 }

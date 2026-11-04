@@ -32,7 +32,7 @@ if (
 )
 {
     return res.status(400).json({
-        message: "Email y contraseña son obligatorios"
+        message: req.__('auth.requiredCredentials')
     });
 }
 
@@ -45,7 +45,7 @@ if (
     if (!valid ) return res.status(401).json({message:req.__('auth.invalidCredentials')});
 
     res.json({
-        message : "Login successful",
+        message: req.__('auth.loginSuccess'),
         data:{
             token:signToken(user),
             token_type:"Bearer",

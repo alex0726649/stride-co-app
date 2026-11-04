@@ -27,7 +27,7 @@ it.each([{}, { email: 'a' }, { password: 'b' }, { email: 42, password: 'b' },
 });
 
 describe.each([
-  ['sin cookie (español predeterminado)', null, 'credenciales invalidas'],
+  ['sin preferencia (español predeterminado)', null, 'credenciales invalidas'],
   ['español', 'es', 'credenciales invalidas'],
   ['inglés', 'en', 'Invalid Credentials'],
 ])('credenciales incorrectas: %s', (_label, language, message) => {
@@ -35,7 +35,7 @@ it.each(['desconocido', 'inactivo', 'contraseña incorrecta'])('rechaza %s con m
   record.active = reason !== 'inactivo';
   User.findOne.mockResolvedValue(reason === 'desconocido' ? null : record);
   const login = request(app).post('/api/auth/login');
-  if (language) login.set('Cookie', `lang=${language}`);
+  if (language) login.set('Accept-Language', language);
   const res = await login
     .send({ ...credentials, password: reason === 'contraseña incorrecta' ? 'mal' : credentials.password }).expect(401);
   expect(res.body).toEqual({ message });
