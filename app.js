@@ -1,4 +1,4 @@
-
+require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');//es de node.js, permite juntas directorios con archivos y lo hace respetando las reglas de casa SO; hablamo de rutas de disco

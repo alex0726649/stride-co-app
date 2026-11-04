@@ -1,15 +1,14 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const app = require('../app');
 const { User, Role } = require('../models/relationals');
 
-function createToken(userId, options = {}, secret = config.get('jwt.secret')) {
+function createToken(userId, options = {}, secret = process.env.JWT_SECRET) {
   return jwt.sign({ sub: String(userId) }, secret, {
     algorithm: 'HS256',
     expiresIn: '15m',
-    issuer: config.get('jwt.issuer'),
-    audience: config.get('jwt.audience'),
+    issuer: process.env.JWT_ISSUER,
+    audience: process.env.JWT_AUDIENCE,
     ...options,
   });
 }
