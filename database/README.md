@@ -52,3 +52,24 @@ Con PostgreSQL disponible y la aplicación iniciada, consulta las tablas desde
 El archivo [`schema.sql`](schema.sql) contiene el esquema SQL equivalente para
 catálogo e inventario. La creación automática de las tablas se realiza con
 `sequelize.sync()` al iniciar la aplicación.
+
+## Datos iniciales de demo
+
+Con PostgreSQL y MongoDB disponibles, ejecuta `npm run seed` desde la raíz.
+El comando carga la matriz RBAC, tres cuentas activas, un producto con su
+variante e inventario, y dos clientes con una orden cada uno. El usuario demo
+`user` tiene una orden propia y puede usar la otra para probar el acceso a una
+orden ajena. Puedes repetir la carga sin duplicar los datos.
+
+| Cuenta | Contraseña local de demo |
+| --- | --- |
+| `admin@stride-demo.example` | `StrideDemo-Admin-2026!` |
+| `sales@stride-demo.example` | `StrideDemo-Sales-2026!` |
+| `user@stride-demo.example` | `StrideDemo-User-2026!` |
+
+El comando usa la configuración de `NODE_ENV`. MongoDB apunta por defecto a
+`mongodb://localhost:27017/stride_co`. Para un entorno remoto, configura
+`MONGODB_URI` y las variables de PostgreSQL documentadas en el README principal.
+Con `NODE_ENV=production`, define `SEED_ADMIN_PASSWORD`, `SEED_SALES_PASSWORD` y
+`SEED_USER_PASSWORD` para crear las cuentas de demo con contraseñas propias del
+entorno. Las cuentas que ya existen conservan sus contraseñas.

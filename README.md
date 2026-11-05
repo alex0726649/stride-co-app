@@ -147,6 +147,7 @@ $env:PORT=4000; npm start
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. Debe finalizar sin errores. |
 | `npm test` | Ejecuta la suite completa de pruebas con Jest. No requiere bases de datos. |
 | `npm run seed:rbac` | Carga roles, permisos y sus relaciones (matriz RBAC) en PostgreSQL. Ver [Carga de permisos desde la base de datos](#carga-de-permisos-desde-la-base-de-datos). |
+| `npm run seed` | Carga los [datos iniciales de demo](database/README.md#datos-iniciales-de-demo) en PostgreSQL y MongoDB. |
 
 ## Arquitectura
 
