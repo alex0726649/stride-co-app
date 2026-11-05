@@ -3,8 +3,12 @@
     "secret": "REEMPLAZA CON TU PROPIO SECRETO"
   },
   "db": {
-    "mysql": {
-      "password": "REEMPLAZA CON TUC ONTRASEÑA MYSQL"
+    "postgres": {
+      "password": "REEMPLAZA CON TU CONTRASEÑA DE POSTGRESQL",
+      "ssl": {
+        "enabled": false,
+        "rejectUnauthorized": false
+      }
     }
   }
 }

@@ -1,50 +1,54 @@
 # Esquema relacional de catálogo e inventario
 
-## Mi aporte al proyecto
+La aplicación usa PostgreSQL mediante Sequelize para usuarios, roles, permisos,
+productos, variantes e inventario. `bin/www` autentica la conexión, sincroniza
+los modelos y asegura las restricciones de catálogo e inventario al iniciar.
 
-Como parte del trabajo en equipo de la Actividad 4, agregué los modelos Sequelize
-de productos, variantes e inventario, definí sus relaciones y restricciones, y
-documenté cómo comprobar las tablas en MySQL. Esta fue mi contribución de base de
-datos al proyecto. La autenticación con bcrypt y JWT corresponde a los otros
-requisitos de la actividad.
-
-Este aporte agrega los modelos Sequelize de `Product`, `ProductVariant` e `Inventory`.
-Al iniciar la aplicación, `bin/www` autentica la conexión MySQL y ejecuta
-`sequelize.sync()`, que crea las tablas declaradas por los modelos cuando todavía
-no existen. Después se agregan las restricciones que MySQL debe aplicar.
-
-## Relaciones
+## Relaciones y restricciones
 
 - Un producto puede tener muchas variantes (`products` → `product_variants`).
-- Cada variante pertenece a un producto.
-- Cada variante tiene un registro de inventario (`product_variants` → `inventory`).
-- Al crear una variante, Sequelize crea su registro de inventario inicial con stock
-  y reservado en cero.
-- `products.category_id` se almacena como texto, de acuerdo con la indicación del
-  profesor; no tiene tabla de categorías ni llave foránea.
-
-## Restricciones
-
-- El SKU de una variante es único.
-- Solo puede existir un registro de inventario por variante.
-- El precio no puede ser negativo.
-- Las unidades reservadas no pueden superar las existencias.
+- Cada variante pertenece a un producto y tiene un registro de inventario.
+- Al crear una variante, Sequelize crea su inventario inicial con stock y reservado
+  en cero.
+- `products.category_id` se almacena como texto y no tiene llave foránea.
+- El SKU es único; cada variante tiene un único registro de inventario.
+- El precio no puede ser negativo y las unidades reservadas no pueden superar el
+  stock disponible.
 - Las llaves foráneas conectan variantes con productos e inventario con variantes.
 
-Las restricciones `CHECK` requieren MySQL 8.0.16 o posterior para que el servidor
-las aplique. Los modelos también validan las reglas correspondientes en Sequelize.
+## PostgreSQL local
 
-## Comprobar las tablas en MySQL
+Instala PostgreSQL y crea la base `stride_co`. Configura las credenciales en
+`config/local-development.json`, copiando `config/local-development.example.json`
+y reemplazando el marcador de contraseña. Ese archivo local no se sube a Git.
 
-Con el servidor MySQL disponible y la aplicación iniciada correctamente, se pueden
-consultar las tablas desde un cliente MySQL conectado a la base `stride_co`:
+También puedes iniciar un servidor local con Docker:
 
-```sql
-SHOW TABLES;
-DESCRIBE products;
-DESCRIBE product_variants;
-DESCRIBE inventory;
+```bash
+docker run -d --name stride-postgres \
+  -e POSTGRES_PASSWORD=abcd1234 \
+  -e POSTGRES_DB=stride_co \
+  -p 5432:5432 \
+  postgres:16
 ```
 
-La creación automática ocurre al iniciar la aplicación; este archivo solo documenta
-el esquema y no sustituye la configuración de conexión de MySQL.
+La configuración por defecto usa host `localhost`, puerto `5432` y usuario
+`postgres`. Para una conexión remota con SSL, establece `db.postgres.ssl.enabled`
+en `true` en tu archivo local de configuración. En Render también se puede usar
+la variable `DB_POSTGRES_SSL=true`.
+
+## Comprobar las tablas
+
+Con PostgreSQL disponible y la aplicación iniciada, consulta las tablas desde
+`psql` conectado a `stride_co`:
+
+```sql
+\dt
+\d products
+\d product_variants
+\d inventory
+```
+
+El archivo [`schema.sql`](schema.sql) contiene el esquema SQL equivalente para
+catálogo e inventario. La creación automática de las tablas se realiza con
+`sequelize.sync()` al iniciar la aplicación.

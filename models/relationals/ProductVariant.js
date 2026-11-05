@@ -3,8 +3,8 @@ const sequelize = require('../../config/sequelize');
 const Inventory = require('./Inventory');
 
 const ProductVariant = sequelize.define('ProductVariant', {
-  id: { type: DataTypes.INTEGER.UNSIGNED, primaryKey: true, autoIncrement: true },
-  product_id: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  product_id: { type: DataTypes.INTEGER, allowNull: false },
   sku: { type: DataTypes.STRING(100), allowNull: false, unique: true },
   size: { type: DataTypes.STRING(30), allowNull: false },
   color: { type: DataTypes.STRING(50), allowNull: false },
