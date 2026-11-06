@@ -28,9 +28,9 @@ describe('App base', () => {
   });
 
   it('distingue una ruta desconocida de un recurso inexistente', async () => {
-    const res = await request(app).get('/api/users/999');
+    const res = await request(app).get('/api/roles/999');
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ message: 'Usuario no encontrado', data: null });
+    expect(res.body).toEqual({ message: 'Rol no encontrado', data: null });
   });
 
   it('rechaza JSON malformado sin exponer el contenido ni detalles del parser', async () => {
@@ -70,14 +70,14 @@ describe('App base', () => {
       return true;
     });
     try {
-      await request(app).get('/api/users').expect(200);
+      await request(app).get('/api/roles').expect(200);
       await request(app).get('/api/ruta-que-no-existe').expect(404);
     } finally {
       write.mockRestore();
     }
     // Quitar las secuencias ANSI del formato dev de Morgan.
     const log = stripVTControlCharacters(output.join(''));
-    expect(log).toMatch(/GET \/api\/users 200/);
+    expect(log).toMatch(/GET \/api\/roles 200/);
     expect(log).toMatch(/GET \/api\/ruta-que-no-existe 404/);
   });
 });

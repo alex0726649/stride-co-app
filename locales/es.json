@@ -16,5 +16,18 @@
     "welcome": "Bienvenido a %s",
     "errorTitle": "Error",
     "status": "Estado"
+  },
+  "users": {
+    "list": "Lista de usuarios",
+    "found": "Usuario encontrado",
+    "created": "Usuario creado",
+    "updated": "Usuario actualizado",
+    "deleted": "Usuario eliminado",
+    "notFound": "Usuario no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del usuario son inválidos",
+    "invalidPassword": "La contraseña debe ser un texto no vacío",
+    "invalidRole": "El rol indicado no es válido",
+    "emailTaken": "El email ya está registrado"
   }
 }
