@@ -6,6 +6,21 @@ const request = require('supertest');
 const app = require('../app');
 const { jest: jestMock } = require('@jest/globals');
 const { stripVTControlCharacters } = require('node:util');
+const jwt = require('jsonwebtoken');
+const config = require('config');
+const { User, Role } = require('../models/relationals');
+
+// Token de un administrador simulado para las rutas protegidas con RBAC.
+function adminToken() {
+  User.findByPk.mockResolvedValue({ id: 101, role_id: 1, active: true });
+  Role.findByPk.mockImplementation(async (id, options) => (
+    options?.attributes ? { id: 1, name: 'admin', permissions: [{ key: 'roles:read:any' }] } : null
+  ));
+  return jwt.sign({ sub: '101' }, config.get('jwt.secret'), {
+    issuer: config.get('jwt.issuer'),
+    audience: config.get('jwt.audience'),
+  });
+}
 
 describe('App base', () => {
   it('responde en la ruta raíz "/" con estado 200', async () => {
@@ -28,7 +43,7 @@ describe('App base', () => {
   });
 
   it('distingue una ruta desconocida de un recurso inexistente', async () => {
-    const res = await request(app).get('/api/roles/999');
+    const res = await request(app).get('/api/roles/999').auth(adminToken(), { type: 'bearer' });
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ message: 'Rol no encontrado', data: null });
   });
@@ -70,14 +85,14 @@ describe('App base', () => {
       return true;
     });
     try {
-      await request(app).get('/api/roles').expect(200);
+      await request(app).get('/api/roles').expect(401);
       await request(app).get('/api/ruta-que-no-existe').expect(404);
     } finally {
       write.mockRestore();
     }
     // Quitar las secuencias ANSI del formato dev de Morgan.
     const log = stripVTControlCharacters(output.join(''));
-    expect(log).toMatch(/GET \/api\/roles 200/);
+    expect(log).toMatch(/GET \/api\/roles 401/);
     expect(log).toMatch(/GET \/api\/ruta-que-no-existe 404/);
   });
 });

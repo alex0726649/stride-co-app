@@ -29,5 +29,19 @@
     "invalidPassword": "The password must be a non-empty string",
     "invalidRole": "The specified role is invalid",
     "emailTaken": "This email is already registered"
+  },
+  "roles": {
+    "list": "Role list",
+    "found": "Role found",
+    "created": "Role created",
+    "updated": "Role updated",
+    "deleted": "Role deleted",
+    "notFound": "Role not found",
+    "invalidId": "The ID must be a valid positive integer",
+    "invalidBody": "The role data is invalid",
+    "invalidName": "The role name is required and must be at most 50 characters",
+    "invalidPermissions": "permission_ids must be an array of existing permission IDs, without duplicates",
+    "nameTaken": "A role with that name already exists",
+    "inUse": "A role with assigned users cannot be deleted"
   }
 }

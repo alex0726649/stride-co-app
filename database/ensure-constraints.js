@@ -13,6 +13,8 @@ async function addConstraintIfMissing(name, table, definition) {
 }
 
 async function ensureConstraints() {
+  // Mismo nombre que genera PostgreSQL para unique: true; cubre bases creadas antes de S2-06.
+  await addConstraintIfMissing('roles_name_key', 'roles', 'UNIQUE (name)');
   await addConstraintIfMissing('chk_products_price_nonnegative', 'products', 'CHECK (price >= 0)');
   await addConstraintIfMissing('chk_inventory_stock_nonnegative', 'inventory', 'CHECK (stock >= 0)');
   await addConstraintIfMissing('chk_inventory_reserved_nonnegative', 'inventory', 'CHECK (reserved >= 0)');

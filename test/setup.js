@@ -4,7 +4,7 @@ const { jest: mock, beforeEach } = require('@jest/globals');
 mock.mock('../models/relationals', () => {
   const actual = mock.requireActual('../models/relationals');
   for (const name of ['User', 'Role', 'Permission']) {
-    for (const method of ['findAll', 'findByPk', 'findOne', 'create']) {
+    for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) {
       mock.spyOn(actual[name], method).mockReturnValue(undefined);
     }
   }
@@ -31,10 +31,11 @@ mock.mock('../models/documents', () => {
 beforeEach(() => {
   const { User, Role, Permission } = require('../models/relationals');
   for (const model of [User, Role, Permission]) {
-    for (const method of ['findAll', 'findByPk', 'findOne', 'create']) model[method].mockReset();
+    for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) model[method].mockReset();
     model.findAll.mockResolvedValue([]);
     model.findByPk.mockResolvedValue(null);
     model.findOne.mockResolvedValue(null);
+    model.count.mockResolvedValue(0);
   }
   const { Customer, Order } = require('../models/documents');
   for (const model of [Customer, Order]) {

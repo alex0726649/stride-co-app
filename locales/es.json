@@ -29,5 +29,19 @@
     "invalidPassword": "La contraseña debe ser un texto no vacío",
     "invalidRole": "El rol indicado no es válido",
     "emailTaken": "El email ya está registrado"
+  },
+  "roles": {
+    "list": "Lista de roles",
+    "found": "Rol encontrado",
+    "created": "Rol creado",
+    "updated": "Rol actualizado",
+    "deleted": "Rol eliminado",
+    "notFound": "Rol no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del rol son inválidos",
+    "invalidName": "El nombre del rol es obligatorio y debe tener máximo 50 caracteres",
+    "invalidPermissions": "permission_ids debe ser un arreglo de IDs de permisos existentes, sin repetir",
+    "nameTaken": "Ya existe un rol con ese nombre",
+    "inUse": "No se puede eliminar un rol que tiene usuarios asignados"
   }
 }
