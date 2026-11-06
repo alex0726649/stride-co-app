@@ -7,7 +7,8 @@
     "dev": "cross-env NODE_ENV=development supervisor ./bin/www",
     "lint": "eslint .",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
-    "seed:rbac": "node database/seed-rbac.js"
+    "seed:rbac": "node database/seed-rbac.js",
+    "seed": "node database/seed.js"
   },
   "dependencies": {
     "accesscontrol": "2.2.1",
