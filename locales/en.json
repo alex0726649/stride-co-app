@@ -16,5 +16,18 @@
     "welcome": "Welcome to %s",
     "errorTitle": "Error",
     "status": "Status"
+  },
+  "users": {
+    "list": "User list",
+    "found": "User found",
+    "created": "User created",
+    "updated": "User updated",
+    "deleted": "User deleted",
+    "notFound": "User not found",
+    "invalidId": "The ID must be a valid positive integer",
+    "invalidBody": "Invalid user data",
+    "invalidPassword": "The password must be a non-empty string",
+    "invalidRole": "The specified role is invalid",
+    "emailTaken": "This email is already registered"
   }
 }

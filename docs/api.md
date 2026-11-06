@@ -232,30 +232,29 @@ Los errores inesperados responderán `Error interno del servidor`, sin exponer d
 
 Este documento describe el comportamiento acordado. Su existencia no significa que los endpoints ya estén implementados.
 
-## 9. Usuarios implementados (S1-03)
+## 9. Usuarios (S2-05)
 
 `/api/users` admite GET y POST; `/api/users/:id` admite GET, PUT y DELETE.
-Los registros fijos tienen IDs 1 y 2, ambos con `role_id: 1` como referencia
-para el mock de roles. POST devuelve el ID de ejemplo 3, sin guardarlo.
+Se requiere un JWT con `users:read:any` para GET, `users:create:any` para POST,
+`users:update:any` para PUT y `users:delete:any` para DELETE. La matriz asigna
+estos permisos a `admin`.
 
-Los campos públicos son `id`, `first_name`, `last_name`, `email` y `role_id`.
-POST y PUT requieren los cuatro últimos campos: los textos deben ser cadenas
-no vacías (ni solo espacios) y `role_id` un número entero positivo seguro.
-En este sprint no se valida el formato de email ni la existencia del rol.
-Los campos adicionales se ignoran; nunca se reflejan contraseñas, hashes o salts.
-El ID del cuerpo se ignora: POST asigna 3 y PUT conserva el ID de la ruta.
-Los IDs de ruta se comparan con la representación decimal exacta del fixture.
-Un ID desconocido en PUT devuelve 404 antes de validar sus campos.
+Los usuarios se guardan en PostgreSQL y las respuestas incluyen `role`.
+POST requiere `first_name`, `last_name`, `email`, `role_id` y `password`.
+PUT acepta los mismos campos de forma parcial y conserva la contraseña si
+se omite. El rol debe existir. Un ID inválido, un cuerpo inválido o un correo
+duplicado devuelve 400. Un ID válido sin usuario devuelve 404.
+Las respuestas usan `{ message, data }` en el idioma solicitado y excluyen
+`password`, `password_hash` y `salt_key`.
 
-Ejemplo de cuerpo válido para POST o PUT:
+Ejemplo de cuerpo válido para POST:
 
 ```json
-{"first_name":"Eva","last_name":"Ejemplo","email":"eva@example.com","role_id":1}
+{"first_name":"Eva","last_name":"Ejemplo","email":"eva@example.com","role_id":1,"password":"ClaveDemo123!"}
 ```
 
-Las pruebas en `test/users.test.js` verifican éxito, errores y que ninguna
-escritura modifica los registros originales. Ejecutar `npm run lint` y
-`npm test -- --runInBand` desde la raíz del repositorio.
+Las pruebas en `test/users.test.js` simulan las consultas SQL y verifican
+acceso, validaciones, traducciones y campos públicos.
 
 ## 10. Variantes implementadas (S1-07)
 

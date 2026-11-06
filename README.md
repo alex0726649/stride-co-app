@@ -198,7 +198,7 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Recurso | Base | GET lista | GET `:id` | POST | PUT | DELETE | Datos |
 |---|---|---|---|---|---|---|---|
 | Autenticación | `/api/auth` | — | — | `/login` | — | — | PostgreSQL |
-| Usuarios | `/api/users` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
+| Usuarios | `/api/users` | `users:read:any` | `users:read:any` | `users:create:any` | `users:update:any` | `users:delete:any` | PostgreSQL |
 | Roles | `/api/roles` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
 | Permisos | `/api/permissions` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
