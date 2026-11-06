@@ -5,7 +5,7 @@ mock.mock('../models/relationals', () => {
   const actual = mock.requireActual('../models/relationals');
   for (const name of ['User', 'Role', 'Permission']) {
     for (const method of ['findAll', 'findByPk', 'findOne', 'create']) {
-      actual[name][method] = mock.fn();
+      mock.spyOn(actual[name], method).mockReturnValue(undefined);
     }
   }
   return actual;
