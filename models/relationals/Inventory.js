@@ -4,8 +4,8 @@ const sequelize = require('../../config/sequelize');
 const Inventory = sequelize.define('Inventory', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   variant_id: { type: DataTypes.INTEGER, allowNull: false, unique: true },
-  stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { min: 0 } },
-  reserved: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { min: 0 } },
+  stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { isInt: true, min: 0, max: 2_147_483_647 } },
+  reserved: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0, validate: { isInt: true, min: 0, max: 2_147_483_647 } },
 }, {
   tableName: 'inventory',
   timestamps: true,

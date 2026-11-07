@@ -43,5 +43,14 @@
     "invalidPermissions": "permission_ids debe ser un arreglo de IDs de permisos existentes, sin repetir",
     "nameTaken": "Ya existe un rol con ese nombre",
     "inUse": "No se puede eliminar un rol que tiene usuarios asignados"
+  },
+  "inventory": {
+    "list": "Lista de inventario",
+    "found": "Registro de inventario encontrado",
+    "updated": "Existencias actualizadas",
+    "notFound": "Registro de inventario no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidQuantity": "stock y reserved son obligatorios y deben ser enteros entre 0 y 2147483647",
+    "excessReserved": "reserved no puede ser mayor que stock"
   }
 }
