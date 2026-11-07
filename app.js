@@ -5,28 +5,14 @@ const path = require('path');//es de node.js, permite juntas directorios con arc
 const cookieParser = require('cookie-parser');//cookie , pequeños datos que guarda el navegador y los puede enviar despues a la aplicacion
 //cooke-parser organiza las cookies que llegan para poder leerlas despues en nuestra aplicacion
 const logger = require('morgan');//morgan es una dependencia que registra en la terminal las solicitudes http que recibe la aplicacion
-//const {expressjwt}=require('express-jwt');
 
 const i18n = require('./config/i18n');
 
-const indexRouter = require('./routes/index');// en estos estamos guardando un router, el cual es un objeto que exporta ./routes/index
-const usersRouter = require('./routes/users');
-const productsRouter = require('./routes/products');
-const rolesRouter = require('./routes/roles');
-const permissionsRouter = require('./routes/permissions');
-const inventoryRouter = require('./routes/inventory');
-const variantsRouter = require('./routes/variants');
-const ordersRouter = require('./routes/orders');
-const customersRouter = require('./routes/customers');
-const authRouter =require('./routes/auth');
-
-
+const apiRouter = require('./routes/api');
+const webRouter = require('./routes/web');
+const { healthCheck } = require('./controllers/index');
 
 const app = express();// crea y devuelve la aplicacion*** importante ***
-
-// Código de clase: la verificación JWT ahora está en
-// middlewares/authenticate.js y se aplica a /api/auth/me
-// desde routes/auth.js. Se comenta para evitar verificar dos veces.
 
 // view engine setup
 //vistas son archivos que se usan como plantillas para generar pag html
@@ -41,16 +27,9 @@ app.use(cookieParser());// arriba lo requerimos aqui lo activamos
 app.use(express.static(path.join(__dirname, 'public'))); // para servir doc estaticos publicos
 
 
-app.use('/', indexRouter);
-app.use('/api/auth', authRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/products', productsRouter);
-app.use('/api/roles', rolesRouter);
-app.use('/api/permissions', permissionsRouter);
-app.use('/api/inventory', inventoryRouter);
-app.use('/api/variants', variantsRouter);
-app.use('/api/orders', ordersRouter);
-app.use('/api/customers', customersRouter);
+app.get('/health', healthCheck);
+app.use('/api', apiRouter);
+app.use('/', webRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {   //middleware

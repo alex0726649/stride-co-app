@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/roles');
+const controller = require('../../controllers/permissions');
 
-/* GET roles listing. */
+/* GET permissions listing. */
 router.get('/', controller.list);
 
-/* GET role by id */
+/* GET permission by id */
 router.get('/:id', controller.find);
 
-/* POST role create */
+/* POST permission create */
 router.post('/', controller.create);
 
-/* PUT role to update */
+/* PUT permission to update */
 router.put('/:id', controller.update);
 
-/* DELETE role by id */
+/* DELETE permission by id */
 router.delete('/:id', controller.destroy);
 
 module.exports = router;

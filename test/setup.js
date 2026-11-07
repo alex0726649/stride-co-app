@@ -8,6 +8,7 @@ mock.mock('../models/relationals', () => {
       mock.spyOn(actual[name], method).mockReturnValue(undefined);
     }
   }
+  mock.spyOn(actual.Product, 'findAll');
   return actual;
 });
 
@@ -29,7 +30,8 @@ mock.mock('../models/documents', () => {
 });
 
 beforeEach(() => {
-  const { User, Role, Permission } = require('../models/relationals');
+  const { User, Role, Permission, Product } = require('../models/relationals');
+  Product.findAll.mockReset().mockResolvedValue([]);
   for (const model of [User, Role, Permission]) {
     for (const method of ['findAll', 'findByPk', 'findOne', 'create']) model[method].mockReset();
     model.findAll.mockResolvedValue([]);

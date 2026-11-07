@@ -4,13 +4,37 @@
 
 const request = require('supertest');
 const app = require('../app');
+const { Product } = require('../models/relationals');
 const { jest: jestMock } = require('@jest/globals');
 const { stripVTControlCharacters } = require('node:util');
 
 describe('App base', () => {
-  it('responde en la ruta raíz "/" con estado 200', async () => {
-    const res = await request(app).get('/');
-    expect(res.status).toBe(200);
+  it('renderiza los productos activos en HTML público y escapa sus datos', async () => {
+    Product.findAll.mockResolvedValue([
+      Product.build({ name: 'Stride Runner', description: '<b>Edición demo</b>', brand: 'Stride & Co', price: '1299.00' }),
+    ]);
+
+    const res = await request(app).get('/?lang=es').expect(200);
+    expect(Product.findAll).toHaveBeenCalledWith(expect.objectContaining({ where: { active: true } }));
+    expect(res.headers['content-type']).toMatch(/html/);
+    expect(res.text).toContain('<th scope="col">Precio</th>');
+    expect(res.text).toContain('<td>Stride Runner</td>');
+    expect(res.text).toContain('<td>&lt;b&gt;Edición demo&lt;/b&gt;</td>');
+    expect(res.text).toContain('<td>Stride &amp; Co</td>');
+    expect(res.text).toContain('<td>1299.00</td>');
+  });
+
+  it('usa la página de error cuando falla la consulta del catálogo', async () => {
+    Product.findAll.mockRejectedValue(new Error('Falló la consulta'));
+    const res = await request(app).get('/?lang=en').expect(500);
+    expect(res.headers['content-type']).toMatch(/html/);
+    expect(res.text).toContain('Internal server error');
+  });
+
+  it.each(['/health', '/api/health'])('conserva el estado de salud en %s', async path => {
+    const res = await request(app).get(path).expect(200);
+    expect(res.body).toEqual({ status: 'UP' });
+    expect(Product.findAll).not.toHaveBeenCalled();
   });
 
   it('responde con 404 ante una ruta de API inexistente', async () => {
@@ -46,7 +70,7 @@ describe('App base', () => {
   it('oculta los detalles de un error inesperado en producción', async () => {
     let failingApp;
     // Inyectar el fallo solo en esta instancia de prueba, sin rutas de depuración reales.
-    jestMock.doMock('../routes/index', () => function(_req, _res, next) {
+    jestMock.doMock('../routes/api', () => function(_req, _res, next) {
       next(new Error('Detalle privado del servidor'));
     });
     try {
@@ -59,7 +83,7 @@ describe('App base', () => {
       expect(res.headers['content-type']).toMatch(/json/);
       expect(res.body).toEqual({ message: 'Error interno del servidor', data: null });
     } finally {
-      jestMock.dontMock('../routes/index');
+      jestMock.dontMock('../routes/api');
     }
   });
 

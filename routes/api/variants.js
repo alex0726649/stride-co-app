@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const variants = require('../controllers/variants');
+const variants = require('../../controllers/variants');
 
 router.get('/', variants.list);
 router.get('/:id', variants.find);

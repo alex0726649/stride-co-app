@@ -17,6 +17,14 @@
     "errorTitle": "Error",
     "status": "Status"
   },
+  "products": {
+    "catalog": "Product catalog",
+    "name": "Name",
+    "description": "Description",
+    "brand": "Brand",
+    "price": "Price",
+    "empty": "There are currently no products in the catalog."
+  },
   "users": {
     "list": "User list",
     "found": "User found",
