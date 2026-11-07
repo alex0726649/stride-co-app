@@ -52,5 +52,18 @@
     "invalidId": "ID must be a valid positive integer",
     "invalidQuantity": "stock and reserved are required and must be integers between 0 and 2147483647",
     "excessReserved": "reserved cannot exceed stock"
+  },
+  "permissions": {
+    "list": "Permission list",
+    "found": "Permission found",
+    "created": "Permission created",
+    "updated": "Permission updated",
+    "deleted": "Permission deleted",
+    "notFound": "Permission not found",
+    "invalidId": "The ID must be a valid positive integer",
+    "invalidBody": "The permission data is invalid",
+    "invalidKey": "The key must follow the resource:action:possession format, for example orders:read:own",
+    "keyTaken": "A permission with that key already exists",
+    "inUse": "A permission assigned to roles cannot be deleted; remove it from those roles first"
   }
 }

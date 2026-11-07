@@ -199,8 +199,8 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 |---|---|---|---|---|---|---|---|
 | Autenticación | `/api/auth` | — | — | `/login` | — | — | PostgreSQL |
 | Usuarios | `/api/users` | `users:read:any` | `users:read:any` | `users:create:any` | `users:update:any` | `users:delete:any` | PostgreSQL |
-| Roles | `/api/roles` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
-| Permisos | `/api/permissions` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
+| Roles | `/api/roles` | `roles:read:any` | `roles:read:any` | `roles:create:any` | `roles:update:any` | `roles:delete:any` | PostgreSQL |
+| Permisos | `/api/permissions` | `permissions:read:any` | `permissions:read:any` | `permissions:create:any` | `permissions:update:any` | `permissions:delete:any` | PostgreSQL |
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
@@ -208,6 +208,8 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Inventario | `/api/inventory` | `inventory:read:any` | `inventory:read:any` | — | `inventory:update:any` | — | PostgreSQL |
 
 Además, `GET /api/auth/me` devuelve el usuario autenticado y requiere un token Bearer.
+
+La `key` de un permiso debe seguir el formato `recurso:acción:alcance` (por ejemplo `orders:read:own`) y no puede repetirse. Un permiso asignado a roles no se puede eliminar: primero se retira del rol con `PUT /api/roles/:id`. Del mismo modo, un rol con usuarios asignados no se puede eliminar.
 
 El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante. Para ajustar existencias, `PUT /api/inventory/:id` requiere ambos campos, `stock` y `reserved`, como enteros no negativos con `reserved <= stock`.
 
