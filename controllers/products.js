@@ -1,76 +1,94 @@
 const response = require('../utils/response');
+const { Product } = require('../models/relationals');
 
-const products = Object.freeze([
-  Object.freeze({
-    id: 1,
-    category_id: 101,
-    name: 'Tenis Deportivos Stride',
-    description: 'Calzado ergonómico de alta resistencia para corredores urbanos.',
-    brand: 'Stride & Co.',
-    price: 1299.00,
-    active: true
-  }),
-]);
+const ID_FORMAT = /^[1-9]\d*$/;
 
-function findProduct(id) {
-  return products.find(p => String(p.id) === id);
-}
-
-function validate(body) {
+function validate(req, body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return 'El cuerpo debe ser un objeto JSON';
+    return req.__('products.invalidBody');
   }
   for (const field of ['name', 'description', 'brand']) {
     if (typeof body[field] !== 'string' || !body[field].trim()) {
-      return `El ${field} es obligatorio y debe ser un texto no vacío`;
+      return req.__('products.invalidBody');
     }
   }
   if (typeof body.price !== 'number' || body.price < 0) {
-    return 'El price debe ser un número mayor o igual a cero';
+    return req.__('products.invalidPrice');
   }
   return null;
 }
 
-function publicProduct(id, body) {
-  return {
-    id,
-    category_id: body.category_id || 1,
-    name: body.name,
-    description: body.description,
-    brand: body.brand,
-    price: body.price,
-    active: body.active !== undefined ? body.active : true
-  };
+async function list(req, res, next) {
+  try {
+    const products = await Product.findAll({ include: 'variants' });
+    return response.success(res, req.__('products.list'), products);
+  } catch (error) {
+    next(error);
+  }
 }
 
-function list(req, res) {
-  // Ajustado a "GET products" para que pasen las pruebas del equipo
-  return response.success(res, 'GET products', products);
+async function find(req, res, next) {
+  try {
+    if (!ID_FORMAT.test(req.params.id)) {
+      return response.badRequest(res, req.__('products.invalidId'));
+    }
+    const product = await Product.findByPk(req.params.id, { include: 'variants' });
+    if (!product) return response.notFound(res, req.__('products.notFound'));
+    return response.success(res, req.__('products.found'), product);
+  } catch (error) {
+    next(error);
+  }
 }
 
-function find(req, res) {
-  const product = findProduct(req.params.id);
-  if (!product) return response.notFound(res, 'Producto no encontrado');
-  return response.success(res, 'Producto encontrado', product);
+async function create(req, res, next) {
+  try {
+    const error = validate(req, req.body);
+    if (error) return response.badRequest(res, error);
+
+    const product = await Product.create(req.body);
+    return response.created(res, req.__('products.created'), product);
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return response.badRequest(res, req.__('products.invalidBody'));
+    }
+    next(error);
+  }
 }
 
-function create(req, res) {
-  const error = validate(req.body);
-  if (error) return response.badRequest(res, error);
-  return response.created(res, 'Creación de producto simulada', publicProduct(2, req.body));
+async function update(req, res, next) {
+  try {
+    if (!ID_FORMAT.test(req.params.id)) {
+      return response.badRequest(res, req.__('products.invalidId'));
+    }
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return response.notFound(res, req.__('products.notFound'));
+
+    const error = validate(req, req.body);
+    if (error) return response.badRequest(res, error);
+
+    await product.update(req.body);
+    return response.success(res, req.__('products.updated'), product);
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError') {
+      return response.badRequest(res, req.__('products.invalidBody'));
+    }
+    next(error);
+  }
 }
 
-function update(req, res) {
-  const product = findProduct(req.params.id);
-  if (!product) return response.notFound(res, 'Producto no encontrado');
-  const error = validate(req.body);
-  if (error) return response.badRequest(res, error);
-  return response.success(res, 'Actualización de producto simulada', publicProduct(product.id, req.body));
-}
+async function destroy(req, res, next) {
+  try {
+    if (!ID_FORMAT.test(req.params.id)) {
+      return response.badRequest(res, req.__('products.invalidId'));
+    }
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return response.notFound(res, req.__('products.notFound'));
 
-function destroy(req, res) {
-  if (!findProduct(req.params.id)) return response.notFound(res, 'Producto no encontrado');
-  return response.success(res, 'Eliminación de producto simulada', null);
+    await product.destroy();
+    return response.success(res, req.__('products.deleted'), null);
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = { list, find, create, update, destroy };

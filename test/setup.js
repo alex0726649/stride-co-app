@@ -3,7 +3,7 @@ const { jest: mock, beforeEach } = require('@jest/globals');
 // Mantener modelos/serialización reales, sustituyendo solo el acceso a SQL.
 mock.mock('../models/relationals', () => {
   const actual = mock.requireActual('../models/relationals');
-  for (const name of ['User', 'Role', 'Permission']) {
+  for (const name of ['User', 'Role', 'Permission', 'Product']) {
     for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) {
       mock.spyOn(actual[name], method).mockReturnValue(undefined);
     }
@@ -29,8 +29,8 @@ mock.mock('../models/documents', () => {
 });
 
 beforeEach(() => {
-  const { User, Role, Permission } = require('../models/relationals');
-  for (const model of [User, Role, Permission]) {
+  const { User, Role, Permission, Product } = require('../models/relationals');
+  for (const model of [User, Role, Permission, Product]) {
     for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) model[method].mockReset();
     model.findAll.mockResolvedValue([]);
     model.findByPk.mockResolvedValue(null);

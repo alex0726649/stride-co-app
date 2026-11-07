@@ -2,7 +2,7 @@ const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const app = require('../app');
-const { User, Role } = require('../models/relationals');
+const { User, Role, Product } = require('../models/relationals');
 
 const accessToken = jwt.sign({ sub: '7' }, config.get('jwt.secret'), {
   algorithm: 'HS256',
@@ -18,6 +18,11 @@ beforeEach(() => {
     name: 'admin',
     permissions: [{ key: 'products:read:any' }],
   });
+  // products ya persiste con Sequelize; se expone el producto id 1 que
+  // referencian las variantes, para validar la coherencia de referencias.
+  Product.findAll.mockResolvedValue([
+    { id: 1, name: 'Tenis Stride', description: 'Producto de prueba', brand: 'Stride & Co.', price: 1299, active: true, variants: [] },
+  ]);
 });
 
 it('mantiene referencias coherentes en los recursos que todavía usan datos fijos', async () => {

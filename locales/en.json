@@ -65,5 +65,16 @@
     "invalidKey": "The key must follow the resource:action:possession format, for example orders:read:own",
     "keyTaken": "A permission with that key already exists",
     "inUse": "A permission assigned to roles cannot be deleted; remove it from those roles first"
+  },
+  "products": {
+    "list": "Product list",
+    "found": "Product found",
+    "created": "Product created",
+    "updated": "Product updated",
+    "deleted": "Product deleted",
+    "notFound": "Product not found",
+    "invalidId": "The ID must be a valid positive integer",
+    "invalidBody": "Invalid product data: name, description and brand are required",
+    "invalidPrice": "The price must be a number greater than or equal to zero"
   }
 }
