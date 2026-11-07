@@ -157,6 +157,42 @@ describe('/api/products', () => {
     expectError(res, 404);
   });
 
+  it('ignora el id enviado por el cliente al crear (solo campos editables)', async () => {
+    Product.create.mockResolvedValue({ id: 2, ...validProduct, active: true });
+
+    await asAdmin('post', '/api/products').send({ ...validProduct, id: 999 });
+
+    expect(Product.create).toHaveBeenCalledWith(validProduct);
+    expect(Product.create.mock.calls[0][0]).not.toHaveProperty('id');
+  });
+
+  it('devuelve 400 si el ID excede el máximo entero (2147483648)', async () => {
+    const res = await asAdmin('get', '/api/products/2147483648');
+    expectError(res, 400);
+    expect(Product.findByPk).not.toHaveBeenCalled();
+  });
+
+  it('devuelve 400 si el name excede 150 caracteres', async () => {
+    const res = await asAdmin('post', '/api/products').send({ ...validProduct, name: 'x'.repeat(151) });
+    expectError(res, 400);
+    expect(Product.create).not.toHaveBeenCalled();
+  });
+
+  it('devuelve 400 si el price excede el máximo de la columna', async () => {
+    const res = await asAdmin('post', '/api/products').send({ ...validProduct, price: 100000000 });
+    expectError(res, 400);
+    expect(Product.create).not.toHaveBeenCalled();
+  });
+
+  it('devuelve 400 al eliminar un producto con variantes asociadas', async () => {
+    const instance = { ...mockProductRow, variants: [{ id: 1 }], destroy: mock.fn() };
+    Product.findByPk.mockResolvedValue(instance);
+
+    const res = await asAdmin('delete', '/api/products/1');
+    expectError(res, 400);
+    expect(instance.destroy).not.toHaveBeenCalled();
+  });
+
   it('devuelve 401 sin token', async () => {
     const res = await request(app).get('/api/products');
     expectAuthError(res, 401);

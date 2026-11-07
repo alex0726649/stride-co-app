@@ -75,6 +75,7 @@
     "notFound": "Product not found",
     "invalidId": "The ID must be a valid positive integer",
     "invalidBody": "Invalid product data: name, description and brand are required",
-    "invalidPrice": "The price must be a number greater than or equal to zero"
+    "invalidPrice": "The price must be a number greater than or equal to zero",
+    "inUse": "A product with associated variants cannot be deleted; remove its variants first"
   }
 }

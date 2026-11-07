@@ -75,6 +75,7 @@
     "notFound": "Producto no encontrado",
     "invalidId": "El ID debe ser un entero positivo válido",
     "invalidBody": "Los datos del producto son inválidos: name, description y brand son obligatorios",
-    "invalidPrice": "El price debe ser un número mayor o igual a cero"
+    "invalidPrice": "El price debe ser un número mayor o igual a cero",
+    "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
   }
 }
