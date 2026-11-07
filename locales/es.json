@@ -65,5 +65,17 @@
     "invalidKey": "La key debe tener el formato recurso:acción:alcance, por ejemplo orders:read:own",
     "keyTaken": "Ya existe un permiso con esa key",
     "inUse": "No se puede eliminar un permiso asignado a roles; primero retíralo de esos roles"
+  },
+  "products": {
+    "list": "Lista de productos",
+    "found": "Producto encontrado",
+    "created": "Producto creado",
+    "updated": "Producto actualizado",
+    "deleted": "Producto eliminado",
+    "notFound": "Producto no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del producto son inválidos: name, description y brand son obligatorios",
+    "invalidPrice": "El price debe ser un número mayor o igual a cero",
+    "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
   }
 }
