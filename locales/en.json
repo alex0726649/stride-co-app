@@ -43,5 +43,14 @@
     "invalidPermissions": "permission_ids must be an array of existing permission IDs, without duplicates",
     "nameTaken": "A role with that name already exists",
     "inUse": "A role with assigned users cannot be deleted"
+  },
+  "inventory": {
+    "list": "Inventory list",
+    "found": "Inventory record found",
+    "updated": "Stock updated",
+    "notFound": "Inventory record not found",
+    "invalidId": "ID must be a valid positive integer",
+    "invalidQuantity": "stock and reserved are required and must be integers between 0 and 2147483647",
+    "excessReserved": "reserved cannot exceed stock"
   }
 }
