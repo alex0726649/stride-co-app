@@ -37,7 +37,7 @@ HTTP Request → Express → Middleware → Route → Controller → Modelo (Seq
 - **Persistencia relacional (PostgreSQL + Sequelize):** usuarios, roles y permisos, incluida la relación N:M entre roles y permisos.
 - **Persistencia documental (MongoDB + Mongoose):** clientes y órdenes.
 - **Autenticación:** contraseñas protegidas con bcrypt, login que emite un JWT y middleware `authenticate` con `express-jwt` para las rutas protegidas. Los detalles están en [Autenticación](#autenticación).
-- **Pendiente:** productos, variantes e inventario ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se describe en [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
+- **Pendiente:** productos y variantes ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se describe en [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
 
 Las entregas anteriores se conservan en el historial de Git. El estado del Entregable 1 puede consultarse en la etiqueta `entregable-1`.
 
@@ -205,11 +205,11 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
 | Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
-| Inventario | `/api/inventory` | Sí | Sí | No | Sí | No | Datos fijos |
+| Inventario | `/api/inventory` | `inventory:read:any` | `inventory:read:any` | — | `inventory:update:any` | — | PostgreSQL |
 
 Además, `GET /api/auth/me` devuelve el usuario autenticado y requiere un token Bearer.
 
-El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante.
+El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante. Para ajustar existencias, `PUT /api/inventory/:id` requiere ambos campos, `stock` y `reserved`, como enteros no negativos con `reserved <= stock`.
 
 El modelo actual de órdenes (`models/documents/order.js`) guarda `customerId`, que referencia al cliente, y `totals` (`subtotal`, `shipping`, `discount`, `total`), además de `createdAt` y `updatedAt`. Los artículos, la dirección de envío y el historial de estados del diagrama todavía no forman parte del esquema.
 
@@ -217,7 +217,7 @@ El contrato de la API se encuentra en [`docs/api.md`](docs/api.md).
 
 ### Recursos con datos fijos
 
-Productos, variantes e inventario todavía no usan sus modelos de Sequelize. Mientras se completa esa integración:
+Productos y variantes todavía no usan sus modelos de Sequelize. Mientras se completa esa integración:
 
 - Los datos viven en memoria y las operaciones de escritura devuelven la respuesta esperada, pero **no modifican los datos**.
 - Los identificadores devueltos al crear son valores de ejemplo y no quedan registrados.
@@ -273,7 +273,7 @@ En conjunto, la suite comprueba:
 - Login JSON y formulario, validación de credenciales y firma real de JWT.
 - Rechazo de tokens ausentes, malformados, expirados o con firma, algoritmo, issuer o audience incorrectos.
 - Consulta de `/api/auth/me` y rechazo del mismo token cuando el usuario se desactiva o deja de existir.
-- Comportamiento de productos, variantes e inventario. `test/fixtures.test.js` comprueba las relaciones entre esos tres recursos.
+- Comportamiento de productos, variantes e inventario. `test/fixtures.test.js` comprueba la relación entre productos y variantes simulados, y `test/inventory.test.js` verifica las operaciones de inventario con mocks de Sequelize.
 
 Estas pruebas no verifican el esquema SQL, las restricciones de la base ni la conexión real. Esas comprobaciones se realizan por separado, por ejemplo con Postman sobre una base de desarrollo.
 
