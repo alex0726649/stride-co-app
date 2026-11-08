@@ -6,7 +6,7 @@ const DEMO_ORDERS = [
   { customerRole: 'admin', customerId: '674000000000000000020402', orderId: '674000000000000000020412' },
 ];
 
-async function seedMongo(users) {
+async function seedMongo(users, demoProductId) {
   const now = new Date();
   const dates = { createdAt: now, updatedAt: now };
   const options = { upsert: true, runValidators: true, timestamps: false };
@@ -23,6 +23,9 @@ async function seedMongo(users) {
       $set: { customerId, salesPersonId },
       $setOnInsert: {
         ...dates,
+        paymentMethod: 'efectivo',
+        items: [{ productId: demoProductId, quantity: 1, unitPrice: 1299 }],
+        status: 'Pendiente de pago',
         totals: { subtotal: 1299, shipping: 0, discount: 0, total: 1299 },
       },
     }, options);

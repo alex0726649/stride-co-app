@@ -202,7 +202,7 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Roles | `/api/roles` | `roles:read:any` | `roles:read:any` | `roles:create:any` | `roles:update:any` | `roles:delete:any` | PostgreSQL |
 | Permisos | `/api/permissions` | `permissions:read:any` | `permissions:read:any` | `permissions:create:any` | `permissions:update:any` | `permissions:delete:any` | PostgreSQL |
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
-| Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
+| Órdenes | `/api/orders` | `orders:read:any` | `orders:read:own` o `any` | `orders:create:own` o `any` | `orders:update:own` o `any` | `orders:delete:any` | MongoDB |
 | Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
 | Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
 | Inventario | `/api/inventory` | `inventory:read:any` | `inventory:read:any` | — | `inventory:update:any` | — | PostgreSQL |
@@ -213,7 +213,7 @@ La `key` de un permiso debe seguir el formato `recurso:acción:alcance` (por eje
 
 El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante. Para ajustar existencias, `PUT /api/inventory/:id` requiere ambos campos, `stock` y `reserved`, como enteros no negativos con `reserved <= stock`.
 
-El modelo actual de órdenes (`models/documents/order.js`) guarda `customerId`, que referencia al cliente, y `totals` (`subtotal`, `shipping`, `discount`, `total`), además de `createdAt` y `updatedAt`. Los artículos, la dirección de envío y el historial de estados del diagrama todavía no forman parte del esquema.
+Las órdenes guardan el cliente, vendedor, método de pago, artículos, estado y totales en MongoDB. Para crear una orden, envía `customerId`, `paymentMethod` (`efectivo` o `transferencia`) y al menos un artículo con `productId`, `quantity` y `unitPrice`. El estado inicial por defecto es `Pendiente de pago`. También se admiten `Pagado` y `Cancelado`. El servidor calcula el subtotal al recibir artículos y las consultas incluyen los datos del cliente.
 
 El contrato de la API se encuentra en [`docs/api.md`](docs/api.md).
 
