@@ -1,59 +1,90 @@
-const { Inventory } = require('../models/relationals');
-const response = require('../utils/response');
+// controllers/inventory.js
+// Recurso: Inventario — operaciones acordadas: listar, consultar por ID y
+// actualizar existencias. Sin creación ni eliminación (ver docs/api.md, sección 3).
+// Datos mock fijos: las escrituras se simulan y no modifican el arreglo (docs/api.md, sección 1).
 
-const MAX_POSTGRES_INTEGER = 2_147_483_647;
-const inventoryFields = ['id', 'variant_id', 'stock', 'reserved'];
+const inventoryRecords = [
+{ id: 1, variant_id: 1, stock: 20, reserved: 0 },
+{ id: 2, variant_id: 2, stock: 15, reserved: 3 },
+];
 
-function isValidId(id) {
-  return /^[1-9]\d*$/.test(id) && Number(id) <= MAX_POSTGRES_INTEGER;
+function findInventoryById(id) {
+return inventoryRecords.find((item) => item.id === id);
 }
 
-function isValidQuantity(value) {
-  return Number.isInteger(value) && value >= 0 && value <= MAX_POSTGRES_INTEGER;
+// GET /api/inventory
+function listInventory(req, res) {
+return res.status(200).json({
+    message: 'Lista de inventario',
+    data: inventoryRecords,
+});
 }
 
-async function listInventory(req, res, next) {
-  try {
-    const records = await Inventory.findAll({ attributes: inventoryFields, order: [['id', 'ASC']] });
-    return response.success(res, req.__('inventory.list'), records);
-  } catch (error) {
-    return next(error);
-  }
+// GET /api/inventory/:id
+function getInventoryById(req, res) {
+const id = Number(req.params.id);
+const record = findInventoryById(id);
+
+if (!record) {
+    return res.status(404).json({
+    message: 'Registro de inventario no encontrado',
+    data: null,
+    });
 }
 
-async function getInventoryById(req, res, next) {
-  const { id } = req.params;
-  if (!isValidId(id)) return response.badRequest(res, req.__('inventory.invalidId'));
-
-  try {
-    const record = await Inventory.findByPk(id, { attributes: inventoryFields });
-    if (!record) return response.notFound(res, req.__('inventory.notFound'));
-    return response.success(res, req.__('inventory.found'), record);
-  } catch (error) {
-    return next(error);
-  }
+return res.status(200).json({
+    message: 'Registro de inventario encontrado',
+    data: record,
+});
 }
 
-async function updateInventory(req, res, next) {
-  const { id } = req.params;
-  if (!isValidId(id)) return response.badRequest(res, req.__('inventory.invalidId'));
+// PUT /api/inventory/:id
+// Simula la actualización de existencias sin modificar el arreglo fijo.
+function updateInventory(req, res) {
+const id = Number(req.params.id);
+const record = findInventoryById(id);
 
-  const { stock, reserved } = req.body || {};
-  if (!isValidQuantity(stock) || !isValidQuantity(reserved)) {
-    return response.badRequest(res, req.__('inventory.invalidQuantity'));
-  }
-  if (reserved > stock) return response.badRequest(res, req.__('inventory.excessReserved'));
-
-  try {
-    const [updated, records] = await Inventory.update(
-      { stock, reserved },
-      { where: { id }, returning: inventoryFields },
-    );
-    if (!updated) return response.notFound(res, req.__('inventory.notFound'));
-    return response.success(res, req.__('inventory.updated'), records[0]);
-  } catch (error) {
-    return next(error);
-  }
+if (!record) {
+    return res.status(404).json({
+    message: 'Registro de inventario no encontrado',
+    data: null,
+    });
 }
 
-module.exports = { listInventory, getInventoryById, updateInventory };
+const { stock, reserved } = req.body;
+
+  // Validación básica de escrituras (docs/api.md, sección 6).
+if (
+    stock === undefined ||
+    reserved === undefined ||
+    !Number.isInteger(stock) ||
+    !Number.isInteger(reserved) ||
+    stock < 0 ||
+    reserved < 0
+) {
+    return res.status(400).json({
+    message: 'stock y reserved son obligatorios y deben ser enteros mayores o iguales a cero',
+    data: null,
+    });
+}
+
+if (reserved > stock) {
+    return res.status(400).json({
+    message: 'reserved no puede ser mayor que stock',
+    data: null,
+    });
+}
+
+  // No se modifica inventoryRecords: se devuelve el objeto que se habría actualizado.
+const updatedRecord = { ...record, stock, reserved };
+return res.status(200).json({
+    message: 'Actualización de inventario simulada',
+    data: updatedRecord,
+});
+}
+
+module.exports = {
+listInventory,
+getInventoryById,
+updateInventory,
+};

@@ -31,13 +31,13 @@ Tablero de trabajo: [GitHub Project](https://github.com/users/alex0726649/projec
 El backend sigue esta arquitectura:
 
 ```
-HTTP Request → Express → Middleware → Route → Controller → Modelo (Sequelize / Mongoose) → PostgreSQL / MongoDB
+HTTP Request → Express → Middleware → Route → Controller → Modelo (Sequelize / Mongoose) → MySQL / MongoDB
 ```
 
-- **Persistencia relacional (PostgreSQL + Sequelize):** usuarios, roles y permisos, incluida la relación N:M entre roles y permisos.
+- **Persistencia relacional (MySQL + Sequelize):** usuarios, roles y permisos, incluida la relación N:M entre roles y permisos.
 - **Persistencia documental (MongoDB + Mongoose):** clientes y órdenes.
 - **Autenticación:** contraseñas protegidas con bcrypt, login que emite un JWT y middleware `authenticate` con `express-jwt` para las rutas protegidas. Los detalles están en [Autenticación](#autenticación).
-- **Pendiente:** productos y variantes ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se describe en [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
+- **Pendiente:** productos, variantes e inventario ya tienen modelos de Sequelize y tablas en `database/schema.sql`, pero sus controladores todavía responden con datos fijos. La autorización por roles y permisos (RBAC) se describe en [Control de acceso basado en roles](#control-de-acceso-basado-en-roles).
 
 Las entregas anteriores se conservan en el historial de Git. El estado del Entregable 1 puede consultarse en la etiqueta `entregable-1`.
 
@@ -46,7 +46,7 @@ Las entregas anteriores se conservan en el historial de Git. El estado del Entre
 **Ejecución**
 
 - Node.js y Express — servidor web y enrutamiento
-- PostgreSQL con Sequelize — modelo relacional
+- MySQL con Sequelize — modelo relacional
 - MongoDB con Mongoose — modelo documental
 - bcrypt — hash y salt de contraseñas
 - jsonwebtoken y express-jwt — emisión y verificación de JWT
@@ -68,7 +68,7 @@ Las entregas anteriores se conservan en el historial de Git. El estado del Entre
 - **Node.js** `^20.19.0 || ^22.13.0 || >=24` (definido en `engines` de `package.json`)
 - **npm** (incluido con Node.js)
 - **Git**
-- **Docker**, para levantar PostgreSQL y MongoDB en local
+- **Docker**, para levantar MySQL y MongoDB en local
 
 Verifica tu versión antes de instalar:
 
@@ -86,24 +86,24 @@ npm ci
 
 Se usa `npm ci` en lugar de `npm install` porque instala exactamente las versiones registradas en `package-lock.json` sin modificar el archivo, lo que garantiza que todos los integrantes trabajen con las mismas dependencias.
 
-Después se crea la configuración local para el secreto JWT y la contraseña de PostgreSQL, como se explica en [Configuración local](#configuración-local):
+Después se crea el archivo `.env` a partir de la plantilla y se completa `JWT_SECRET`, como se explica en [Variables de entorno](#variables-de-entorno):
 
-```powershell
-Copy-Item config/local-development.example.json config/local-development.json
+```bash
+cp .env.example .env
 ```
 
 ## Bases de datos
 
-La conexión está definida en `config/sequelize.js` (PostgreSQL: base `stride_co`, usuario `postgres`, puerto `5432`) y en `config/mongoose.js` (MongoDB: `mongodb://localhost:27017/stride_co`).
+La conexión está definida en `config/sequelize.js` (MySQL: base `stride_co`, usuario `root`, puerto `3306`) y en `config/mongoose.js` (MongoDB: `mongodb://localhost:27017/stride_co`).
 
 La primera vez se crean los contenedores:
 
 ```bash
-docker run -d --name stride-postgres \
-  -e POSTGRES_PASSWORD=abcd1234 \
-  -e POSTGRES_DB=stride_co \
-  -p 5432:5432 \
-  postgres:16
+docker run -d --name stride-mysql \
+  -e MYSQL_ROOT_PASSWORD=abcd1234 \
+  -e MYSQL_DATABASE=stride_co \
+  -p 3306:3306 \
+  mysql:8
 
 docker run -d --name stride-mongo -p 27017:27017 mongo:7
 ```
@@ -111,7 +111,7 @@ docker run -d --name stride-mongo -p 27017:27017 mongo:7
 En las siguientes sesiones basta con iniciarlos:
 
 ```bash
-docker start stride-postgres stride-mongo
+docker start stride-mysql stride-mongo
 ```
 
 Al arrancar, el servidor ejecuta `sequelize.sync()` para crear las tablas que no existen y `database/ensure-constraints.js` para aplicar las restricciones de catálogo e inventario. `sync()` no modifica tablas existentes: si la base se creó antes de agregar una columna, por ejemplo `password_hash` y `salt_key` en `users`, se debe recrear la base de desarrollo o agregar la columna manualmente. El esquema relacional está documentado en [`database/README.md`](database/README.md).
@@ -146,8 +146,7 @@ $env:PORT=4000; npm start
 | `npm run dev` | Inicia el servidor con Supervisor y lo reinicia al detectar cambios en el código. |
 | `npm run lint` | Ejecuta ESLint sobre el proyecto. Debe finalizar sin errores. |
 | `npm test` | Ejecuta la suite completa de pruebas con Jest. No requiere bases de datos. |
-| `npm run seed:rbac` | Carga roles, permisos y sus relaciones (matriz RBAC) en PostgreSQL. Ver [Carga de permisos desde la base de datos](#carga-de-permisos-desde-la-base-de-datos). |
-| `npm run seed` | Carga los [datos iniciales de demo](database/README.md#datos-iniciales-de-demo) en PostgreSQL y MongoDB. |
+| `npm run seed:rbac` | Carga roles, permisos y sus relaciones (matriz RBAC) en MySQL. Ver [Carga de permisos desde la base de datos](#carga-de-permisos-desde-la-base-de-datos). |
 
 ## Arquitectura
 
@@ -155,11 +154,11 @@ La aplicación mantiene una separación estricta de responsabilidades:
 
 | Capa | Ubicación | Responsabilidad |
 |---|---|---|
-| Montaje | `app.js` | Registra middlewares y asocia cada router a su ruta base. |
+| Montaje | `app.js` | Carga `.env`, registra middlewares y asocia cada router a su ruta base. |
 | Middleware | `middlewares/` | Lógica transversal reutilizable, como `authenticate`. |
 | Ruta | `routes/` | Define los endpoints y delega al controlador. No contiene lógica. |
 | Controlador | `controllers/` | Valida la solicitud, resuelve la operación y construye la respuesta. |
-| Modelo | `models/relationals/`, `models/documents/` | Define las entidades de Sequelize (PostgreSQL) y Mongoose (MongoDB). |
+| Modelo | `models/relationals/`, `models/documents/` | Define las entidades de Sequelize (MySQL) y Mongoose (MongoDB). |
 | Utilidades | `utils/` | Funciones compartidas, como el hash de contraseñas. |
 
 Cada recurso tiene un archivo en `routes/` y otro en `controllers/` con el mismo nombre.
@@ -197,21 +196,19 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 
 | Recurso | Base | GET lista | GET `:id` | POST | PUT | DELETE | Datos |
 |---|---|---|---|---|---|---|---|
-| Autenticación | `/api/auth` | — | — | `/login` | — | — | PostgreSQL |
-| Usuarios | `/api/users` | `users:read:any` | `users:read:any` | `users:create:any` | `users:update:any` | `users:delete:any` | PostgreSQL |
-| Roles | `/api/roles` | `roles:read:any` | `roles:read:any` | `roles:create:any` | `roles:update:any` | `roles:delete:any` | PostgreSQL |
-| Permisos | `/api/permissions` | `permissions:read:any` | `permissions:read:any` | `permissions:create:any` | `permissions:update:any` | `permissions:delete:any` | PostgreSQL |
+| Autenticación | `/api/auth` | — | — | `/login` | — | — | MySQL |
+| Usuarios | `/api/users` | Sí | Sí | Sí | Sí | Sí | MySQL |
+| Roles | `/api/roles` | Sí | Sí | Sí | Sí | Sí | MySQL |
+| Permisos | `/api/permissions` | Sí | Sí | Sí | Sí | Sí | MySQL |
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
-| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
-| Inventario | `/api/inventory` | `inventory:read:any` | `inventory:read:any` | — | `inventory:update:any` | — | PostgreSQL |
+| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
+| Inventario | `/api/inventory` | Sí | Sí | No | Sí | No | Datos fijos |
 
 Además, `GET /api/auth/me` devuelve el usuario autenticado y requiere un token Bearer.
 
-La `key` de un permiso debe seguir el formato `recurso:acción:alcance` (por ejemplo `orders:read:own`) y no puede repetirse. Un permiso asignado a roles no se puede eliminar: primero se retira del rol con `PUT /api/roles/:id`. Del mismo modo, un rol con usuarios asignados no se puede eliminar.
-
-El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante. Para ajustar existencias, `PUT /api/inventory/:id` requiere ambos campos, `stock` y `reserved`, como enteros no negativos con `reserved <= stock`.
+El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante.
 
 El modelo actual de órdenes (`models/documents/order.js`) guarda `customerId`, que referencia al cliente, y `totals` (`subtotal`, `shipping`, `discount`, `total`), además de `createdAt` y `updatedAt`. Los artículos, la dirección de envío y el historial de estados del diagrama todavía no forman parte del esquema.
 
@@ -219,7 +216,7 @@ El contrato de la API se encuentra en [`docs/api.md`](docs/api.md).
 
 ### Recursos con datos fijos
 
-Productos y variantes todavía no usan sus modelos de Sequelize. Mientras se completa esa integración:
+Productos, variantes e inventario todavía no usan sus modelos de Sequelize. Mientras se completa esa integración:
 
 - Los datos viven en memoria y las operaciones de escritura devuelven la respuesta esperada, pero **no modifican los datos**.
 - Los identificadores devueltos al crear son valores de ejemplo y no quedan registrados.
@@ -258,7 +255,7 @@ En Windows PowerShell, `curl` es un alias de `Invoke-WebRequest` y no acepta est
 npm test
 ```
 
-Las pruebas usan Jest y Supertest, ejecutando peticiones HTTP locales contra la aplicación Express sin levantar el servidor por separado. `jest.config.js` carga `test/setup.js`, que sustituye las consultas de Sequelize y Mongoose por dobles de prueba. No se necesita Docker ni se escriben datos en PostgreSQL o MongoDB; las consultas SQL reales se bloquean como protección adicional. La suite no lee la configuración local: usa configuración exclusiva de pruebas y un costo bcrypt de 4 para reducir el tiempo de ejecución.
+Las pruebas usan Jest y Supertest, ejecutando peticiones HTTP locales contra la aplicación Express sin levantar el servidor por separado. `jest.config.js` carga `test/setup.js`, que sustituye las consultas de Sequelize y Mongoose por dobles de prueba. No se necesita Docker ni se escriben datos en MySQL o MongoDB; las consultas SQL reales se bloquean como protección adicional. La suite no lee el `.env` local: usa configuración exclusiva de pruebas y un costo bcrypt de 4 para reducir el tiempo de ejecución.
 
 En conjunto, la suite comprueba:
 
@@ -275,7 +272,7 @@ En conjunto, la suite comprueba:
 - Login JSON y formulario, validación de credenciales y firma real de JWT.
 - Rechazo de tokens ausentes, malformados, expirados o con firma, algoritmo, issuer o audience incorrectos.
 - Consulta de `/api/auth/me` y rechazo del mismo token cuando el usuario se desactiva o deja de existir.
-- Comportamiento de productos, variantes e inventario. `test/fixtures.test.js` comprueba la relación entre productos y variantes simulados, y `test/inventory.test.js` verifica las operaciones de inventario con mocks de Sequelize.
+- Comportamiento de productos, variantes e inventario. `test/fixtures.test.js` comprueba las relaciones entre esos tres recursos.
 
 Estas pruebas no verifican el esquema SQL, las restricciones de la base ni la conexión real. Esas comprobaciones se realizan por separado, por ejemplo con Postman sobre una base de desarrollo.
 
@@ -298,9 +295,9 @@ La configuración se encuentra en `eslint.config.js`. El comando debe finalizar 
 ```text
 stride-co-app/
 |-- bin/
-|   `-- www                    Punto de entrada: conecta PostgreSQL y MongoDB e inicia el servidor
+|   `-- www                    Punto de entrada: conecta MySQL y MongoDB e inicia el servidor
 |-- config/
-|   |-- sequelize.js           Conexión a PostgreSQL
+|   |-- sequelize.js           Conexión a MySQL
 |   `-- mongoose.js            Conexión a MongoDB
 |-- controllers/               Lógica de cada recurso
 |-- database/
@@ -324,7 +321,7 @@ stride-co-app/
 |-- public/                    Archivos estáticos
 |-- views/                     Plantillas Pug
 |-- app.js                     Middlewares y montaje de routers
-|-- config/local-development.example.json  Plantilla de configuración local
+|-- .env.example               Plantilla de variables de entorno
 |-- Dockerfile                 Imagen para despliegue
 |-- eslint.config.js
 |-- jest.config.js
@@ -377,21 +374,27 @@ La Actividad 4 incorpora autenticación con JWT y almacenamiento seguro de contr
 
 ### Contraseñas
 
-Las funciones reutilizables de `utils/password.js` utilizan `bcrypt.genSalt`, `bcrypt.hash` y `bcrypt.compare`. Al crear un usuario o actualizar su contraseña mediante `PUT /api/users/:id`, se generan un nuevo salt y un nuevo hash, que se almacenan en las columnas `salt_key` y `password_hash` de la tabla `users`. El factor de costo se obtiene de `bcrypt.saltRounds` en la configuración; el valor predeterminado es `10`.
+Las funciones reutilizables de `utils/password.js` utilizan `bcrypt.genSalt`, `bcrypt.hash` y `bcrypt.compare`. Al crear un usuario o actualizar su contraseña mediante `PUT /api/users/:id`, se generan un nuevo salt y un nuevo hash, que se almacenan en las columnas `salt_key` y `password_hash` de la tabla `users`. El factor de costo se obtiene de `BCRYPT_SALT_ROUNDS`; la plantilla propone `10`.
 
 La base de datos local debe tener ambas columnas. Los usuarios anteriores sin hash necesitan una contraseña configurada antes de probar el login. La contraseña en texto plano no se almacena; `User.toJSON()` excluye `password`, `password_hash` y `salt_key` de las respuestas JSON.
 
-### Configuración local
+### Variables de entorno
 
-Copiar `config/local-development.example.json` a `config/local-development.json` y reemplazar los valores de ejemplo. Ese archivo es local y está excluido de Git.
+Copiar `.env.example` a `.env` en la raíz del proyecto y completar la configuración. En PowerShell, si todavía no existe `.env`:
 
 ```powershell
-Copy-Item config/local-development.example.json config/local-development.json
+Copy-Item .env.example .env
 ```
 
-Completar `jwt.secret` y `db.postgres.password`. La plantilla usa PostgreSQL local sin SSL. Para conexiones remotas se pueden definir `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD` y `DB_POSTGRES_SSL=true`; el último activa SSL para PostgreSQL.
+| Variable | Uso | Valor de la plantilla |
+|---|---|---|
+| `JWT_SECRET` | Clave compartida para firmar y verificar tokens; configurar un valor privado. | Vacío, debe completarse |
+| `JWT_EXPIRES_IN` | Tiempo de expiración del token. | `15m` (15 minutos) |
+| `JWT_ISSUER` | Emisor esperado. | `stride-co` |
+| `JWT_AUDIENCE` | Destinatario esperado. | `stride-co-api` |
+| `BCRYPT_SALT_ROUNDS` | Factor de costo de bcrypt. | `10` |
 
-Reiniciar el servidor después de cambiar la configuración. No compartas el archivo `config/local-development.json` ni sus secretos.
+`dotenv` carga estas variables al iniciar la aplicación. Reiniciar el servidor después de modificar `.env`. El archivo `.env` está excluido de Git; únicamente se comparte `.env.example`, sin secretos reales.
 
 ### Inicio de sesión
 
@@ -417,7 +420,7 @@ Si el usuario existe, está activo y la contraseña coincide, el servidor respon
 }
 ```
 
-`jsonwebtoken` firma el token con `HS256`. El identificador del usuario se incluye en `sub`, junto con los claims de emisión, expiración, emisor y destinatario; no se incluyen contraseñas, hashes ni salts. La duración de la respuesta procede de `jwt.expiresIn` en la configuración.
+`jsonwebtoken` firma el token con `HS256`. El identificador del usuario se incluye en `sub`, junto con los claims de emisión, expiración, emisor y destinatario; no se incluyen contraseñas, hashes ni salts. La duración de la respuesta procede de `JWT_EXPIRES_IN`.
 
 ### Usuario autenticado
 
@@ -617,31 +620,3 @@ Como los permisos se leen en cada petición, un cambio en `role_permission` se a
 | `test/authorize.test.js` | El middleware con `any`, `own`, `401` y `403`. |
 | `test/rbac.test.js` | `admin` borra un producto (permitido), `sales` borra un producto (`403`) y los casos `401` sin token. |
 | `test/rbac-user.test.js` | Rol `user`: lee su orden (permitido), lee la de otro (`403`), lista todas (`403`), y `own` no se puede saltar con datos del body. |
-
-## Internacionalización base (S2-03)
-
-Los idiomas disponibles son español (`es`, predeterminado) e inglés (`en`).
-El orden de selección es `?lang` → `Accept-Language` → español. Una consulta
-explícita no soportada (`?lang=fr`) usa español, incluso si el header solicita inglés.
-Las variantes regionales, como `es-MX`, se resuelven al idioma base. Las cookies
-no participan en la selección. La respuesta incluye `Content-Language`.
-
-Ejemplos sin credenciales:
-
-```bash
-curl "http://localhost:3000/api/no-existe?lang=en"
-curl -H "Accept-Language: es-MX" http://localhost:3000/api/no-existe
-```
-
-Los catálogos están en `locales/es.json` y `locales/en.json`, organizados por
-recurso. Usar `req.__('recurso.clave')` en los controllers y `__('clave')` en Pug.
-Agregar cada clave simultáneamente en ambos catálogos. Para incorporar otro
-idioma, crear su catálogo con las mismas claves, registrarlo en `config/i18n.js`
-y ampliar las pruebas de detección y paridad.
-
-S2-03 cubre la detección, autenticación, errores comunes, autorización y vistas.
-Las traducciones propias de users, roles, permissions, products, variants,
-inventory, customers y orders se completan en las tarjetas S2-05 a S2-12.
-
-Ejecutar `npm test -- --runTestsByPath test/i18n.test.js` para comprobar la base;
-`npm test` conserva todas las pruebas con mocks y no requiere bases de datos.

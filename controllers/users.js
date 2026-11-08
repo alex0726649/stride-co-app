@@ -1,138 +1,142 @@
-const { Validator } = require('sequelize');
 const { User, Role } = require('../models/relationals');
-const { hashPassword } = require('../utils/password');
-const response = require('../utils/response');
+const { hashPassword }= require('../utils/password');
 
-const withRole = { include: { model: Role, as: 'role' } };
-const publicFields = ['id', 'first_name', 'last_name', 'email', 'role_id'];
-const accountFields = ['first_name', 'last_name', 'email', 'role_id'];
-const writableFields = [...accountFields, 'password'];
-const MAX_POSTGRES_INTEGER = 2_147_483_647;
 
-function isPositiveId(value) {
-  return Number.isInteger(value) && value > 0 && value <= MAX_POSTGRES_INTEGER;
+function notFound(res) {
+  return res.status(404).json({ message: 'Usuario no encontrado', data: null });
 }
 
-function isValidRouteId(id) {
-  return /^[1-9]\d*$/.test(id) && isPositiveId(Number(id));
+function isValidPassword(password) {
+  return typeof password === 'string' && password.trim() !== '';
 }
 
-function isValidText(value, maxLength) {
-  return typeof value === 'string' && value.trim() !== '' && value.length <= maxLength;
+// El email es UNIQUE: si ya existe, MySQL rechaza el insert/update.
+function emailTaken(error, res) {
+  if (error.name !== 'SequelizeUniqueConstraintError') return false;
+  res.status(409).json({ message: 'El email ya está registrado', data: null });
+  return true;
 }
 
-function validateBody(body, creating) {
-  if (!body || typeof body !== 'object' || Array.isArray(body)
-    || !writableFields.some(field => Object.hasOwn(body, field))) return 'users.invalidBody';
-
-  for (const field of ['first_name', 'last_name']) {
-    if ((creating || Object.hasOwn(body, field)) && !isValidText(body[field], 100)) {
-      return 'users.invalidBody';
-    }
-  }
-  if ((creating || Object.hasOwn(body, 'email'))
-    && (!isValidText(body.email, 150) || !Validator.isEmail(body.email))) return 'users.invalidBody';
-  if ((creating || Object.hasOwn(body, 'role_id')) && !isPositiveId(body.role_id)) return 'users.invalidRole';
-  if ((creating || Object.hasOwn(body, 'password'))
-    && (typeof body.password !== 'string' || !body.password.trim())) return 'users.invalidPassword';
-
-  return null;
-}
-
-async function userValues(body) {
-  const values = {};
-  for (const field of accountFields) {
-    if (Object.hasOwn(body, field)) values[field] = body[field];
-  }
-  if (Object.hasOwn(body, 'password')) {
-    const { securePassword, saltKey } = await hashPassword(body.password);
-    values.password_hash = securePassword;
-    values.salt_key = saltKey;
-  }
-  return values;
-}
-
-function writeError(error, req, res, next) {
-  if (error.name === 'SequelizeUniqueConstraintError') return response.badRequest(res, req.__('users.emailTaken'));
-  if (error.name === 'SequelizeForeignKeyConstraintError') return response.badRequest(res, req.__('users.invalidRole'));
-  if (error.name === 'SequelizeValidationError') return response.badRequest(res, req.__('users.invalidBody'));
-  return next(error);
-}
+// Express 4 no atrapa errores de funciones async; cada función usa
+// try/catch y next(error) para que el manejador de app.js responda 500 en JSON.
 
 async function list(req, res, next) {
   try {
-    const users = await User.findAll({ ...withRole, attributes: publicFields });
-    return response.success(res, req.__('users.list'), users);
+    const users = await User.findAll({
+      attributes: [
+        'first_name',
+        'last_name',
+        'email'
+      ],
+      include: {
+        model: Role,
+        as: 'role'
+      }
+    });
+    res.json({ message: 'Lista de usuarios', data: users });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
-
+//find
 async function find(req, res, next) {
-  const { id } = req.params;
-  if (!isValidRouteId(id)) return response.badRequest(res, req.__('users.invalidId'));
-
   try {
-    const user = await User.findByPk(id, withRole);
-    if (!user) return response.notFound(res, req.__('users.notFound'));
-    return response.success(res, req.__('users.found'), user);
+    const id = req.params.id;
+    const user = await User.findByPk(id, {
+      include: {
+        model: Role,
+        as: 'role'
+      }
+    });
+
+    if (!user) return notFound(res);
+
+    res.json({
+      message: 'Usuario encontrado',
+      data: user
+    });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
-
-async function create(req, res, next) {
-  const errorKey = validateBody(req.body, true);
-  if (errorKey) return response.badRequest(res, req.__(errorKey));
-
+//create
+async function create(req, res, next) { //a la funcion le tengo que agregar async
   try {
-    const role = await Role.findByPk(req.body.role_id);
-    if (!role) return response.badRequest(res, req.__('users.invalidRole'));
+    const name= req.body.first_name;
+    const lastName=req.body.last_name;
+    const roleId = req.body.role_id;
+    const email=req.body.email;
+    const password = req.body.password;
 
-    const user = await User.create(await userValues(req.body));
-    user.setDataValue('role', role);
-    return response.created(res, req.__('users.created'), user);
-  } catch (error) {
-    return writeError(error, req, res, next);
-  }
-}
-
-async function update(req, res, next) {
-  const { id } = req.params;
-  if (!isValidRouteId(id)) return response.badRequest(res, req.__('users.invalidId'));
-
-  try {
-    const user = await User.findByPk(id, withRole);
-    if (!user) return response.notFound(res, req.__('users.notFound'));
-
-    const errorKey = validateBody(req.body, false);
-    if (errorKey) return response.badRequest(res, req.__(errorKey));
-
-    let role;
-    if (Object.hasOwn(req.body, 'role_id')) {
-      role = await Role.findByPk(req.body.role_id);
-      if (!role) return response.badRequest(res, req.__('users.invalidRole'));
+    // Sin esta validación bcrypt lanza un error y la petición nunca responde
+    if (!isValidPassword(password)) {
+      return res.status(400).json({ message: 'La contraseña es obligatoria' });
     }
 
-    await user.update(await userValues(req.body));
-    if (role) user.setDataValue('role', role);
-    return response.success(res, req.__('users.updated'), user);
+    const passwordData = await hashPassword(password);
+    const user = await User.create({
+      first_name: name,
+      last_name: lastName,
+      email: email,
+      role_id: roleId,
+      password_hash: passwordData.securePassword,
+      salt_key: passwordData.saltKey
+    });
+    return res.status(201).json({
+      message: 'Usuario creado',
+      data: user});
   } catch (error) {
-    return writeError(error, req, res, next);
+    if (emailTaken(error, res)) return;
+    next(error);
+  }
+}
+async function update(req, res, next) {
+  try {
+    const id = req.params.id;
+    const name= req.body.first_name;
+    const lastName=req.body.last_name;
+    const email=req.body.email;
+    const user = await User.findByPk(id);
+    const roleId = req.body.role_id;
+
+    if (!user)return res.status(404).json({message:'User not found'});
+    const changes = {};
+    changes.first_name= name ? name: user.first_name;
+    changes.last_name=lastName ? lastName:user.last_name;
+    changes.email=email ? email :user.email;
+    changes.role_id = roleId ? roleId : user.role_id;
+    //actividad 4 si se cambia de pw se regenera salt key
+    if (req.body.password !== undefined) {
+      if (!isValidPassword(req.body.password)) {
+        return res.status(400).json({
+          message: 'La contraseña no puede estar vacía'
+        });
+      }
+
+      const passwordData = await hashPassword(req.body.password);
+
+      changes.password_hash = passwordData.securePassword;
+      changes.salt_key = passwordData.saltKey;
+    }
+
+    await user.update(changes);
+
+    res.json({ message: 'user updated', data: user });
+  } catch (error) {
+    if (emailTaken(error, res)) return;
+    next(error);
   }
 }
 
 async function destroy(req, res, next) {
-  const { id } = req.params;
-  if (!isValidRouteId(id)) return response.badRequest(res, req.__('users.invalidId'));
-
   try {
-    const user = await User.findByPk(id, withRole);
-    if (!user) return response.notFound(res, req.__('users.notFound'));
+    const id = req.params.id;
+    const user = await User.findByPk(id);
+    if (!user)return res.status(404).json({message:'User not found'});
     await user.destroy();
-    return response.success(res, req.__('users.deleted'), user);
+    res.json({ message: 'user deleted', data: user });
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
 

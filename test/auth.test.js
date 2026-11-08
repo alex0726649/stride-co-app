@@ -1,7 +1,6 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const config = require('config');
 const app = require('../app');
 const { User } = require('../models/relationals');
 
@@ -11,10 +10,10 @@ beforeEach(async () => {
     active: true, password_hash: await bcrypt.hash('Clave123!', 4), salt_key: 'private-salt' });
 });
 const credentials = { email: 'ana@example.com', password: 'Clave123!' };
-function token(options = {}, secret = config.get('jwt.secret')) {
+function token(options = {}, secret = process.env.JWT_SECRET) {
   return jwt.sign({ sub: '7' }, secret, {
-    algorithm: 'HS256', expiresIn: '15m', issuer: config.get('jwt.issuer'),
-    audience: config.get('jwt.audience'), ...options,
+    algorithm: 'HS256', expiresIn: '15m', issuer: process.env.JWT_ISSUER,
+    audience: process.env.JWT_AUDIENCE, ...options,
   });
 }
 function safe(data) {
@@ -28,7 +27,7 @@ it.each([{}, { email: 'a' }, { password: 'b' }, { email: 42, password: 'b' },
 });
 
 describe.each([
-  ['sin preferencia (español predeterminado)', null, 'credenciales invalidas'],
+  ['sin cookie (español predeterminado)', null, 'credenciales invalidas'],
   ['español', 'es', 'credenciales invalidas'],
   ['inglés', 'en', 'Invalid Credentials'],
 ])('credenciales incorrectas: %s', (_label, language, message) => {
@@ -36,18 +35,18 @@ it.each(['desconocido', 'inactivo', 'contraseña incorrecta'])('rechaza %s con m
   record.active = reason !== 'inactivo';
   User.findOne.mockResolvedValue(reason === 'desconocido' ? null : record);
   const login = request(app).post('/api/auth/login');
-  if (language) login.set('Accept-Language', language);
+  if (language) login.set('Cookie', `lang=${language}`);
   const res = await login
     .send({ ...credentials, password: reason === 'contraseña incorrecta' ? 'mal' : credentials.password }).expect(401);
-  expect(res.body).toEqual({ message, data: null });
+  expect(res.body).toEqual({ message });
 });
 });
 
 it.each(['json', 'form'])('login %s firma JWT verificable con los claims requeridos', async type => {
   User.findOne.mockResolvedValue(record);
   const res = await request(app).post('/api/auth/login').type(type).send(credentials).expect(200);
-  const payload = jwt.verify(res.body.data.token, config.get('jwt.secret'), {
-    algorithms: ['HS256'], issuer: config.get('jwt.issuer'), audience: config.get('jwt.audience'),
+  const payload = jwt.verify(res.body.data.token, process.env.JWT_SECRET, {
+    algorithms: ['HS256'], issuer: process.env.JWT_ISSUER, audience: process.env.JWT_AUDIENCE,
   });
   expect(payload.sub).toBe('7');
   expect(payload.exp - payload.iat).toBe(900);

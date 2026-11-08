@@ -1,11 +1,21 @@
 const { jest: mock, beforeEach } = require('@jest/globals');
 
+// Configuración exclusiva de pruebas: no leer secretos del .env local.
+Object.assign(process.env, {
+  JWT_SECRET: 'test-only-secret-never-use-in-production',
+  JWT_EXPIRES_IN: '15m',
+  JWT_ISSUER: 'stride-co-test',
+  JWT_AUDIENCE: 'stride-co-test-api',
+  BCRYPT_SALT_ROUNDS: '4',
+});
+mock.mock('dotenv', () => ({ config: () => ({ parsed: {} }) }));
+
 // Mantener modelos/serialización reales, sustituyendo solo el acceso a SQL.
 mock.mock('../models/relationals', () => {
   const actual = mock.requireActual('../models/relationals');
-  for (const name of ['User', 'Role', 'Permission', 'Product']) {
-    for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) {
-      mock.spyOn(actual[name], method).mockReturnValue(undefined);
+  for (const name of ['User', 'Role', 'Permission']) {
+    for (const method of ['findAll', 'findByPk', 'findOne', 'create']) {
+      actual[name][method] = mock.fn();
     }
   }
   return actual;
@@ -29,13 +39,12 @@ mock.mock('../models/documents', () => {
 });
 
 beforeEach(() => {
-  const { User, Role, Permission, Product } = require('../models/relationals');
-  for (const model of [User, Role, Permission, Product]) {
-    for (const method of ['findAll', 'findByPk', 'findOne', 'create', 'count']) model[method].mockReset();
+  const { User, Role, Permission } = require('../models/relationals');
+  for (const model of [User, Role, Permission]) {
+    for (const method of ['findAll', 'findByPk', 'findOne', 'create']) model[method].mockReset();
     model.findAll.mockResolvedValue([]);
     model.findByPk.mockResolvedValue(null);
     model.findOne.mockResolvedValue(null);
-    model.count.mockResolvedValue(0);
   }
   const { Customer, Order } = require('../models/documents');
   for (const model of [Customer, Order]) {

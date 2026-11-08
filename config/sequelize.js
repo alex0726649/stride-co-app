@@ -1,27 +1,20 @@
-const { Sequelize } = require('sequelize');
+const {Sequelize}= require('sequelize');
 const config = require('config');
 
-const postgresConfig = config.get('db.postgres');
+const mysqlConfig = config.get("mysql");
 
-const sslEnabled = String(postgresConfig.ssl.enabled).toLowerCase() === 'true';
-const rejectUnauthorized = String(postgresConfig.ssl.rejectUnauthorized).toLowerCase() === 'true';
+console.log('Entorno:', config.util.getEnv('NODE_ENV'));
+console.log('Base MySQL seleccionada:', mysqlConfig.database);
+//falta cambiar para que use mysqlconfig
 
 const sequelize = new Sequelize(
-    postgresConfig.database,
-    postgresConfig.user,
-    postgresConfig.password,
+    mysqlConfig.database,
+    mysqlConfig.user,
+    mysqlConfig.password,
     {
-        host: postgresConfig.host,
-        port: Number(postgresConfig.port),
-        dialect: 'postgres',
-        ...(sslEnabled && {
-            dialectOptions: {
-                ssl: {
-                    require: true,
-                    rejectUnauthorized,
-                },
-            },
-        }),
+        host: mysqlConfig.host,
+        port: mysqlConfig.port,
+        dialect: 'mysql',
         logging: false,
         define: {
             underscored: true
@@ -30,4 +23,4 @@ const sequelize = new Sequelize(
 );
     
     
-module.exports = sequelize;
+    module.exports =sequelize; 
