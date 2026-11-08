@@ -78,6 +78,20 @@
     "invalidPrice": "The price must be a number greater than or equal to zero",
     "inUse": "A product with associated variants cannot be deleted; remove its variants first"
   },
+  "customers": {
+  "list": "Customer list",
+  "found": "Customer found",
+  "created": "Customer created",
+  "updated": "Customer updated",
+  "deleted": "Customer deleted",
+  "notFound": "Customer not found",
+  "invalidId": "The ID must be a valid ObjectId",
+  "invalidBody": "Invalid customer data",
+  "invalidUserId": "userId is required and must be a positive integer",
+  "invalidEmail": "The email format is invalid",
+  "invalidAddressType": "The address type must be SHIPPING or BILLING",
+  "duplicate": "A customer with that data already exists"
+},
   "variants": {
     "list": "Variant list",
     "found": "Variant found",
