@@ -204,7 +204,7 @@ El campo `data` contiene un objeto, un arreglo o `null` según la operación. En
 | Clientes | `/api/customers` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Órdenes | `/api/orders` | Sí | Sí | Sí | Sí | Sí | MongoDB |
 | Productos | `/api/products` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
-| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | Datos fijos |
+| Variantes | `/api/variants` | Sí | Sí | Sí | Sí | Sí | PostgreSQL |
 | Inventario | `/api/inventory` | `inventory:read:any` | `inventory:read:any` | — | `inventory:update:any` | — | PostgreSQL |
 
 Además, `GET /api/auth/me` devuelve el usuario autenticado y requiere un token Bearer.
