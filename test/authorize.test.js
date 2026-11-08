@@ -10,7 +10,6 @@ const { loadRoleAccess } = require('../utils/rbac');
 
 function requestContext(overrides = {}) {
   return {
-    __: key => ({ 'errors.unauthorized': 'No autorizado', 'errors.forbidden': 'Prohibido' })[key],
     user: { id: 7, role_id: 2 },
     params: {},
     body: {},
@@ -99,7 +98,7 @@ describe('authorize middleware', () => {
   it('responde 401 si no existe usuario autenticado', async () => {
     const res = responseContext();
 
-    await authorize('products', 'read', 'any')(requestContext({ user: null }), res, mock.fn());
+    await authorize('products', 'read', 'any')({}, res, mock.fn());
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(loadRoleAccess).not.toHaveBeenCalled();

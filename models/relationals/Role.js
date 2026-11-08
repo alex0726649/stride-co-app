@@ -3,11 +3,7 @@ const sequelize = require('../../config/sequelize');
 
 const Role = sequelize.define('Role', {
   name: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    // El nombre identifica al rol en el RBAC: no puede repetirse.
-    unique: true,
-    validate: { notEmpty: true }
+    type: DataTypes.STRING(50)
   },
   description: {
     type: DataTypes.STRING(255)

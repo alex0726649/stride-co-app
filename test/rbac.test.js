@@ -1,16 +1,14 @@
-const { jest: mock } = require('@jest/globals');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const app = require('../app');
-const { User, Role, Product } = require('../models/relationals');
+const { User, Role } = require('../models/relationals');
 
-function createToken(userId, options = {}, secret = config.get('jwt.secret')) {
+function createToken(userId, options = {}, secret = process.env.JWT_SECRET) {
   return jwt.sign({ sub: String(userId) }, secret, {
     algorithm: 'HS256',
     expiresIn: '15m',
-    issuer: config.get('jwt.issuer'),
-    audience: config.get('jwt.audience'),
+    issuer: process.env.JWT_ISSUER,
+    audience: process.env.JWT_AUDIENCE,
     ...options,
   });
 }
@@ -46,28 +44,9 @@ describe('Control de Acceso Basado en Roles (RBAC)', () => {
     },
   };
 
-  const sampleProduct = {
-    id: 1,
-    name: 'Tenis Stride',
-    description: 'Producto de prueba',
-    brand: 'Stride & Co.',
-    price: 1299,
-    active: true,
-    variants: [],
-  };
-
   beforeEach(() => {
     User.findByPk.mockImplementation(async (id) => mockUsers[String(id)] || null);
     Role.findByPk.mockImplementation(async (id) => mockRoles[id] || null);
-    // products ya persiste con Sequelize; se mockea el modelo para que los
-    // casos permitidos respondan sin tocar la base de datos.
-    Product.findAll.mockResolvedValue([sampleProduct]);
-    Product.findByPk.mockResolvedValue({
-      ...sampleProduct,
-      update: mock.fn().mockResolvedValue(undefined),
-      destroy: mock.fn().mockResolvedValue(undefined),
-    });
-    Product.create.mockImplementation(async (body) => ({ id: 99, ...body, active: true }));
   });
 
   describe('1. Caso de ACCESO PERMITIDO', () => {
@@ -79,7 +58,7 @@ describe('Control de Acceso Basado en Roles (RBAC)', () => {
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch(/json/);
       expect(res.body).toEqual({
-        message: 'Producto eliminado',
+        message: 'Eliminación de producto simulada',
         data: null,
       });
     });
@@ -112,7 +91,7 @@ describe('Control de Acceso Basado en Roles (RBAC)', () => {
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch(/json/);
-      expect(res.body.message).toBe('Lista de productos');
+      expect(res.body.message).toBe('GET products');
       expect(Array.isArray(res.body.data)).toBe(true);
     });
   });
@@ -234,7 +213,7 @@ describe('Control de Acceso Basado en Roles (RBAC)', () => {
         .auth(adminToken, { type: 'bearer' });
 
       expect(allowedRes.status).toBe(200);
-      expect(allowedRes.body.message).toBe('Producto eliminado');
+      expect(allowedRes.body.message).toBe('Eliminación de producto simulada');
 
       // 2. Rol sin permiso (sales) -> 403 Forbidden
       const deniedRes = await request(app)

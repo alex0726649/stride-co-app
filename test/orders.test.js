@@ -1,7 +1,6 @@
 const { jest: mock } = require('@jest/globals');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const config = require('config');
 const app = require('../app');
 const { Order } = require('../models/documents');
 const { User, Role } = require('../models/relationals');
@@ -9,11 +8,11 @@ const id = '507f1f77bcf86cd799439011';
 const document = { _id: id, customerId: '507f1f77bcf86cd799439012', status: 'pending' };
 function query(result) { return { populate: mock.fn().mockResolvedValue(result) }; }
 
-const accessToken = jwt.sign({ sub: '7' }, config.get('jwt.secret'), {
+const accessToken = jwt.sign({ sub: '7' }, process.env.JWT_SECRET, {
   algorithm: 'HS256',
   expiresIn: '15m',
-  issuer: config.get('jwt.issuer'),
-  audience: config.get('jwt.audience'),
+  issuer: process.env.JWT_ISSUER,
+  audience: process.env.JWT_AUDIENCE,
 });
 
 function authenticated(method, path) {
