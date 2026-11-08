@@ -1,6 +1,96 @@
 {
-    "auth":{
-        "invalidCredentials":"credenciales invalidas"
-    }
-
+  "errors": {
+    "unauthorized": "No autorizado",
+    "forbidden": "Prohibido",
+    "notFound": "Ruta no encontrada",
+    "badRequest": "Solicitud inválida",
+    "invalidJson": "Cuerpo JSON inválido",
+    "internal": "Error interno del servidor"
+  },
+  "auth": {
+    "invalidCredentials": "credenciales invalidas",
+    "requiredCredentials": "Email y contraseña son obligatorios",
+    "loginSuccess": "Inicio de sesión correcto"
+  },
+  "views": {
+    "welcome": "Bienvenido a %s",
+    "errorTitle": "Error",
+    "status": "Estado"
+  },
+  "users": {
+    "list": "Lista de usuarios",
+    "found": "Usuario encontrado",
+    "created": "Usuario creado",
+    "updated": "Usuario actualizado",
+    "deleted": "Usuario eliminado",
+    "notFound": "Usuario no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del usuario son inválidos",
+    "invalidPassword": "La contraseña debe ser un texto no vacío",
+    "invalidRole": "El rol indicado no es válido",
+    "emailTaken": "El email ya está registrado"
+  },
+  "roles": {
+    "list": "Lista de roles",
+    "found": "Rol encontrado",
+    "created": "Rol creado",
+    "updated": "Rol actualizado",
+    "deleted": "Rol eliminado",
+    "notFound": "Rol no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del rol son inválidos",
+    "invalidName": "El nombre del rol es obligatorio y debe tener máximo 50 caracteres",
+    "invalidPermissions": "permission_ids debe ser un arreglo de IDs de permisos existentes, sin repetir",
+    "nameTaken": "Ya existe un rol con ese nombre",
+    "inUse": "No se puede eliminar un rol que tiene usuarios asignados"
+  },
+  "inventory": {
+    "list": "Lista de inventario",
+    "found": "Registro de inventario encontrado",
+    "updated": "Existencias actualizadas",
+    "notFound": "Registro de inventario no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidQuantity": "stock y reserved son obligatorios y deben ser enteros entre 0 y 2147483647",
+    "excessReserved": "reserved no puede ser mayor que stock"
+  },
+  "permissions": {
+    "list": "Lista de permisos",
+    "found": "Permiso encontrado",
+    "created": "Permiso creado",
+    "updated": "Permiso actualizado",
+    "deleted": "Permiso eliminado",
+    "notFound": "Permiso no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del permiso son inválidos",
+    "invalidKey": "La key debe tener el formato recurso:acción:alcance, por ejemplo orders:read:own",
+    "keyTaken": "Ya existe un permiso con esa key",
+    "inUse": "No se puede eliminar un permiso asignado a roles; primero retíralo de esos roles"
+  },
+  "products": {
+    "list": "Lista de productos",
+    "found": "Producto encontrado",
+    "created": "Producto creado",
+    "updated": "Producto actualizado",
+    "deleted": "Producto eliminado",
+    "notFound": "Producto no encontrado",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidBody": "Los datos del producto son inválidos: name, description y brand son obligatorios",
+    "invalidPrice": "El price debe ser un número mayor o igual a cero",
+    "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
+  },
+  "variants": {
+    "list": "Lista de variantes",
+    "found": "Variante encontrada",
+    "created": "Variante creada",
+    "updated": "Variante actualizada",
+    "deleted": "Variante eliminada",
+    "notFound": "Variante no encontrada",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidProductId": "El product_id debe ser un entero positivo válido",
+    "invalidBody": "sku, size y color son obligatorios y admiten hasta 100, 30 y 50 caracteres, respectivamente",
+    "invalidActive": "El active debe ser booleano",
+    "skuTaken": "El sku ya existe",
+    "productNotFound": "El producto indicado no existe",
+    "inUse": "No se puede eliminar una variante con existencias o unidades reservadas"
+  }
 }

@@ -3,3 +3,5 @@ npm-debug.log
 .git
 .gitignore
 .env
+config/local*.json
+!config/local*.example.json
