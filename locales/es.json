@@ -77,5 +77,20 @@
     "invalidBody": "Los datos del producto son inválidos: name, description y brand son obligatorios",
     "invalidPrice": "El price debe ser un número mayor o igual a cero",
     "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
+  },
+  "variants": {
+    "list": "Lista de variantes",
+    "found": "Variante encontrada",
+    "created": "Variante creada",
+    "updated": "Variante actualizada",
+    "deleted": "Variante eliminada",
+    "notFound": "Variante no encontrada",
+    "invalidId": "El ID debe ser un entero positivo válido",
+    "invalidProductId": "El product_id debe ser un entero positivo válido",
+    "invalidBody": "sku, size y color son obligatorios y admiten hasta 100, 30 y 50 caracteres, respectivamente",
+    "invalidActive": "El active debe ser booleano",
+    "skuTaken": "El sku ya existe",
+    "productNotFound": "El producto indicado no existe",
+    "inUse": "No se puede eliminar una variante con existencias o unidades reservadas"
   }
 }

@@ -77,5 +77,20 @@
     "invalidBody": "Invalid product data: name, description and brand are required",
     "invalidPrice": "The price must be a number greater than or equal to zero",
     "inUse": "A product with associated variants cannot be deleted; remove its variants first"
+  },
+  "variants": {
+    "list": "Variant list",
+    "found": "Variant found",
+    "created": "Variant created",
+    "updated": "Variant updated",
+    "deleted": "Variant deleted",
+    "notFound": "Variant not found",
+    "invalidId": "The ID must be a valid positive integer",
+    "invalidProductId": "product_id must be a valid positive integer",
+    "invalidBody": "sku, size and color are required and allow up to 100, 30 and 50 characters, respectively",
+    "invalidActive": "active must be a boolean",
+    "skuTaken": "This sku already exists",
+    "productNotFound": "The specified product does not exist",
+    "inUse": "A variant with stock or reserved units cannot be deleted"
   }
 }
