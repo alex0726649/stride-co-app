@@ -90,7 +90,9 @@
   "invalidUserId": "userId es obligatorio y debe ser un entero positivo",
   "invalidEmail": "El email no tiene un formato válido",
   "invalidAddressType": "El tipo de dirección debe ser SHIPPING o BILLING",
-  "duplicate": "Ya existe un cliente con esos datos"
+  "duplicate": "Ya existe un cliente con esos datos",
+  "userNotFound": "El usuario indicado no existe",
+  "hasOrders": "No se puede eliminar un cliente con órdenes registradas"
   },
   "variants": {
     "list": "Lista de variantes",

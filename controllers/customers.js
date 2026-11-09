@@ -1,4 +1,5 @@
-const { Customer } = require('../models/documents');
+const { Customer, Order } = require('../models/documents');
+const { User } = require('../models/relationals');
 const response = require('../utils/response');
 
 const MAX_INT = 2147483647; // userId referencia a users.id (INTEGER en PostgreSQL)
@@ -61,6 +62,22 @@ function parseBody(req, { partial }) {
   return { data };
 }
 
+// Se monta en la ruta ANTES de authorize: un cuerpo inválido debe dar 400 para
+// cualquier rol. Si authorize corriera primero, con alcance own compararía un
+// userId ausente con el del token y respondería 403.
+function validateBody({ partial }) {
+  return function customerBodyValidation(req, res, next) {
+    const { error, data } = parseBody(req, { partial });
+    if (error) return response.badRequest(res, error);
+    req.customerData = data;
+    return next();
+  };
+}
+
+async function userExists(userId) {
+  return Boolean(await User.findByPk(userId));
+}
+
 // Errores de Mongoose que son culpa de la entrada, no del servidor.
 function handleInputError(req, res, error) {
   if (error && error.code === 11000) {
@@ -92,10 +109,11 @@ async function find(req, res, next) {
 }
 
 async function create(req, res, next) {
-  const { error, data } = parseBody(req, { partial: false });
-  if (error) return response.badRequest(res, error);
-
+  const data = req.customerData;
   try {
+    if (!(await userExists(data.userId))) {
+      return response.badRequest(res, req.__('customers.userNotFound'));
+    }
     const customer = await Customer.create(data);
     return response.created(res, req.__('customers.created'), customer);
   } catch (err) {
@@ -104,10 +122,11 @@ async function create(req, res, next) {
 }
 
 async function update(req, res, next) {
-  const { error, data } = parseBody(req, { partial: true });
-  if (error) return response.badRequest(res, error);
-
+  const data = req.customerData;
   try {
+    if (data.userId !== undefined && !(await userExists(data.userId))) {
+      return response.badRequest(res, req.__('customers.userNotFound'));
+    }
     const customer = await Customer.findByIdAndUpdate(req.params.id, data, {
       new: true,
       runValidators: true,
@@ -119,14 +138,31 @@ async function update(req, res, next) {
   }
 }
 
+// Política de borrado: no se elimina un cliente con órdenes, para que ninguna
+// orden quede apuntando a un cliente inexistente.
 async function destroy(req, res, next) {
   try {
-    const customer = await Customer.findByIdAndDelete(req.params.id);
+    const customer = await Customer.findById(req.params.id);
     if (!customer) return response.notFound(res, req.__('customers.notFound'));
+
+    const orders = await Order.find({ customerId: req.params.id });
+    if (Array.isArray(orders) && orders.length > 0) {
+      return response.badRequest(res, req.__('customers.hasOrders'));
+    }
+
+    await Customer.findByIdAndDelete(req.params.id);
     return response.success(res, req.__('customers.deleted'), null);
   } catch (error) {
     return next(error);
   }
 }
 
-module.exports = { list, find, create, update, destroy };
+module.exports = {
+  list,
+  find,
+  create,
+  update,
+  destroy,
+  validateCreate: validateBody({ partial: false }),
+  validateUpdate: validateBody({ partial: true }),
+};

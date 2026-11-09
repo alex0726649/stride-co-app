@@ -4,11 +4,13 @@ const jwt = require('jsonwebtoken');
 const config = require('config');
 const app = require('../app');
 const { User, Role } = require('../models/relationals');
-const { Customer } = require('../models/documents');
+const { Customer, Order } = require('../models/documents');
 const matrix = require('../database/rbac-matrix.json');
 
 // El id de usuario coincide con su rol: 1 admin, 2 sales, 3 user (cliente).
+// El usuario 4 existe en PostgreSQL pero no se usa para iniciar sesión.
 const ROLES = { 1: 'admin', 2: 'sales', 3: 'user' };
+const EXISTING_USERS = [1, 2, 3, 4];
 
 const ownId = '507f1f77bcf86cd799439011';
 const otherId = '507f1f77bcf86cd799439012';
@@ -39,13 +41,17 @@ function as(userId, method, path) {
 }
 
 beforeEach(() => {
-  User.findByPk.mockImplementation(async id => ({ id: Number(id), active: true, role_id: Number(id) }));
+  User.findByPk.mockImplementation(async id => {
+    const userId = Number(id);
+    return EXISTING_USERS.includes(userId) ? { id: userId, active: true, role_id: userId } : null;
+  });
   Role.findByPk.mockImplementation(async id => ({
     name: ROLES[id],
     permissions: matrix.permissions.filter(permission => permission.roles.includes(ROLES[id])),
   }));
   const documents = { [ownId]: ownCustomer, [otherId]: otherCustomer };
   Customer.findById.mockImplementation(async id => documents[id] || null);
+  Order.find.mockResolvedValue([]);
 });
 
 describe('/api/customers', () => {
@@ -89,7 +95,6 @@ describe('/api/customers', () => {
 
   it.each(['get', 'put', 'delete'])('responde 404 si el cliente no existe: %s', async method => {
     Customer.findByIdAndUpdate.mockResolvedValue(null);
-    Customer.findByIdAndDelete.mockResolvedValue(null);
     await as(1, method, `/api/customers/${missingId}`)
       .send({ phone: '6140000000' })
       .expect(404)
@@ -107,6 +112,19 @@ describe('/api/customers', () => {
 
   it('un cliente no puede crear el perfil de otro usuario (403)', async () => {
     await as(3, 'post', '/api/customers').send({ ...validBody, userId: 4 }).expect(403);
+    expect(Customer.create).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 3])('un alta sin userId responde 400 para cualquier rol: usuario %s', async userId => {
+    await as(userId, 'post', '/api/customers').send({ email: 'ana@example.com' }).expect(400);
+    expect(Customer.create).not.toHaveBeenCalled();
+  });
+
+  it('rechaza crear un cliente para un usuario que no existe en PostgreSQL', async () => {
+    await as(1, 'post', '/api/customers')
+      .send({ ...validBody, userId: 999 })
+      .expect(400)
+      .expect({ message: 'El usuario indicado no existe', data: null });
     expect(Customer.create).not.toHaveBeenCalled();
   });
 
@@ -147,6 +165,11 @@ describe('/api/customers', () => {
     expect(Customer.findByIdAndUpdate).not.toHaveBeenCalled();
   });
 
+  it('rechaza cambiar el userId a un usuario que no existe', async () => {
+    await as(1, 'put', `/api/customers/${ownId}`).send({ userId: 999 }).expect(400);
+    expect(Customer.findByIdAndUpdate).not.toHaveBeenCalled();
+  });
+
   it.each([
     {},
     { email: 'mal' },
@@ -162,7 +185,16 @@ describe('/api/customers', () => {
     await as(1, 'delete', `/api/customers/${ownId}`)
       .expect(200)
       .expect({ message: 'Cliente eliminado', data: null });
+    expect(Order.find).toHaveBeenCalledWith({ customerId: ownId });
     expect(Customer.findByIdAndDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('no elimina un cliente que tiene órdenes registradas', async () => {
+    Order.find.mockResolvedValue([{ _id: '507f1f77bcf86cd799439aaa', customerId: ownId }]);
+    await as(1, 'delete', `/api/customers/${ownId}`)
+      .expect(400)
+      .expect({ message: 'No se puede eliminar un cliente con órdenes registradas', data: null });
+    expect(Customer.findByIdAndDelete).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -186,6 +218,7 @@ describe('/api/customers', () => {
       .expect({ message: 'Error interno del servidor', data: null });
   });
 });
+
 describe('esquema Customer', () => {
   // setup.js sustituye Customer por funciones simuladas; aquí se usa el modelo
   // real solo para validar el esquema (validate() no necesita conexión).

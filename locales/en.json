@@ -90,8 +90,10 @@
   "invalidUserId": "userId is required and must be a positive integer",
   "invalidEmail": "The email format is invalid",
   "invalidAddressType": "The address type must be SHIPPING or BILLING",
-  "duplicate": "A customer with that data already exists"
-},
+  "duplicate": "A customer with that data already exists",
+  "userNotFound": "The specified user does not exist",
+  "hasOrders": "A customer with registered orders cannot be deleted"
+  },
   "variants": {
     "list": "Variant list",
     "found": "Variant found",
