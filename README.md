@@ -213,7 +213,7 @@ La `key` de un permiso debe seguir el formato `recurso:acción:alcance` (por eje
 
 El inventario no se crea ni se elimina de forma independiente porque cada registro existe junto con su variante. Para ajustar existencias, `PUT /api/inventory/:id` requiere ambos campos, `stock` y `reserved`, como enteros no negativos con `reserved <= stock`.
 
-Las órdenes guardan el cliente, vendedor, método de pago, artículos, estado y totales en MongoDB. Para crear una orden, envía `customerId`, `paymentMethod` (`efectivo` o `transferencia`) y al menos un artículo con `productId`, `quantity` y `unitPrice`. El estado inicial por defecto es `Pendiente de pago`. También se admiten `Pagado` y `Cancelado`. El servidor calcula el subtotal al recibir artículos y las consultas incluyen los datos del cliente.
+Las órdenes guardan el cliente, vendedor, método de pago, artículos, estado y totales en MongoDB. Para crear una orden, envía `customerId`, `paymentMethod` (`efectivo` o `transferencia`) y al menos un artículo con `productId` y `quantity`. Las compras con permiso `orders:create:own` empiezan en `Pendiente de pago` y sin un vendedor elegido por el comprador. También se admiten `Pagado` y `Cancelado`. El servidor guarda el precio del catálogo y calcula el subtotal al recibir artículos y las consultas incluyen los datos del cliente.
 
 El contrato de la API se encuentra en [`docs/api.md`](docs/api.md).
 

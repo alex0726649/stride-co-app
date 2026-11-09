@@ -30,7 +30,8 @@
     "invalidSalesPerson": "The salesperson ID must be a positive integer",
     "invalidPayment": "The payment method is invalid",
     "invalidStatus": "The order status is invalid",
-    "invalidItems": "The order requires items with a valid product, quantity, and price"
+    "invalidItems": "The order requires items with a valid product and quantity",
+    "invalidProduct": "One of the products does not exist in the catalog"
   },
   "users": {
     "list": "User list",

@@ -22,7 +22,7 @@ mock.spyOn(Sequelize.prototype, 'authenticate').mockImplementation(() => {
 
 mock.mock('../models/documents', () => {
   const model = () => Object.fromEntries(
-    ['find', 'findById', 'create', 'findByIdAndUpdate', 'findByIdAndDelete']
+    ['find', 'findById', 'create', 'findByIdAndUpdate', 'findOneAndUpdate', 'findByIdAndDelete']
       .map(name => [name, mock.fn()])
   );
   return { Customer: model(), Order: model() };

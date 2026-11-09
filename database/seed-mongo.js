@@ -19,16 +19,28 @@ async function seedMongo(users, demoProductId) {
       $setOnInsert: { ...dates, email: user.email },
     }, options);
 
+    const orderDefaults = {
+      paymentMethod: 'efectivo',
+      items: [{ productId: demoProductId, quantity: 1, unitPrice: 1299 }],
+    };
     await Order.updateOne({ _id: orderId }, {
-      $set: { customerId, salesPersonId },
       $setOnInsert: {
         ...dates,
-        paymentMethod: 'efectivo',
-        items: [{ productId: demoProductId, quantity: 1, unitPrice: 1299 }],
+        customerId,
+        salesPersonId,
+        ...orderDefaults,
         status: 'Pendiente de pago',
         totals: { subtotal: 1299, shipping: 0, discount: 0, total: 1299 },
       },
     }, options);
+
+    for (const [field, value] of Object.entries(orderDefaults)) {
+      await Order.updateOne(
+        { _id: orderId, [field]: { $exists: false } },
+        { $set: { [field]: value } },
+        { runValidators: true, timestamps: false },
+      );
+    }
   }
 }
 

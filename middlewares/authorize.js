@@ -60,17 +60,16 @@ async function ownsResource(resource, action, req, userId) {
     if (!order) return false;
 
     const belongsToSalesPerson = sameId(order.salesPersonId, userId);
-    const belongsToCustomer = await customerBelongsToUser(order.customerId, userId);
-    if (!belongsToSalesPerson && !belongsToCustomer) return false;
-
     if (action === 'update') {
+      if (!belongsToSalesPerson) return false;
       if (req.body?.salesPersonId !== undefined
         && !sameId(req.body.salesPersonId, userId)) return false;
       if (req.body?.customerId !== undefined
         && !(await customerBelongsToUser(req.body.customerId, userId))) return false;
+      return true;
     }
 
-    return true;
+    return belongsToSalesPerson || customerBelongsToUser(order.customerId, userId);
   }
 
   return false;
@@ -110,6 +109,7 @@ function authorize(resource, action, possession) {
       }
 
       req.rbac = { resource, action, possession };
+      if (resource === 'orders') req.rbac.scope = anyPermission ? 'any' : 'own';
       return next();
     } catch (error) {
       return next(error);

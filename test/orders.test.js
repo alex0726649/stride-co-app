@@ -5,7 +5,7 @@ const config = require('config');
 const app = require('../app');
 const { Customer, Order } = require('../models/documents');
 const OrderModel = require('../models/documents/order');
-const { User, Role } = require('../models/relationals');
+const { User, Role, Product } = require('../models/relationals');
 const matrix = require('../database/rbac-matrix.json');
 
 const id = '507f1f77bcf86cd799439011';
@@ -40,6 +40,7 @@ beforeEach(() => {
     permissions: matrix.permissions.filter(permission => permission.roles.includes(roles[id])),
   }));
   Customer.findById.mockImplementation(async id => id === customerId ? customer : null);
+  Product.findAll.mockResolvedValue([{ id: 1, price: '100.00' }]);
 });
 
 it('admin lista y consulta órdenes con datos de cliente y mensajes en ambos idiomas', async () => {
@@ -62,12 +63,15 @@ it('cliente consulta su orden, vendedor la asignada y otro cliente recibe 403', 
   expect(Order.find).not.toHaveBeenCalled();
 });
 
-it('cliente puede crear para su perfil, pero no para el perfil de otro usuario', async () => {
+it('comprador crea para su perfil con precio del catálogo, estado pendiente y sin vendedor', async () => {
   Order.create.mockResolvedValue(document);
   Customer.findById.mockImplementation(async id => id === customerId ? customer : { userId: 4 });
-  await authenticated('post', path, 3).send({ ...input, totals: { total: 1 }, _id: id }).expect(201);
+  await authenticated('post', path, 3)
+    .send({ ...input, items: [{ productId: 1, quantity: 2, unitPrice: 0 }],
+      totals: { total: 0 }, status: 'Pagado', salesPersonId: 4, _id: id }).expect(201);
+  expect(Product.findAll).toHaveBeenCalledWith({ where: { id: [1] }, attributes: ['id', 'price'] });
   expect(Order.create).toHaveBeenCalledWith({
-    ...input, totals: { subtotal: 200, shipping: 0, discount: 0, total: 200 },
+    ...input, status: 'Pendiente de pago', totals: { subtotal: 200, shipping: 0, discount: 0, total: 200 },
   });
   await authenticated('post', path, 3).send({ ...input, customerId: otherCustomerId }).expect(403);
   expect(Order.create).toHaveBeenCalledTimes(1);
@@ -75,15 +79,43 @@ it('cliente puede crear para su perfil, pero no para el perfil de otro usuario',
 
 it('vendedor puede cambiar el estado de una orden asignada sin reemplazar artículos', async () => {
   Order.findById.mockResolvedValue(document);
-  Order.findByIdAndUpdate.mockResolvedValue({ ...document, status: 'Pagado' });
+  Order.findOneAndUpdate.mockResolvedValue({ ...document, status: 'Pagado' });
   const updated = await authenticated('put', detailPath, 2).send({ status: 'Pagado' }).expect(200);
   expect(updated.body.data.items).toEqual(items);
-  expect(Order.findByIdAndUpdate).toHaveBeenCalledWith(id, { $set: { status: 'Pagado' } }, {
+  expect(Order.findOneAndUpdate).toHaveBeenCalledWith({ _id: id, salesPersonId: 2 }, { $set: { status: 'Pagado' } }, {
     new: true, runValidators: true,
   });
   await authenticated('put', detailPath, 2).send({ salesPersonId: 4 }).expect(403);
   await authenticated('put', detailPath, 3).send({ status: 'Cancelado' }).expect(403);
-  expect(Order.findByIdAndUpdate).toHaveBeenCalledTimes(1);
+  expect(Order.findOneAndUpdate).toHaveBeenCalledTimes(1);
+});
+
+it('un vendedor que es comprador recibe 403 si la orden está asignada a otro vendedor', async () => {
+  Order.findById.mockResolvedValue({ ...document, salesPersonId: 9 });
+  Customer.findById.mockResolvedValue({ ...customer, userId: 2 });
+  await authenticated('put', detailPath, 2).send({ status: 'Pagado' }).expect(403);
+  expect(Order.findOneAndUpdate).not.toHaveBeenCalled();
+});
+
+it('recalcula el total al editar artículos aunque el body mande precio cero', async () => {
+  Product.findAll.mockResolvedValue([{ id: 1, price: '19.99' }]);
+  Order.findById.mockResolvedValue(document);
+  Order.findOneAndUpdate.mockResolvedValue(document);
+  await authenticated('put', detailPath, 2)
+    .send({ items: [{ productId: 1, quantity: 3, unitPrice: 0 }] }).expect(200);
+  expect(Order.findOneAndUpdate).toHaveBeenCalledWith({ _id: id, salesPersonId: 2 }, {
+    $set: {
+      items: [{ productId: 1, quantity: 3, unitPrice: 19.99 }],
+      totals: { subtotal: 59.97, shipping: 0, discount: 0, total: 59.97 },
+    },
+  }, { new: true, runValidators: true });
+});
+
+it('rechaza artículos que no tienen producto en el catálogo', async () => {
+  Product.findAll.mockResolvedValue([]);
+  await authenticated('post', path + '?lang=en').send(input).expect(400)
+    .expect({ message: 'One of the products does not exist in the catalog', data: null });
+  expect(Order.create).not.toHaveBeenCalled();
 });
 
 it('solo admin puede eliminar y el controlador conserva el ID de la respuesta', async () => {
@@ -100,7 +132,7 @@ it.each(['get', 'post', 'put', 'delete'])('exige token: %s', async method => {
 it.each(['get', 'put', 'delete'])('rechaza ObjectId inválido antes de consultar: %s', async method => {
   await authenticated(method, path + '/abcdefghijkl', method === 'delete' ? 1 : 2).send(input).expect(400);
   expect(Order.findById).not.toHaveBeenCalled();
-  expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
+  expect(Order.findOneAndUpdate).not.toHaveBeenCalled();
   expect(Order.findByIdAndDelete).not.toHaveBeenCalled();
 });
 
@@ -112,7 +144,7 @@ it.each([
   await authenticated('post', path).send({ ...input, ...patch }).expect(400);
   await authenticated('put', detailPath).send(patch).expect(400);
   expect(Order.create).not.toHaveBeenCalled();
-  expect(Order.findByIdAndUpdate).not.toHaveBeenCalled();
+  expect(Order.findOneAndUpdate).not.toHaveBeenCalled();
 });
 
 it('rechaza un cliente inexistente en una alta', async () => {
@@ -123,13 +155,13 @@ it('rechaza un cliente inexistente en una alta', async () => {
 
 it.each(['get', 'put', 'delete'])('responde 404 para admin si la orden no existe: %s', async method => {
   Order.findById.mockReturnValue(query(null));
-  Order.findByIdAndUpdate.mockResolvedValue(null);
+  Order.findOneAndUpdate.mockResolvedValue(null);
   Order.findByIdAndDelete.mockResolvedValue(null);
   await authenticated(method, detailPath).send({ status: 'Pagado' }).expect(404);
 });
 
 it('un error de MongoDB se traduce y oculta los detalles internos', async () => {
-  Order.findByIdAndUpdate.mockRejectedValue(new Error('dato privado de MongoDB'));
+  Order.findOneAndUpdate.mockRejectedValue(new Error('dato privado de MongoDB'));
   await authenticated('put', detailPath + '?lang=en').send({ status: 'Pagado' }).expect(500)
     .expect({ message: 'Internal server error', data: null });
 });

@@ -30,7 +30,8 @@
     "invalidSalesPerson": "El ID del vendedor debe ser un entero positivo",
     "invalidPayment": "El método de pago no es válido",
     "invalidStatus": "El estado de la orden no es válido",
-    "invalidItems": "La orden requiere artículos con producto, cantidad y precio válidos"
+    "invalidItems": "La orden requiere artículos con producto y cantidad válidos",
+    "invalidProduct": "Uno de los productos no existe en el catálogo"
   },
   "users": {
     "list": "Lista de usuarios",

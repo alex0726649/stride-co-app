@@ -1,5 +1,6 @@
 const { isObjectIdOrHexString } = require('mongoose');
 const { Customer, Order } = require('../models/documents');
+const { Product } = require('../models/relationals');
 const response = require('../utils/response');
 const { PAYMENT_METHODS, ORDER_STATUSES, isPositiveInteger } = require('../utils/order-fields');
 
@@ -32,17 +33,13 @@ function parseBody(body, partial) {
   if (!partial || Object.hasOwn(body, 'items')) {
     if (!Array.isArray(body.items) || body.items.length === 0) return { error: 'invalidItems' };
     const items = [];
-    let subtotal = 0;
     for (const item of body.items) {
-      if (!item || !isPositiveInteger(item.productId) || !isPositiveInteger(item.quantity)
-        || !Number.isFinite(item.unitPrice) || item.unitPrice < 0) return { error: 'invalidItems' };
-      const { productId, quantity, unitPrice } = item;
-      items.push({ productId, quantity, unitPrice });
-      subtotal += quantity * unitPrice;
+      if (!item || !isPositiveInteger(item.productId) || item.productId > 2_147_483_647
+        || !isPositiveInteger(item.quantity)) return { error: 'invalidItems' };
+      const { productId, quantity } = item;
+      items.push({ productId, quantity });
     }
-    if (!Number.isFinite(subtotal)) return { error: 'invalidItems' };
     data.items = items;
-    data.totals = { subtotal, shipping: 0, discount: 0, total: subtotal };
   }
   if (Object.keys(data).length === 0) return { error: 'invalidBody' };
   return { data };
@@ -55,6 +52,24 @@ function validateBody(partial) {
     req.orderInput = data;
     return next();
   };
+}
+
+async function priceItems(items) {
+  const ids = [...new Set(items.map(item => item.productId))];
+  const products = await Product.findAll({ where: { id: ids }, attributes: ['id', 'price'] });
+  const prices = new Map(products.map(product => [product.id, Math.round(Number(product.price) * 100)]));
+
+  let subtotalCents = 0;
+  const priced = [];
+  for (const item of items) {
+    const cents = prices.get(item.productId);
+    if (cents === undefined) return { error: 'invalidProduct' };
+    subtotalCents += item.quantity * cents;
+    if (!Number.isSafeInteger(subtotalCents)) return { error: 'invalidItems' };
+    priced.push({ ...item, unitPrice: cents / 100 });
+  }
+  const subtotal = subtotalCents / 100;
+  return { items: priced, totals: { subtotal, shipping: 0, discount: 0, total: subtotal } };
 }
 
 function handleWriteError(error, req, res, next) {
@@ -89,7 +104,13 @@ async function create(req, res, next) {
     if (!(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
     }
-    const order = await Order.create(data);
+    const priced = await priceItems(data.items);
+    if (priced.error) return response.badRequest(res, req.__(`orders.${priced.error}`));
+    if (req.rbac.scope === 'own') {
+      data.status = ORDER_STATUSES[0];
+      delete data.salesPersonId;
+    }
+    const order = await Order.create({ ...data, ...priced });
     return response.created(res, req.__('orders.created'), order);
   } catch (error) {
     return handleWriteError(error, req, res, next);
@@ -102,7 +123,14 @@ async function update(req, res, next) {
     if (data.customerId && !(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
     }
-    const order = await Order.findByIdAndUpdate(req.params.id, { $set: data }, {
+    if (data.items) {
+      const priced = await priceItems(data.items);
+      if (priced.error) return response.badRequest(res, req.__(`orders.${priced.error}`));
+      Object.assign(data, priced);
+    }
+    const filter = { _id: req.params.id };
+    if (req.rbac.scope === 'own') filter.salesPersonId = req.user.id;
+    const order = await Order.findOneAndUpdate(filter, { $set: data }, {
       new: true,
       runValidators: true,
     });
