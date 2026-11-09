@@ -34,7 +34,9 @@ function query(raw, result = raw) {
 }
 
 beforeEach(() => {
-  User.findByPk.mockImplementation(async user => ({ id: Number(user), role_id: Number(user), active: true }));
+  User.findByPk.mockImplementation(async user => roles[user] ? {
+    id: Number(user), role_id: Number(user), active: true, role: { name: roles[user] },
+  } : null);
   Role.findByPk.mockImplementation(async id => ({
     name: roles[id],
     permissions: matrix.permissions.filter(permission => permission.roles.includes(roles[id])),
@@ -63,12 +65,38 @@ it('cliente consulta su orden, vendedor la asignada y otro cliente recibe 403', 
   expect(Order.find).not.toHaveBeenCalled();
 });
 
+it('una asignación antigua incorrecta no permite al comprador ver datos de otro cliente', async () => {
+  const misassigned = { ...document, salesPersonId: 4 };
+  const lookup = query(misassigned, { ...populated, salesPersonId: 4 });
+  Order.findById.mockReturnValue(lookup);
+  await authenticated('get', detailPath + '?lang=en', 4).expect(403)
+    .expect({ message: 'Forbidden', data: null });
+  expect(lookup.populate).not.toHaveBeenCalled();
+});
+
+it.each([['post', path, 1], ['post', path, 3], ['put', detailPath, 1]])(
+  'rechaza usar una cuenta compradora como vendedor: %s %s (usuario %s)',
+  async (method, url, user) => {
+    await authenticated(method, url + '?lang=en', user).send({ ...input, salesPersonId: 4 }).expect(400)
+      .expect({ message: 'The ID must belong to a salesperson account', data: null });
+    expect(Order.create).not.toHaveBeenCalled();
+    expect(Order.findOneAndUpdate).not.toHaveBeenCalled();
+  },
+);
+
+it('admin puede reasignar a una cuenta con rol vendedor', async () => {
+  Order.findOneAndUpdate.mockResolvedValue(document);
+  await authenticated('put', detailPath).send({ salesPersonId: 2 }).expect(200);
+  expect(Order.findOneAndUpdate).toHaveBeenCalledWith({ _id: id },
+    { $set: { salesPersonId: 2 } }, { new: true, runValidators: true });
+});
+
 it('comprador crea para su perfil con precio del catálogo, estado pendiente y sin vendedor', async () => {
   Order.create.mockResolvedValue(document);
   Customer.findById.mockImplementation(async id => id === customerId ? customer : { userId: 4 });
   await authenticated('post', path, 3)
     .send({ ...input, items: [{ productId: 1, quantity: 2, unitPrice: 0 }],
-      totals: { total: 0 }, status: 'Pagado', salesPersonId: 4, _id: id }).expect(201);
+      totals: { total: 0 }, status: 'Pagado', salesPersonId: 2, _id: id }).expect(201);
   expect(Product.findAll).toHaveBeenCalledWith({ where: { id: [1] }, attributes: ['id', 'price'] });
   expect(Order.create).toHaveBeenCalledWith({
     ...input, status: 'Pendiente de pago', totals: { subtotal: 200, shipping: 0, discount: 0, total: 200 },

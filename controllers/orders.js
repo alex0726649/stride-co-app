@@ -1,6 +1,6 @@
 const { isObjectIdOrHexString } = require('mongoose');
 const { Customer, Order } = require('../models/documents');
-const { Product } = require('../models/relationals');
+const { Product, Role, User } = require('../models/relationals');
 const response = require('../utils/response');
 const { PAYMENT_METHODS, ORDER_STATUSES, isPositiveInteger } = require('../utils/order-fields');
 
@@ -19,7 +19,9 @@ function parseBody(body, partial) {
     data.customerId = body.customerId;
   }
   if (Object.hasOwn(body, 'salesPersonId')) {
-    if (!isPositiveInteger(body.salesPersonId)) return { error: 'invalidSalesPerson' };
+    if (!isPositiveInteger(body.salesPersonId) || body.salesPersonId > 2_147_483_647) {
+      return { error: 'invalidSalesPerson' };
+    }
     data.salesPersonId = body.salesPersonId;
   }
   if (!partial || Object.hasOwn(body, 'paymentMethod')) {
@@ -52,6 +54,14 @@ function validateBody(partial) {
     req.orderInput = data;
     return next();
   };
+}
+
+async function isSalesPerson(id) {
+  const user = await User.findByPk(id, {
+    attributes: ['id'],
+    include: [{ model: Role, as: 'role', attributes: ['name'] }],
+  });
+  return user?.role?.name === 'sales';
 }
 
 async function priceItems(items) {
@@ -104,6 +114,9 @@ async function create(req, res, next) {
     if (!(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
     }
+    if (data.salesPersonId !== undefined && !(await isSalesPerson(data.salesPersonId))) {
+      return response.badRequest(res, req.__('orders.invalidSalesPerson'));
+    }
     const priced = await priceItems(data.items);
     if (priced.error) return response.badRequest(res, req.__(`orders.${priced.error}`));
     if (req.rbac.scope === 'own') {
@@ -122,6 +135,9 @@ async function update(req, res, next) {
     const data = req.orderInput;
     if (data.customerId && !(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
+    }
+    if (data.salesPersonId !== undefined && !(await isSalesPerson(data.salesPersonId))) {
+      return response.badRequest(res, req.__('orders.invalidSalesPerson'));
     }
     if (data.items) {
       const priced = await priceItems(data.items);

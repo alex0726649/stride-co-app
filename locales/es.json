@@ -27,7 +27,7 @@
     "invalidId": "El ID de la orden no es válido",
     "invalidBody": "Los datos de la orden son inválidos",
     "invalidCustomer": "El cliente indicado no es válido",
-    "invalidSalesPerson": "El ID del vendedor debe ser un entero positivo",
+    "invalidSalesPerson": "El ID debe corresponder a una cuenta de vendedor",
     "invalidPayment": "El método de pago no es válido",
     "invalidStatus": "El estado de la orden no es válido",
     "invalidItems": "La orden requiere artículos con producto y cantidad válidos",

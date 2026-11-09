@@ -21,6 +21,7 @@ async function seedMongo(users, demoProductId) {
 
     const orderDefaults = {
       paymentMethod: 'efectivo',
+      status: 'Pendiente de pago',
       items: [{ productId: demoProductId, quantity: 1, unitPrice: 1299 }],
     };
     await Order.updateOne({ _id: orderId }, {
@@ -29,7 +30,6 @@ async function seedMongo(users, demoProductId) {
         customerId,
         salesPersonId,
         ...orderDefaults,
-        status: 'Pendiente de pago',
         totals: { subtotal: 1299, shipping: 0, discount: 0, total: 1299 },
       },
     }, options);

@@ -28,7 +28,7 @@ async function customerBelongsToUser(customerId, userId) {
   return Boolean(customer && sameId(customer.userId, userId));
 }
 
-async function ownsResource(resource, action, req, userId) {
+async function ownsResource(resource, action, req, userId, roleName) {
   const resourceId = req.params?.id;
 
   if (resource === 'users') {
@@ -59,7 +59,7 @@ async function ownsResource(resource, action, req, userId) {
     const order = resourceId ? await Order.findById(resourceId) : null;
     if (!order) return false;
 
-    const belongsToSalesPerson = sameId(order.salesPersonId, userId);
+    const belongsToSalesPerson = roleName === 'sales' && sameId(order.salesPersonId, userId);
     if (action === 'update') {
       if (!belongsToSalesPerson) return false;
       if (req.body?.salesPersonId !== undefined
@@ -69,7 +69,8 @@ async function ownsResource(resource, action, req, userId) {
       return true;
     }
 
-    return belongsToSalesPerson || customerBelongsToUser(order.customerId, userId);
+    if (roleName === 'sales') return belongsToSalesPerson;
+    return customerBelongsToUser(order.customerId, userId);
   }
 
   return false;
@@ -104,7 +105,7 @@ function authorize(resource, action, possession) {
       }
 
       if (possession === 'own' && !anyPermission
-        && (!ownPermission || !(await ownsResource(resource, action, req, userId)))) {
+        && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess.roleName)))) {
         return response(res, 403, req.__('errors.forbidden'));
       }
 
