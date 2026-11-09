@@ -1,6 +1,7 @@
 const { isObjectIdOrHexString } = require('mongoose');
 const { Customer, Order } = require('../models/documents');
-const { Product, Role, User } = require('../models/relationals');
+const { Product, User } = require('../models/relationals');
+const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
 const response = require('../utils/response');
 const { PAYMENT_METHODS, ORDER_STATUSES, isPositiveInteger } = require('../utils/order-fields');
 
@@ -56,12 +57,9 @@ function validateBody(partial) {
   };
 }
 
-async function isSalesPerson(id) {
-  const user = await User.findByPk(id, {
-    attributes: ['id'],
-    include: [{ model: Role, as: 'role', attributes: ['name'] }],
-  });
-  return user?.role?.name === 'sales';
+async function canAssignOrderTo(userId) {
+  const user = await User.findByPk(userId, { attributes: ['role_id'] });
+  return canManageAssignedOrders(await loadRoleAccess(user?.role_id));
 }
 
 async function priceItems(items) {
@@ -114,7 +112,7 @@ async function create(req, res, next) {
     if (!(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
     }
-    if (data.salesPersonId !== undefined && !(await isSalesPerson(data.salesPersonId))) {
+    if (data.salesPersonId !== undefined && !(await canAssignOrderTo(data.salesPersonId))) {
       return response.badRequest(res, req.__('orders.invalidSalesPerson'));
     }
     const priced = await priceItems(data.items);
@@ -136,7 +134,7 @@ async function update(req, res, next) {
     if (data.customerId && !(await Customer.findById(data.customerId))) {
       return response.badRequest(res, req.__('orders.invalidCustomer'));
     }
-    if (data.salesPersonId !== undefined && !(await isSalesPerson(data.salesPersonId))) {
+    if (data.salesPersonId !== undefined && !(await canAssignOrderTo(data.salesPersonId))) {
       return response.badRequest(res, req.__('orders.invalidSalesPerson'));
     }
     if (data.items) {

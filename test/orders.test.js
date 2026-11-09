@@ -16,7 +16,7 @@ const input = { customerId, paymentMethod: 'efectivo', items };
 const document = { _id: id, ...input, salesPersonId: 2, status: 'Pendiente de pago' };
 const customer = { _id: customerId, userId: 3, email: 'customer@example.com' };
 const populated = { ...document, customerId: customer };
-const roles = { 1: 'admin', 2: 'sales', 3: 'user', 4: 'user' };
+const roles = { 1: 'admin', 2: 'sales', 3: 'user', 4: 'user', 5: 'ventas' };
 const path = '/api/orders';
 const detailPath = path + '/' + id;
 
@@ -35,12 +35,15 @@ function query(raw, result = raw) {
 
 beforeEach(() => {
   User.findByPk.mockImplementation(async user => roles[user] ? {
-    id: Number(user), role_id: Number(user), active: true, role: { name: roles[user] },
+    id: Number(user), role_id: Number(user), active: true,
   } : null);
-  Role.findByPk.mockImplementation(async id => ({
-    name: roles[id],
-    permissions: matrix.permissions.filter(permission => permission.roles.includes(roles[id])),
-  }));
+  Role.findByPk.mockImplementation(async id => {
+    const permissionRole = id === 5 ? 'sales' : roles[id];
+    return {
+      name: roles[id],
+      permissions: matrix.permissions.filter(permission => permission.roles.includes(permissionRole)),
+    };
+  });
   Customer.findById.mockImplementation(async id => id === customerId ? customer : null);
   Product.findAll.mockResolvedValue([{ id: 1, price: '100.00' }]);
 });
@@ -89,6 +92,23 @@ it('admin puede reasignar a una cuenta con rol vendedor', async () => {
   await authenticated('put', detailPath).send({ salesPersonId: 2 }).expect(200);
   expect(Order.findOneAndUpdate).toHaveBeenCalledWith({ _id: id },
     { $set: { salesPersonId: 2 } }, { new: true, runValidators: true });
+});
+
+it('un vendedor con el rol renombrado puede recibir, consultar y editar una orden asignada', async () => {
+  const assigned = { ...document, salesPersonId: 5 };
+  Order.findById.mockImplementation(() => query(assigned, { ...assigned, customerId: customer }));
+  Order.findOneAndUpdate.mockResolvedValue(assigned);
+
+  await authenticated('put', detailPath).send({ salesPersonId: 5 }).expect(200);
+  expect(Order.findOneAndUpdate).toHaveBeenLastCalledWith(
+    { _id: id }, { $set: { salesPersonId: 5 } }, { new: true, runValidators: true },
+  );
+
+  await authenticated('get', detailPath, 5).expect(200);
+  await authenticated('put', detailPath, 5).send({ status: 'Pagado' }).expect(200);
+  expect(Order.findOneAndUpdate).toHaveBeenLastCalledWith(
+    { _id: id, salesPersonId: 5 }, { $set: { status: 'Pagado' } }, { new: true, runValidators: true },
+  );
 });
 
 it('comprador crea para su perfil con precio del catálogo, estado pendiente y sin vendedor', async () => {
