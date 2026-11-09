@@ -1,9 +1,23 @@
 const mongoose = require('mongoose');
 
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const customerSchema = new mongoose.Schema({
-    userId: {type: Number, required: true},
-    phone: String,
-    email: String,
+    // Referencia a users.id (INTEGER en PostgreSQL): entero positivo.
+    userId: {
+        type: Number,
+        required: true,
+        min: 1,
+        max: 2147483647,
+        validate: { validator: Number.isInteger, message: 'userId debe ser un número entero' },
+    },
+    phone: { type: String, trim: true },
+    email: {
+        type: String,
+        trim: true,
+        lowercase: true,
+        match: [EMAIL_FORMAT, 'El email no tiene un formato válido'],
+    },
 
     //Lista de direcciones del cliente Embebido (vive dentro de otra entidad)
     addresses : [
