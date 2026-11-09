@@ -78,6 +78,22 @@
     "invalidPrice": "El price debe ser un número mayor o igual a cero",
     "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
   },
+  "customers": {
+  "list": "Lista de clientes",
+  "found": "Cliente encontrado",
+  "created": "Cliente creado",
+  "updated": "Cliente actualizado",
+  "deleted": "Cliente eliminado",
+  "notFound": "Cliente no encontrado",
+  "invalidId": "El ID debe ser un ObjectId válido",
+  "invalidBody": "Los datos del cliente son inválidos",
+  "invalidUserId": "userId es obligatorio y debe ser un entero positivo",
+  "invalidEmail": "El email no tiene un formato válido",
+  "invalidAddressType": "El tipo de dirección debe ser SHIPPING o BILLING",
+  "duplicate": "Ya existe un cliente con esos datos",
+  "userNotFound": "El usuario indicado no existe",
+  "hasOrders": "No se puede eliminar un cliente con órdenes registradas"
+  },
   "variants": {
     "list": "Lista de variantes",
     "found": "Variante encontrada",
