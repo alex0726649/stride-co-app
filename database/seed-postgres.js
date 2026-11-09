@@ -54,7 +54,7 @@ async function seedCatalog(transaction) {
       defaults: { stock: DEMO_STOCK },
       transaction,
     });
-    return;
+    return existingVariant.product_id;
   }
 
   const [product] = await Product.findOrCreate({
@@ -71,6 +71,7 @@ async function seedCatalog(transaction) {
 
   // El hook de la variante ya creó su inventario con stock cero.
   await Inventory.update({ stock: DEMO_STOCK }, { where: { variant_id: variant.id }, transaction });
+  return product.id;
 }
 
 async function seedPostgres() {
@@ -81,8 +82,8 @@ async function seedPostgres() {
 
     const roles = await loadRbacMatrix(transaction);
     const users = await seedUsers(roles, transaction);
-    await seedCatalog(transaction);
-    return users;
+    const demoProductId = await seedCatalog(transaction);
+    return { users, demoProductId };
   });
 }
 

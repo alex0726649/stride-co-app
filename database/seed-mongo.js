@@ -6,7 +6,7 @@ const DEMO_ORDERS = [
   { customerRole: 'admin', customerId: '674000000000000000020402', orderId: '674000000000000000020412' },
 ];
 
-async function seedMongo(users) {
+async function seedMongo(users, demoProductId) {
   const now = new Date();
   const dates = { createdAt: now, updatedAt: now };
   const options = { upsert: true, runValidators: true, timestamps: false };
@@ -19,13 +19,28 @@ async function seedMongo(users) {
       $setOnInsert: { ...dates, email: user.email },
     }, options);
 
+    const orderDefaults = {
+      paymentMethod: 'efectivo',
+      status: 'Pendiente de pago',
+      items: [{ productId: demoProductId, quantity: 1, unitPrice: 1299 }],
+    };
     await Order.updateOne({ _id: orderId }, {
-      $set: { customerId, salesPersonId },
       $setOnInsert: {
         ...dates,
+        customerId,
+        salesPersonId,
+        ...orderDefaults,
         totals: { subtotal: 1299, shipping: 0, discount: 0, total: 1299 },
       },
     }, options);
+
+    for (const [field, value] of Object.entries(orderDefaults)) {
+      await Order.updateOne(
+        { _id: orderId, [field]: { $exists: false } },
+        { $set: { [field]: value } },
+        { runValidators: true, timestamps: false },
+      );
+    }
   }
 }
 

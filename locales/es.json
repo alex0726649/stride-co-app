@@ -17,6 +17,22 @@
     "errorTitle": "Error",
     "status": "Estado"
   },
+  "orders": {
+    "list": "Lista de órdenes",
+    "found": "Orden encontrada",
+    "created": "Orden creada",
+    "updated": "Orden actualizada",
+    "deleted": "Orden eliminada",
+    "notFound": "Orden no encontrada",
+    "invalidId": "El ID de la orden no es válido",
+    "invalidBody": "Los datos de la orden son inválidos",
+    "invalidCustomer": "El cliente indicado no es válido",
+    "invalidSalesPerson": "El ID debe corresponder a una cuenta de vendedor",
+    "invalidPayment": "El método de pago no es válido",
+    "invalidStatus": "El estado de la orden no es válido",
+    "invalidItems": "La orden requiere artículos con producto y cantidad válidos",
+    "invalidProduct": "Uno de los productos no existe en el catálogo"
+  },
   "users": {
     "list": "Lista de usuarios",
     "found": "Usuario encontrado",

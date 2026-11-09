@@ -5,9 +5,9 @@ const { authenticate } = require('../middlewares/authenticate');
 const { authorize } = require('../middlewares/authorize');
 
 router.get('/', authenticate, authorize('orders', 'read', 'any'), controller.list);
-router.get('/:id', authenticate, authorize('orders', 'read', 'own'), controller.find);
-router.post('/', authenticate, authorize('orders', 'create', 'own'), controller.create);
-router.put('/:id', authenticate, authorize('orders', 'update', 'own'), controller.update);
-router.delete('/:id', authenticate, authorize('orders', 'delete', 'any'), controller.destroy);
+router.get('/:id', authenticate, controller.validateId, authorize('orders', 'read', 'own'), controller.find);
+router.post('/', authenticate, controller.validateBody(false), authorize('orders', 'create', 'own'), controller.create);
+router.put('/:id', authenticate, controller.validateId, controller.validateBody(true), authorize('orders', 'update', 'own'), controller.update);
+router.delete('/:id', authenticate, controller.validateId, authorize('orders', 'delete', 'any'), controller.destroy);
 
 module.exports = router;

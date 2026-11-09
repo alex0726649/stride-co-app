@@ -17,6 +17,22 @@
     "errorTitle": "Error",
     "status": "Status"
   },
+  "orders": {
+    "list": "Order list",
+    "found": "Order found",
+    "created": "Order created",
+    "updated": "Order updated",
+    "deleted": "Order deleted",
+    "notFound": "Order not found",
+    "invalidId": "The order ID is invalid",
+    "invalidBody": "The order data is invalid",
+    "invalidCustomer": "The specified customer is invalid",
+    "invalidSalesPerson": "The ID must belong to a salesperson account",
+    "invalidPayment": "The payment method is invalid",
+    "invalidStatus": "The order status is invalid",
+    "invalidItems": "The order requires items with a valid product and quantity",
+    "invalidProduct": "One of the products does not exist in the catalog"
+  },
   "users": {
     "list": "User list",
     "found": "User found",
