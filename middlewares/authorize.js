@@ -1,5 +1,5 @@
 const { Customer, Order } = require('../models/documents');
-const { loadRoleAccess } = require('../utils/rbac');
+const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
 
 const ACTIONS = new Set(['create', 'read', 'update', 'delete']);
 const POSSESSIONS = new Set(['own', 'any']);
@@ -28,7 +28,7 @@ async function customerBelongsToUser(customerId, userId) {
   return Boolean(customer && sameId(customer.userId, userId));
 }
 
-async function ownsResource(resource, action, req, userId, roleName) {
+async function ownsResource(resource, action, req, userId, roleAccess) {
   const resourceId = req.params?.id;
 
   if (resource === 'users') {
@@ -59,7 +59,8 @@ async function ownsResource(resource, action, req, userId, roleName) {
     const order = resourceId ? await Order.findById(resourceId) : null;
     if (!order) return false;
 
-    const belongsToSalesPerson = roleName === 'sales' && sameId(order.salesPersonId, userId);
+    const managesAssignedOrders = canManageAssignedOrders(roleAccess);
+    const belongsToSalesPerson = managesAssignedOrders && sameId(order.salesPersonId, userId);
     if (action === 'update') {
       if (!belongsToSalesPerson) return false;
       if (req.body?.salesPersonId !== undefined
@@ -69,7 +70,7 @@ async function ownsResource(resource, action, req, userId, roleName) {
       return true;
     }
 
-    if (roleName === 'sales') return belongsToSalesPerson;
+    if (managesAssignedOrders) return belongsToSalesPerson;
     return customerBelongsToUser(order.customerId, userId);
   }
 
@@ -105,7 +106,7 @@ function authorize(resource, action, possession) {
       }
 
       if (possession === 'own' && !anyPermission
-        && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess.roleName)))) {
+        && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess)))) {
         return response(res, 403, req.__('errors.forbidden'));
       }
 
