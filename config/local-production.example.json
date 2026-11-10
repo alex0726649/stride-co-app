@@ -1,0 +1,21 @@
+{
+  "jwt": {
+    "secret": "REEMPLAZA_CON_UN_SECRETO_LARGO_Y_ALEATORIO"
+  },
+  "db": {
+    "postgres": {
+      "host": "HOST_DE_RENDER_POSTGRESQL",
+      "port": 5432,
+      "database": "NOMBRE_DE_LA_BASE",
+      "user": "USUARIO_DE_LA_BASE",
+      "password": "CONTRASEÑA_DE_LA_BASE",
+      "ssl": {
+        "enabled": false,
+        "rejectUnauthorized": false
+      }
+    },
+    "mongo": {
+      "uri": "mongodb+srv://USUARIO:CONTRASEÑA@CLUSTER.mongodb.net/stride_co?retryWrites=true&w=majority"
+    }
+  }
+}
