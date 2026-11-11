@@ -101,10 +101,35 @@ async function cleanup(token, resources) {
   }
 }
 
+function findForbiddenKeys(obj, forbiddenKeys = ['password_hash', 'salt_key']) {
+  const found = [];
+
+  function scan(current, currentPath = '') {
+    if (!current || typeof current !== 'object') return;
+
+    if (Array.isArray(current)) {
+      current.forEach((item, index) => scan(item, `${currentPath}[${index}]`));
+      return;
+    }
+
+    for (const [key, value] of Object.entries(current)) {
+      const fullPath = currentPath ? `${currentPath}.${key}` : key;
+      if (forbiddenKeys.includes(key)) {
+        found.push(fullPath);
+      }
+      scan(value, fullPath);
+    }
+  }
+
+  scan(obj);
+  return found;
+}
+
 module.exports = {
   baseUrl,
   api,
   login,
   cleanup,
   DEMO_CREDENTIALS,
+  findForbiddenKeys,
 };

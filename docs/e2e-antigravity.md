@@ -234,3 +234,42 @@ Ajustes a test/e2e/i18n.e2e.test.js: (1) agrega un caso sin Accept-Language ni ?
 ```text
 Agrega a la suite más adecuada un caso donde el admin hace POST /products con un cuerpo inválido según controllers/products.js (por ejemplo, sin name) y recibe 400 con data: null; si por error se crea algo, bórralo en afterAll.
 ```
+## Anexo B · S2-15, suites E2E de recursos SQL
+
+### Prompt 8 · Ciclos SQL y limpieza
+
+```text
+Lee las rutas y controladores de users, roles, permissions, products, variants e inventory; revisa sus modelos de Sequelize, locales/es.json y las suites base de test/e2e/. Genera seis archivos *.e2e.test.js en test/e2e/sql/ para la API en ejecución, con Supertest, sin importar la aplicación ni usar mocks. Cambia solo las pruebas.
+
+Usa los fixtures de test/e2e/sql/fixtures.js para autenticar como admin y registrar altas para afterAll. Para cada recurso con POST y DELETE comprueba 201, GET por id, presencia en GET de lista, PUT, una nueva lectura que confirme persistencia, DELETE y GET 404 del id que acabas de eliminar. Agrega un 400 con su mensaje de locales/es.json por recurso. Usa identificadores únicos en cuentas, roles, permisos y SKU. No modifiques registros del seed.
+
+Para users toma el id del rol user desde GET /api/roles y reutiliza findForbiddenKeys para comprobar el cuerpo completo de las respuestas de alta, detalle, lista, actualización y baja. Para permissions la parte recurso de la clave solo admite letras minúsculas. Para products crea una variante temporal y confirma su id y SKU dentro de variants en el detalle y la lista. Borra la variante antes del producto.
+
+Para variants crea un producto temporal y comprueba que el detalle incluye el producto y el inventario. Para inventory crea un producto y una variante temporal, obtiene el id de inventory desde el detalle de la variante, comprueba las cantidades iniciales, consulta el listado, ajusta stock y reserved, vuelve a consultar y verifica el 400 por reserved mayor que stock. En afterAll devuelve ambas cantidades a cero antes de eliminar variante y producto. Inventario solo expone GET y PUT.
+
+Registra los ids de los POST antes de hacer las aserciones, incluso si una prueba de 400 recibe por error una respuesta exitosa. Conserva la limpieza en orden inverso y reporta sus fallos como errores de Jest. Indica qué archivos generaste y qué contratos verificaste.
+```
+
+### Generación y revisión
+
+Se ejecutó el Prompt 8 desde Antigravity CLI 1.5.5 con la cuenta institucional UACH y Gemini 3.8 Flash (High). La sesión interactiva escribió las seis suites en `test/e2e/sql/`.
+
+- La prueba negativa de variantes envía una variante con los campos de texto válidos y `product_id: 0`. El controlador valida ese campo primero y devuelve `variants.invalidProductId`.
+- Las cuentas, los roles y los SKU temporales usan UUID. Para los permisos, los dígitos del UUID se convierten a letras de forma que la clave cumpla el formato RBAC.
+- La segunda consulta de usuario también revisa el cuerpo completo en busca de `password_hash` y `salt_key`.
+- En inventario, `afterAll` exige un 200 al volver a cero y ejecuta la limpieza inversa aunque falle ese ajuste. Las altas se registran antes de hacer las aserciones para que se puedan limpiar si una solicitud inválida se acepta por error.
+
+### Validación local
+
+Con la API en ejecución, PostgreSQL 16 y MongoDB 7 en contenedores locales:
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | 0 errores |
+| `npm test` | 16 suites, 363 pruebas |
+| `npm run test:e2e` (primera corrida) | 10 suites, 44 pruebas |
+| `npm run test:e2e` (segunda corrida) | 10 suites, 44 pruebas |
+
+Después de cada corrida quedaron los mismos datos iniciales. PostgreSQL conservó
+3 usuarios, 3 roles, 36 permisos, 1 producto, 1 variante y 1 registro de inventario
+con 20 unidades y 0 reservadas. MongoDB conservó 2 clientes y 2 órdenes.
