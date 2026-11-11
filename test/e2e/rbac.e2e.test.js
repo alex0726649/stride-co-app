@@ -1,5 +1,5 @@
 const es = require('../../locales/es.json');
-const { api, login } = require('./helpers');
+const { api, login, cleanup } = require('./helpers');
 
 describe('E2E - Control de Acceso Basado en Roles (RBAC)', () => {
   let adminToken;
@@ -19,50 +19,11 @@ describe('E2E - Control de Acceso Basado en Roles (RBAC)', () => {
   afterAll(async () => {
     if (!adminToken) return;
 
-    // 1. Borrar órdenes
-    for (const id of createdOrderIds.reverse()) {
-      try {
-        const res = await api()
-          .delete(`/api/orders/${id}`)
-          .set('Accept-Language', 'es')
-          .set('Authorization', `Bearer ${adminToken}`);
-        if (res.status !== 200 && res.status !== 404) {
-          console.warn(`[afterAll Cleanup] Recurso: orders, ID: ${id}, Status: ${res.status}, Mensaje: ${res.body?.message || res.text}`);
-        }
-      } catch (error) {
-        console.warn(`[afterAll Cleanup] Recurso: orders, ID: ${id}, Error: ${error.message}`);
-      }
-    }
-
-    // 2. Borrar clientes
-    for (const id of createdCustomerIds.reverse()) {
-      try {
-        const res = await api()
-          .delete(`/api/customers/${id}`)
-          .set('Accept-Language', 'es')
-          .set('Authorization', `Bearer ${adminToken}`);
-        if (res.status !== 200 && res.status !== 404) {
-          console.warn(`[afterAll Cleanup] Recurso: customers, ID: ${id}, Status: ${res.status}, Mensaje: ${res.body?.message || res.text}`);
-        }
-      } catch (error) {
-        console.warn(`[afterAll Cleanup] Recurso: customers, ID: ${id}, Error: ${error.message}`);
-      }
-    }
-
-    // 3. Borrar productos
-    for (const id of createdProductIds.reverse()) {
-      try {
-        const res = await api()
-          .delete(`/api/products/${id}`)
-          .set('Accept-Language', 'es')
-          .set('Authorization', `Bearer ${adminToken}`);
-        if (res.status !== 200 && res.status !== 404) {
-          console.warn(`[afterAll Cleanup] Recurso: products, ID: ${id}, Status: ${res.status}, Mensaje: ${res.body?.message || res.text}`);
-        }
-      } catch (error) {
-        console.warn(`[afterAll Cleanup] Recurso: products, ID: ${id}, Error: ${error.message}`);
-      }
-    }
+    await cleanup(adminToken, [
+      { path: '/api/orders', ids: [...createdOrderIds].reverse() },
+      { path: '/api/customers', ids: [...createdCustomerIds].reverse() },
+      { path: '/api/products', ids: [...createdProductIds].reverse() },
+    ]);
   });
 
   describe('(1) ADMIN products:delete:any', () => {
