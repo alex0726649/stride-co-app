@@ -273,3 +273,29 @@ Con la API en ejecución, PostgreSQL 16 y MongoDB 7 en contenedores locales:
 Después de cada corrida quedaron los mismos datos iniciales. PostgreSQL conservó
 3 usuarios, 3 roles, 36 permisos, 1 producto, 1 variante y 1 registro de inventario
 con 20 unidades y 0 reservadas. MongoDB conservó 2 clientes y 2 órdenes.
+
+## Anexo C · S2-16, suites E2E de clientes y órdenes
+
+Las suites prueban las rutas HTTP de clientes y órdenes contra la API en ejecución. Verifican el ciclo completo hasta el 404, la persistencia de las actualizaciones, los datos del cliente incluidos en una orden y el 400 para datos inválidos e identificadores mal formados.
+
+Las pruebas usan identificadores y correos temporales. `afterAll` elimina primero las órdenes, luego los clientes y finalmente los productos de prueba. Se registran los identificadores de las altas exitosas antes de comprobar las respuestas.
+
+### Prompt preparado para Antigravity
+
+> Implementa S2-16 (#76). Crea dos suites E2E con Jest y Supertest para clientes y órdenes. Usa los helpers existentes y prueba contra la API real.
+>
+> Para cada recurso, verifica crear, consultar, listar, actualizar, borrar y recibir 404 al volver a consultar. Comprueba que una orden incluya los datos de su cliente y que los datos inválidos y los IDs mal formados devuelvan 400.
+>
+> Usa datos temporales únicos y límpialos en afterAll. Borra las órdenes antes que sus clientes y productos. Registra el prompt y los ajustes en docs/e2e-antigravity.md. Al final, muestra los archivos modificados.
+
+Codex escribió las suites de clientes y órdenes de S2-16. Para la entrega, el equipo confirmó que basta la evidencia de uso de Antigravity ya documentada en el proyecto.
+
+### Ejecutar solo S2-16
+
+Con la API en ejecución y los datos demo cargados, ejecuta:
+
+```bash
+npm run test:e2e -- --runTestsByPath test/e2e/customers.e2e.test.js test/e2e/orders.e2e.test.js
+```
+
+Validación local con la API, PostgreSQL y MongoDB en ejecución. Las dos corridas consecutivas pasaron con 2 suites y 6 pruebas cada una. ESLint pasó sin errores.
