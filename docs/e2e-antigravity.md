@@ -288,11 +288,7 @@ Las pruebas usan identificadores y correos temporales. `afterAll` elimina primer
 >
 > Usa datos temporales únicos y límpialos en afterAll. Borra las órdenes antes que sus clientes y productos. Al terminar, resume qué generaste y qué archivos cambiaste. Deja los cambios sin commit para revisarlos.
 
-### Generación y revisión
-
-Antigravity regeneró las dos suites de S2-16. Al compararlas con las anteriores, comprobamos que ambas conservan el ciclo hasta el 404 y los casos de error 400. La suite de órdenes verifica la relación con el cliente y limpia las órdenes antes de borrar clientes y productos.
-
-[Captura del resumen de Antigravity para S2-16](img/e2e/s2-16-antigravity-resumen.png)
+Para la entrega, acordamos usar la evidencia de Antigravity ya documentada para S2-14 y S2-15.
 
 ### Ejecutar solo S2-16
 
