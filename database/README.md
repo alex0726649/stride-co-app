@@ -35,8 +35,8 @@ docker run -d --name stride-postgres \
 
 La configuración por defecto usa host `localhost`, puerto `5432` y usuario
 `postgres`. Para una conexión remota con SSL, establece `db.postgres.ssl.enabled`
-en `true` en tu archivo local de configuración. En Render también se puede usar
-la variable `DB_POSTGRES_SSL=true`.
+en `true` en tu archivo local de configuración (en Render, en
+`config/local-production.json`).
 
 ## Comprobar las tablas
 

@@ -87,9 +87,9 @@ El `.dockerignore` excluye `**/local*.json` (salvo las plantillas `*.example.jso
 El seed se ejecuta desde una computadora del equipo contra el host **externo**:
 
 1. Crear temporalmente `config/local-production.json` con el host externo y `"ssl": { "enabled": true, "rejectUnauthorized": false }`. Git lo ignora.
-2. Ejecutar (en producción el seed exige las contraseñas demo por variable):
+2. Ejecutar el seed en modo producción. Crea las cuentas demo con las contraseñas documentadas en el README, las mismas en todos los entornos:
    ```bash
-   NODE_ENV=production SEED_ADMIN_PASSWORD='...' SEED_SALES_PASSWORD='...' SEED_USER_PASSWORD='...' npm run seed
+   NODE_ENV=production npm run seed
    ```
 3. Borrar `config/local-production.json`.
 

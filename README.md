@@ -44,16 +44,16 @@ Tablero de trabajo: [GitHub Project](https://github.com/users/alex0726649/projec
 
 ## API pública
 
-La API está desplegada en Render desde la rama `staging`, con Render PostgreSQL y MongoDB Atlas en sus planes gratuitos.
+La API está desplegada en Render desde la rama `staging` (auto-deploy en cada push), con Render PostgreSQL y MongoDB Atlas en sus planes gratuitos. El servicio web y la base PostgreSQL están en la región Oregon. El procedimiento completo para recrear el despliegue está en [`docs/deploy-render.md`](docs/deploy-render.md).
 
 | Dato | Contenido |
 |---|---|
-| URL pública | ⚠️ PENDIENTE: `https://<servicio>.onrender.com` |
+| URL pública | <https://stride-co-app-staging.onrender.com> |
 | Health Check | `GET /health` → `200 {"status":"UP"}`. Render lo usa como Health Check Path. |
 | Usuarios de demostración | Ver la tabla siguiente. Son cuentas ficticias creadas por `npm run seed`. |
 | Ejemplo de uso | Ver [Probar el despliegue](#probar-el-despliegue). |
-| Render PostgreSQL | Plan gratuito. Creada el ⚠️ PENDIENTE (caduca 30 días después, el ⚠️ PENDIENTE). Región: ⚠️ PENDIENTE. |
-| MongoDB Atlas | Cluster gratuito M0 en ⚠️ PENDIENTE (proveedor y región). Usuario de base de datos exclusivo del proyecto. Network Access: ⚠️ PENDIENTE. |
+| Render PostgreSQL | Plan gratuito, región Oregon. Creada el **11 de noviembre de 2026**; caduca el **11 de diciembre de 2026** (30 días). |
+| MongoDB Atlas | Cluster gratuito M0 en AWS, región Oregon, base `stride_co`. Usuario de base de datos exclusivo del proyecto. Network Access: `0.0.0.0/0`, porque el plan gratuito de Render no tiene IP fija; el acceso queda protegido por el usuario y la contraseña del proyecto. |
 | Secretos | `config/local-production.json` se carga en Render como **Secret File**. Ver [Secretos en producción](#secretos-en-producción). |
 
 **Usuarios de demostración.** Las contraseñas son exclusivas de estas cuentas de prueba y no se usan en ningún otro lugar:
@@ -64,14 +64,14 @@ La API está desplegada en Render desde la rama `staging`, con Render PostgreSQL
 | `sales` | `sales@stride-demo.example` | `StrideDemo-Sales-2026!` | Catálogo, inventario, clientes y solo sus órdenes asignadas |
 | `user` | `user@stride-demo.example` | `StrideDemo-User-2026!` | Catálogo, su perfil de cliente y solo sus órdenes |
 
-> El plan gratuito de Render suspende el servicio tras unos minutos sin tráfico. La primera petición después de eso puede tardar alrededor de un minuto; consulta `/health` antes de probar.
+> El plan gratuito de Render suspende el servicio tras 15 minutos sin tráfico. La primera petición después de eso tarda alrededor de 50 segundos; consulta `/health` antes de probar.
 
 ### Probar el despliegue
 
 Con `bash` (en PowerShell usa `curl.exe` en lugar de `curl`):
 
 ```bash
-API=https://<servicio>.onrender.com
+API=https://stride-co-app-staging.onrender.com
 
 # 1. Despertar el servicio
 curl $API/health
@@ -185,7 +185,7 @@ La configuración se lee con el paquete [`config`](https://www.npmjs.com/package
 | `development.json`, `test.json`, `production.json` | Sí | Diferencias de cada entorno (por ejemplo, `bcrypt.saltRounds` 1 en pruebas y 12 en producción). |
 | `local-development.json`, `local-production.json` | **No** | Secretos de cada entorno: `jwt.secret`, contraseñas y URIs de las bases. |
 | `local-*.example.json` | Sí | Plantillas sin valores reales para crear los archivos locales. |
-| `custom-environment-variables.json` | Sí | Mapea variables de entorno a claves de configuración. |
+| `custom-environment-variables.json` | Sí | Mapea `PORT` a `server.port`. Es la única variable que sobrescribe la configuración. |
 
 Si falta `jwt.secret`, el servidor no arranca y muestra un mensaje que indica qué configurar.
 
@@ -619,10 +619,10 @@ npm run test:e2e
 **Contra Render:** primero consulta `/health` para despertar el servicio. La URL se pasa solo al runner de pruebas:
 
 ```bash
-E2E_BASE_URL=https://<servicio>.onrender.com npm run test:e2e
+E2E_BASE_URL=https://stride-co-app-staging.onrender.com npm run test:e2e
 ```
 
-En PowerShell: `$env:E2E_BASE_URL="https://<servicio>.onrender.com"; npm run test:e2e`.
+En PowerShell: `$env:E2E_BASE_URL="https://stride-co-app-staging.onrender.com"; npm run test:e2e`.
 
 La URL por defecto sale de `e2e.baseUrl` en `config/default.json` (`http://localhost:3000`). Las pruebas inician sesión con los [usuarios de demostración](#api-pública).
 
@@ -640,7 +640,7 @@ stride-co-app/
 |-- config/
 |   |-- default.json           Configuración común sin secretos
 |   |-- development.json, test.json, production.json
-|   |-- custom-environment-variables.json   Mapeo de PORT y variables de conexión
+|   |-- custom-environment-variables.json   Mapeo de PORT
 |   |-- local-*.example.json   Plantillas de los archivos de secretos
 |   |-- i18n.js                Configuración de idiomas
 |   |-- sequelize.js           Conexión a PostgreSQL
@@ -655,6 +655,7 @@ stride-co-app/
 |   `-- README.md              Documentación del esquema relacional
 |-- docs/
 |   |-- api.md                 Contrato de la API
+|   |-- deploy-render.md       Despliegue en Render, PostgreSQL y Atlas
 |   |-- e2e-antigravity.md     Registro de las pruebas E2E con Antigravity
 |   |-- product-backlog.md     Product Backlog
 |   `-- transcripcion-cliente.md  Entrevista con el cliente
