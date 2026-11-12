@@ -1,0 +1,60 @@
+Ruptura:   T13
+Fecha:     2026-11-12T06:17:04.801Z
+Archivo:   test/e2e/auth.e2e.test.js
+Prueba:    la respuesta de login no contiene password_hash ni salt_key en ningún nivel
+Cambio:    findForbiddenKeys(res.body)
+       →   findForbiddenKeys(res.body, ['password_hash', 'salt_key', 'token'])
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/auth.e2e.test.js -t "la respuesta de login no contiene password_hash ni salt_key en ningún nivel"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/auth.e2e.test.js
+  E2E - Autenticación y JWT
+    (1) Login válido con cada rol demo
+      ○ skipped rol "admin" regresa 200, mensaje traducido y JWT de tres partes
+      ○ skipped rol "sales" regresa 200, mensaje traducido y JWT de tres partes
+      ○ skipped rol "user" regresa 200, mensaje traducido y JWT de tres partes
+    (2) Contraseña incorrecta y usuario inexistente
+      ○ skipped contraseña incorrecta regresa 401 con mensaje auth.invalidCredentials
+      ○ skipped email inexistente regresa 401 con exactamente el mismo cuerpo que contraseña incorrecta
+    (3) Cuerpo de login inválido
+      ○ skipped regresa 400 cuando falta la contraseña
+      ○ skipped regresa 400 cuando falta el email
+      ○ skipped regresa 400 con cuerpo vacío o campos en blanco
+    (4) Rutas protegidas sin token y con token alterado
+      ○ skipped GET /api/products sin encabezado Authorization regresa 401
+      ○ skipped GET /api/products con token alterado regresa 401
+      ○ skipped GET /api/auth/me sin token regresa 401
+    (5) Exclusión de password_hash y salt_key
+      × la respuesta de login no contiene password_hash ni salt_key en ningún nivel (122 ms)
+      ○ skipped GET /api/auth/me no contiene password_hash ni salt_key en ningún nivel
+      ○ skipped GET /api/users no contiene password_hash ni salt_key en ningún nivel
+
+  ● E2E - Autenticación y JWT › (5) Exclusión de password_hash y salt_key › la respuesta de login no contiene password_hash ni salt_key en ningún nivel
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 3
+
+    - Array []
+    + Array [
+    +   "data.token",
+    + ]
+
+      195 |       expect(res.status).toBe(200);
+      196 |       const forbidden = findForbiddenKeys(res.body, ['password_hash', 'salt_key', 'token']);
+    > 197 |       expect(forbidden).toEqual([]);
+          |                         ^
+      198 |     });
+      199 |
+      200 |     it('GET /api/auth/me no contiene password_hash ni salt_key en ningún nivel', async () => {
+
+      at Object.toEqual (test/e2e/auth.e2e.test.js:197:25)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 13 skipped, 14 total
+Snapshots:   0 total
+Time:        0.896 s, estimated 1 s
+Ran all test suites matching test/e2e/auth.e2e.test.js with tests matching "la respuesta de login no contiene password_hash ni salt_key en ningún nivel".

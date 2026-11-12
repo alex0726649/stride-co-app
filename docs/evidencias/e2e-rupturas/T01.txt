@@ -1,0 +1,42 @@
+Ruptura:   T01
+Fecha:     2026-11-12T06:16:50.064Z
+Archivo:   test/e2e/health.e2e.test.js
+Prueba:    GET /health responde 200 con estado UP sin requerir token
+Cambio:    { status: 'UP' }
+       →   { status: 'DOWN' }
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/health.e2e.test.js -t "GET /health responde 200 con estado UP sin requerir token"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/health.e2e.test.js
+  E2E - Health check
+    × GET /health responde 200 con estado UP sin requerir token (24 ms)
+
+  ● E2E - Health check › GET /health responde 200 con estado UP sin requerir token
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Object {
+    -   "status": "DOWN",
+    +   "status": "UP",
+      }
+
+       7 |     expect(res.status).toBe(200);
+       8 |     expect(res.headers['content-type']).toMatch(/json/);
+    >  9 |     expect(res.body).toEqual({ status: 'DOWN' });
+         |                      ^
+      10 |   });
+      11 | });
+      12 |
+
+      at Object.toEqual (test/e2e/health.e2e.test.js:9:22)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        0.914 s
+Ran all test suites matching test/e2e/health.e2e.test.js with tests matching "GET /health responde 200 con estado UP sin requerir token".

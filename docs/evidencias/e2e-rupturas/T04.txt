@@ -1,0 +1,56 @@
+Ruptura:   T04
+Fecha:     2026-11-12T06:16:53.586Z
+Archivo:   test/e2e/auth.e2e.test.js
+Prueba:    rol "user" regresa 200, mensaje traducido y JWT de tres partes
+Cambio:    expect(parts).toHaveLength(3);
+       →   expect(parts).toHaveLength(2);
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/auth.e2e.test.js -t "rol "user" regresa 200, mensaje traducido y JWT de tres partes"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/auth.e2e.test.js
+  E2E - Autenticación y JWT
+    (1) Login válido con cada rol demo
+      × rol "user" regresa 200, mensaje traducido y JWT de tres partes (125 ms)
+      ○ skipped rol "admin" regresa 200, mensaje traducido y JWT de tres partes
+      ○ skipped rol "sales" regresa 200, mensaje traducido y JWT de tres partes
+    (2) Contraseña incorrecta y usuario inexistente
+      ○ skipped contraseña incorrecta regresa 401 con mensaje auth.invalidCredentials
+      ○ skipped email inexistente regresa 401 con exactamente el mismo cuerpo que contraseña incorrecta
+    (3) Cuerpo de login inválido
+      ○ skipped regresa 400 cuando falta la contraseña
+      ○ skipped regresa 400 cuando falta el email
+      ○ skipped regresa 400 con cuerpo vacío o campos en blanco
+    (4) Rutas protegidas sin token y con token alterado
+      ○ skipped GET /api/products sin encabezado Authorization regresa 401
+      ○ skipped GET /api/products con token alterado regresa 401
+      ○ skipped GET /api/auth/me sin token regresa 401
+    (5) Exclusión de password_hash y salt_key
+      ○ skipped la respuesta de login no contiene password_hash ni salt_key en ningún nivel
+      ○ skipped GET /api/auth/me no contiene password_hash ni salt_key en ningún nivel
+      ○ skipped GET /api/users no contiene password_hash ni salt_key en ningún nivel
+
+  ● E2E - Autenticación y JWT › (1) Login válido con cada rol demo › rol "user" regresa 200, mensaje traducido y JWT de tres partes
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 2
+    Received length: 3
+    Received array:  ["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", "eyJzdWIiOiIzIiwiaWF0IjoxNzk0NDY0MjEzLCJleHAiOjE3OTQ0NjUxMTMsImF1ZCI6InN0cmlkZS1jby1hcGkiLCJpc3MiOiJzdHJpZGUtY28ifQ", "Z9cdC4UrqyorFWsiDrDiZhDCtjReApJADoIK3KTMRr4"]
+
+      44 |         expect(typeof token).toBe('string');
+      45 |         const parts = token.split('.');
+    > 46 |         expect(parts).toHaveLength(2);
+         |                       ^
+      47 |         expect(parts[0].length).toBeGreaterThan(0);
+      48 |         expect(parts[1].length).toBeGreaterThan(0);
+      49 |         expect(parts[2].length).toBeGreaterThan(0);
+
+      at Object.toHaveLength (test/e2e/auth.e2e.test.js:46:23)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 13 skipped, 14 total
+Snapshots:   0 total
+Time:        0.678 s, estimated 1 s
+Ran all test suites matching test/e2e/auth.e2e.test.js with tests matching "rol "user" regresa 200, mensaje traducido y JWT de tres partes".
