@@ -605,6 +605,7 @@ Las suites de `test/e2e/` llaman a la **API en ejecución** con Supertest; no im
 | `i18n` | Respuestas en español e inglés con `?lang` y `Accept-Language`. |
 | `sql/` | Ciclo completo de users, roles, permissions, products, variants e inventory. |
 | `customers`, `orders` | Ciclo completo de los recursos de MongoDB y la relación orden → cliente. |
+| **Total** | **12 suites y 50 pruebas.** |
 
 Cada suite limpia en `afterAll` lo que crea, así que se pueden ejecutar varias veces seguidas.
 
@@ -626,11 +627,11 @@ En PowerShell: `$env:E2E_BASE_URL="https://stride-co-app-staging.onrender.com"; 
 
 La URL por defecto sale de `e2e.baseUrl` en `config/default.json` (`http://localhost:3000`). Las pruebas inician sesión con los [usuarios de demostración](#api-pública).
 
-Resultado de `npm run test:e2e` contra Render:
-
-⚠️ PENDIENTE: agregar la captura en `docs/img/e2e/render-test-e2e.png`.
+Resultado de `npm run test:e2e` contra Render (12 suites y 50 pruebas en verde, validado en la S2-18):
 
 ![npm run test:e2e contra Render](docs/img/e2e/render-test-e2e.png)
+
+La validación completa de la entrega (clonación limpia, pruebas locales y contra Render, revisión de secretos, ramas y Project) está en [`docs/sprint2-validacion.md`](docs/sprint2-validacion.md).
 
 ## Estructura del proyecto
 
@@ -657,6 +658,9 @@ stride-co-app/
 |   |-- api.md                 Contrato de la API
 |   |-- deploy-render.md       Despliegue en Render, PostgreSQL y Atlas
 |   |-- e2e-antigravity.md     Registro de las pruebas E2E con Antigravity
+|   |-- sprint2-validacion.md  Validación de la entrega del Sprint 2
+|   |-- evidencias/            Logs de las rupturas E2E y reporte de validación
+|   |-- img/                   Capturas de las pruebas y del despliegue
 |   |-- product-backlog.md     Product Backlog
 |   `-- transcripcion-cliente.md  Entrevista con el cliente
 |-- locales/                   Catálogos de traducción (es.json, en.json)
@@ -667,6 +671,8 @@ stride-co-app/
 |   |-- relationals/           Modelos de Sequelize
 |   `-- documents/             Modelos de Mongoose
 |-- routes/                    Definición de endpoints
+|-- scripts/
+|   `-- e2e-rupturas.js        Evidencia: rompe cada prueba E2E a propósito
 |-- test/                      Pruebas con mocks (Jest y Supertest)
 |   `-- e2e/                   Pruebas E2E contra la API en ejecución
 |-- utils/
