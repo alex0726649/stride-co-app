@@ -105,8 +105,8 @@ El seed es idempotente: no duplica usuarios ni el producto demo si se vuelve a c
 | Login admin | `POST /api/auth/login` con el usuario demo admin | ✅ 200, `Inicio de sesión correcto` y JWT |
 | Ruta protegida en español | `GET /api/products` con `Accept-Language: es`, sin token | ✅ 401 `No autorizado` |
 | Ruta protegida en inglés | `GET /api/products` con `Accept-Language: en`, sin token | ✅ 401 `Unauthorized` |
+| E2E contra Render | `E2E_BASE_URL=https://stride-co-app-staging.onrender.com npm run test:e2e` | ✅ 12 suites, 50 pruebas (validado en la S2-18) |
 
-> Las pruebas E2E contra Render se validan en la S2-18, una vez integradas las suites de la S2-14 en `staging`.
 ---
 
 ## 6. Consideraciones
