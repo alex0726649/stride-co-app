@@ -288,7 +288,7 @@ Las pruebas usan identificadores y correos temporales. `afterAll` elimina primer
 >
 > Usa datos temporales únicos y límpialos en afterAll. Borra las órdenes antes que sus clientes y productos. Registra el prompt y los ajustes en docs/e2e-antigravity.md. Al final, muestra los archivos modificados.
 
-Codex escribió las suites de clientes y órdenes de S2-16. Para la entrega, el equipo confirmó que basta la evidencia de uso de Antigravity ya documentada en el proyecto.
+Para la entrega, acordamos usar la evidencia de Antigravity ya documentada para S2-14 y S2-15.
 
 ### Ejecutar solo S2-16
 
