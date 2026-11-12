@@ -155,7 +155,7 @@ R2, R4 y R5 demuestran que el `403` lo decide el RBAC según el rol: con el toke
 
 1. **`GET /api/auth/me`** responde `res.json(req.user)`, sin el formato `{ message, data }` del resto de la API.
 2. **`auth.invalidCredentials`**: los textos son `"credenciales invalidas"` (es) y `"Invalid Credentials"` (en); conviene corregir la redacción a `"Credenciales inválidas"` / `"Invalid credentials"`. Las pruebas leen los textos de `locales/`, así que no se rompen con el cambio.
-3. **Ejecución contra Render**: `database/seed-postgres.js` permite cambiar las contraseñas demo con `SEED_<ROL>_PASSWORD` y las exige en producción. Si en Render se siembran contraseñas distintas, `login()` fallará con las credenciales de `helpers.js`; se revisará en la S2-13.
+3. **Ejecución contra Render**: `database/seed-postgres.js` permite cambiar las contraseñas demo con `SEED_<ROL>_PASSWORD` y las exige en producción. Si en Render se siembran contraseñas distintas, `login()` fallará con las credenciales de `helpers.js`; se revisará en la S2-13. **Resuelto en la S2-18:** el seed ya no lee variables de entorno y crea las cuentas demo con las mismas contraseñas en todos los entornos.
 
 Ninguna de estas observaciones se modificó en este PR: las pruebas E2E no cambian código de la aplicación.
 
