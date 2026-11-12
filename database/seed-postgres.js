@@ -20,14 +20,9 @@ async function seedUsers(roles, transaction) {
     let user = await User.findOne({ where: { email }, transaction });
 
     if (!user) {
-      const passwordVariable = `SEED_${roleName.toUpperCase()}_PASSWORD`;
-      const demoPassword = process.env[passwordVariable]
-        || (process.env.NODE_ENV === 'production' ? '' : password);
-      if (!demoPassword.trim()) {
-        throw new Error(`Define ${passwordVariable} para crear la cuenta demo ${email}.`);
-      }
-
-      const { securePassword, saltKey } = await hashPassword(demoPassword);
+      // Contraseñas ficticias, exclusivas de estas cuentas y documentadas en el README.
+      // Son las mismas en todos los entornos para que las pruebas E2E también corran contra Render.
+      const { securePassword, saltKey } = await hashPassword(password);
       user = await User.create({
         first_name: firstName,
         last_name: 'Demo',
