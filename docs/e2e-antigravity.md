@@ -280,15 +280,19 @@ Las suites prueban las rutas HTTP de clientes y órdenes contra la API en ejecuc
 
 Las pruebas usan identificadores y correos temporales. `afterAll` elimina primero las órdenes, luego los clientes y finalmente los productos de prueba. Se registran los identificadores de las altas exitosas antes de comprobar las respuestas.
 
-### Prompt preparado para Antigravity
+### Prompt enviado a Antigravity
 
-> Implementa S2-16 (#76). Crea dos suites E2E con Jest y Supertest para clientes y órdenes. Usa los helpers existentes y prueba contra la API real.
+> Implementa S2-16 (#76). Regenera las pruebas E2E de clientes y órdenes con Jest y Supertest contra la API real. Usa los helpers existentes y modifica únicamente test/e2e/customers.e2e.test.js y test/e2e/orders.e2e.test.js.
 >
-> Para cada recurso, verifica crear, consultar, listar, actualizar, borrar y recibir 404 al volver a consultar. Comprueba que una orden incluya los datos de su cliente y que los datos inválidos y los IDs mal formados devuelvan 400.
+> Para cada recurso, prueba crear, consultar, listar, actualizar y borrar. Después de borrar, comprueba que la consulta devuelva 404. Verifica que una orden incluya los datos de su cliente y que los datos inválidos y los identificadores mal formados devuelvan 400.
 >
-> Usa datos temporales únicos y límpialos en afterAll. Borra las órdenes antes que sus clientes y productos. Registra el prompt y los ajustes en docs/e2e-antigravity.md. Al final, muestra los archivos modificados.
+> Usa datos temporales únicos y límpialos en afterAll. Borra las órdenes antes que sus clientes y productos. Al terminar, resume qué generaste y qué archivos cambiaste. Deja los cambios sin commit para revisarlos.
 
-Codex escribió las suites de clientes y órdenes de S2-16. Para la entrega, el equipo confirmó que basta la evidencia de uso de Antigravity ya documentada en el proyecto.
+### Generación y revisión
+
+Antigravity regeneró las dos suites de S2-16. Al compararlas con las anteriores, comprobamos que ambas conservan el ciclo hasta el 404 y los casos de error 400. La suite de órdenes verifica la relación con el cliente y limpia las órdenes antes de borrar clientes y productos.
+
+[Captura del resumen de Antigravity para S2-16](img/e2e/s2-16-antigravity-resumen.png)
 
 ### Ejecutar solo S2-16
 
@@ -298,4 +302,4 @@ Con la API en ejecución y los datos demo cargados, ejecuta:
 npm run test:e2e -- --runTestsByPath test/e2e/customers.e2e.test.js test/e2e/orders.e2e.test.js
 ```
 
-Validación local con la API, PostgreSQL y MongoDB en ejecución. Las dos corridas consecutivas pasaron con 2 suites y 6 pruebas cada una. ESLint pasó sin errores.
+Validación local con la API, PostgreSQL y MongoDB en ejecución. Corrimos npm run test:e2e dos veces. En cada corrida pasaron las 12 suites y las 50 pruebas, incluidas las 6 de S2-16. La sesión de Antigravity reportó que ESLint pasó sin errores.
