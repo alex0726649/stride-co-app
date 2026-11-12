@@ -22,11 +22,12 @@ Instala PostgreSQL y crea la base `stride_co`. Configura las credenciales en
 `config/local-development.json`, copiando `config/local-development.example.json`
 y reemplazando el marcador de contraseña. Ese archivo local no se sube a Git.
 
-También puedes iniciar un servidor local con Docker:
+También puedes iniciar un servidor local con Docker, usando la misma contraseña
+que pusiste en `config/local-development.json`:
 
 ```bash
 docker run -d --name stride-postgres \
-  -e POSTGRES_PASSWORD=abcd1234 \
+  -e POSTGRES_PASSWORD=<tu-contraseña> \
   -e POSTGRES_DB=stride_co \
   -p 5432:5432 \
   postgres:16
@@ -34,8 +35,8 @@ docker run -d --name stride-postgres \
 
 La configuración por defecto usa host `localhost`, puerto `5432` y usuario
 `postgres`. Para una conexión remota con SSL, establece `db.postgres.ssl.enabled`
-en `true` en tu archivo local de configuración. En Render también se puede usar
-la variable `DB_POSTGRES_SSL=true`.
+en `true` en tu archivo local de configuración (en Render, en
+`config/local-production.json`).
 
 ## Comprobar las tablas
 
@@ -68,8 +69,10 @@ orden ajena. Puedes repetir la carga sin duplicar los datos.
 | `user@stride-demo.example` | `StrideDemo-User-2026!` |
 
 El comando usa la configuración de `NODE_ENV`. MongoDB apunta por defecto a
-`mongodb://localhost:27017/stride_co`. Para un entorno remoto, configura
-`MONGODB_URI` y las variables de PostgreSQL documentadas en el README principal.
-Con `NODE_ENV=production`, define `SEED_ADMIN_PASSWORD`, `SEED_SALES_PASSWORD` y
-`SEED_USER_PASSWORD` para crear las cuentas de demo con contraseñas propias del
-entorno. Las cuentas que ya existen conservan sus contraseñas.
+`mongodb://localhost:27017/stride_co`. Para sembrar las bases de producción,
+ejecuta el comando con `NODE_ENV=production` y los datos de conexión en
+`config/local-production.json`.
+
+Las contraseñas de demo son ficticias, exclusivas de estas cuentas y las mismas
+en todos los entornos, para que las pruebas E2E también puedan correr contra
+Render. Las cuentas que ya existen conservan sus contraseñas.

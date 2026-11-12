@@ -1,29 +1,5 @@
 const es = require('../../locales/es.json');
-const { api, login, DEMO_CREDENTIALS } = require('./helpers');
-
-function findForbiddenKeys(obj, forbiddenKeys = ['password_hash', 'salt_key']) {
-  const found = [];
-
-  function scan(current, currentPath = '') {
-    if (!current || typeof current !== 'object') return;
-
-    if (Array.isArray(current)) {
-      current.forEach((item, index) => scan(item, `${currentPath}[${index}]`));
-      return;
-    }
-
-    for (const [key, value] of Object.entries(current)) {
-      const fullPath = currentPath ? `${currentPath}.${key}` : key;
-      if (forbiddenKeys.includes(key)) {
-        found.push(fullPath);
-      }
-      scan(value, fullPath);
-    }
-  }
-
-  scan(obj);
-  return found;
-}
+const { api, login, DEMO_CREDENTIALS, findForbiddenKeys } = require('./helpers');
 
 describe('E2E - Autenticación y JWT', () => {
   describe('(1) Login válido con cada rol demo', () => {
