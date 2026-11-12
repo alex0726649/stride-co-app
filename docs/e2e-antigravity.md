@@ -13,7 +13,7 @@ Este documento registra cómo se generaron las suites E2E base con **Google Anti
 | Herramienta | Google Antigravity CLI (`agy`) |
 | Versión | `1.5.5` |
 | Cuenta | Institucional UACH |
-| Fecha | 10 de noviembre de 2026 |
+| Fecha | 10 y 11 de noviembre de 2026 |
 | Permisos del agente | `request-review` (cada edición y comando se aprobó manualmente) |
 | Contexto que leyó el agente | `README.md`, `app.js`, `routes/`, `controllers/`, `middlewares/`, `models/`, `database/rbac-matrix.json`, `database/seed-postgres.js`, `locales/es.json`, `locales/en.json`, `config/`, `package.json` |
 
@@ -56,11 +56,22 @@ La URL base sale de `config.get('e2e.baseUrl')` (por defecto `http://localhost:3
 | `jest.config.js` | `testPathIgnorePatterns: ['/node_modules/', '/test/e2e/']` |
 | `jest.e2e.config.js` | `testMatch` de `test/e2e/**/*.e2e.test.js`, `testEnvironment: 'node'`, `testTimeout: 20000`, sin `setupFiles` |
 | `package.json` | Script `test:e2e` |
-| `test/e2e/helpers.js` | `api()` (Supertest contra la URL), `login(rol)` y `DEMO_CREDENTIALS` |
+| `test/e2e/helpers.js` | `api()` (Supertest contra la URL), `login(rol)`, `DEMO_CREDENTIALS` y `cleanup(token, resources)` |
 | `test/e2e/health.e2e.test.js` | `GET /health` → 200 `{"status":"UP"}` |
 | `test/e2e/auth.e2e.test.js` | Login por rol, credenciales inválidas, 400, rutas protegidas, exclusión de `password_hash`/`salt_key` |
 | `test/e2e/rbac.e2e.test.js` | Los cinco escenarios de la Tarea 6 y 400 por datos inválidos |
 | `test/e2e/i18n.e2e.test.js` | Mensajes en `es`/`en` por `Accept-Language`, `?lang` e idioma por defecto |
+| `scripts/e2e-rupturas.js` | Script auxiliar de evidencia (no es una prueba): rompe cada prueba a propósito y guarda la salida de Jest |
+| `docs/evidencias/e2e-rupturas/` | `RESUMEN.md` y un log `.txt` por ruptura (T01–T33 y C1) |
+
+**Inventario de pruebas (33)**
+
+| Suite | Pruebas | IDs |
+|---|---|---|
+| health | 1 | T01 |
+| auth | 14 | T02–T15 |
+| rbac | 6 | T16–T21 |
+| i18n | 12 | T22–T33 |
 
 ---
 
@@ -81,6 +92,9 @@ La URL base sale de `config.get('e2e.baseUrl')` (por defecto `http://localhost:3
 | 6.1 | Corrección de i18n | Idioma por defecto y textos `es` ≠ `en` | [prompt6-corrections](img/e2e/prompt6-corrections.png) |
 | 7 | 400 por datos inválidos | Caso agregado a `rbac.e2e.test.js` | [prompt7](img/e2e/prompt7.png) |
 
+
+La sesión del prompt 8 terminó porque se agotó la cuota del modelo justo después de aplicar los cambios. El equipo los revisó y verificó con `npm run lint`, `npm run test:e2e` y la ruptura C1 (sección 6).
+
 El texto completo de cada prompt está en el [Anexo A](#anexo-a-prompts-completos).
 
 ---
@@ -97,6 +111,7 @@ El texto completo de cada prompt está en el [Anexo A](#anexo-a-prompts-completo
 | `auth.e2e.test.js` | No cubría correo inexistente | Caso de correo inexistente con body idéntico al de contraseña incorrecta | Evita enumerar usuarios por la respuesta del login |
 | `auth.e2e.test.js` | Credenciales demo repetidas | Se toman de `helpers.js` | Una sola fuente de verdad |
 | `rbac.e2e.test.js` | `try/catch` silencioso en `afterAll` | Revisa el status de cada `DELETE` y hace `console.warn` si no es 200 ni 404 | Supertest no lanza error con 4xx, así que la limpieza podía fallar en silencio |
+| `helpers.js`, `rbac.e2e.test.js` | `afterAll` con `console.warn` si un borrado fallaba | `cleanup()` en `helpers.js`: intenta todos los borrados, acumula los fallos (status distinto de 200/404 o error de red) y lanza un error al final | Observación del PR #101: un aviso no hacía fallar la corrida y podían quedar datos sin limpiar (verificado con la ruptura C1) |
 | `rbac.e2e.test.js` | Siempre creaba un customer para `user` | Reutiliza el customer existente de `user` | Evita duplicados en corridas repetidas |
 | `rbac.e2e.test.js` | Cuerpo de orden supuesto | Validado contra `order-fields.js` y `order.js` | `paymentMethod` solo acepta `efectivo` o `transferencia`; el precio lo calcula el servidor |
 | `rbac.e2e.test.js` | Id de `/api/auth/me` con fallback a `data.id` | Usa `meRes.body.id` directo | `/api/auth/me` responde el usuario en la raíz; el fallback escondía el contrato real |
@@ -107,36 +122,64 @@ El texto completo de cada prompt está en el [Anexo A](#anexo-a-prompts-completo
 
 ## 6. Verificación «romper a propósito»
 
-Cada prueba se modificó a propósito, se ejecutó, se confirmó que fallaba y se revirtió con `git restore`. Todas fallaron como se esperaba.
+Cada una de las **33 pruebas** se rompió a propósito, más la limpieza del `afterAll` (C1). Las 34 rupturas se ejecutaron con el script auxiliar `scripts/e2e-rupturas.js`, que para cada una:
 
-| # | Suite | Prueba | Cambio hecho | Resultado esperado | ¿Falló? | Captura |
-|---|---|---|---|---|---|---|
-| H1 | health | `GET /health` 200 UP | Esperado `status: 'DOWN'` | Received `UP` | ✅ Sí | [h1](img/e2e/h1.png) |
-| H2 | health | `GET /health` 200 UP | API apagada | `ECONNREFUSED` | ✅ Sí | [h2](img/e2e/h2.png) |
-| A1 | auth | JWT de tres partes | `toHaveLength(2)` | Received length 3 | ✅ Sí | [a1](img/e2e/a1.png), [a1-2](img/e2e/a1-2.png) |
-| A2 | auth | Contraseña incorrecta | Esperado `200` | Received 401 | ✅ Sí | [a2](img/e2e/a2.png) |
-| A3 | auth | Ruta protegida sin token | Esperado `200` | Received 401 | ✅ Sí | [a3](img/e2e/a3.png) |
-| A4 | auth | `/api/auth/me` sin campos sensibles | `'email'` agregado a las claves prohibidas | Received `["email"]` | ✅ Sí | [a4](img/e2e/a4.png) |
-| R1 | rbac | (1) ADMIN `products:delete:any` | Esperado `403` | Received 200 | ✅ Sí | [r1](img/e2e/r1.png) |
-| R2 | rbac | (2) SALES `products:delete:any` | DELETE con `adminToken` | Received 200 | ✅ Sí | [r2](img/e2e/r2.png) |
-| R3 | rbac | (3) USER `orders:read:own` propia | Esperado `403` | Received 200 | ✅ Sí | [r3](img/e2e/r3.png) |
-| R4 | rbac | (4) USER `orders:read:own` ajena | GET con `adminToken` | Received 200 | ✅ Sí | [r4](img/e2e/r4.png) |
-| R5 | rbac | (5) USER `orders:read:any` | GET con `adminToken` | Received 200 | ✅ Sí | [r5](img/e2e/r5.png) |
-| R6 | rbac | 400 por producto inválido | Se agregó `name` al cuerpo | Received 201 | ✅ Sí | [r6](img/e2e/r6.png) |
-| I1 | i18n | `Accept-Language: en` | Se pidió `es` esperando `en` | Mensaje en español | ✅ Sí | [i1](img/e2e/i1.png) |
-| I2 | i18n | `?lang=en` | Se cambió a `?lang=es` | Mensaje en español | ✅ Sí | [i2](img/e2e/i2.png) |
-| I3 | i18n | Idioma por defecto | `content-language` esperado `en` | Received `es` | ✅ Sí | [i3](img/e2e/i3.png) |
+1. modifica una sola línea dentro de la prueba;
+2. corre **solo esa prueba** con `-t`;
+3. guarda la salida completa de Jest en un `.txt`;
+4. restaura el archivo original.
 
-R2, R4 y R5 demuestran que el `403` lo decide el RBAC según el rol: con el token de admin la misma petición responde 200. A4 demuestra que el escáner recursivo sí detecta claves en la respuesta.
+El criterio de éxito es que Jest termine con código distinto de 0 y `Tests: 1 failed`. En C1, que la suite falle porque la limpieza no pudo borrar un id inválido, aunque las pruebas pasen.
+
+**Resultado: 34/34 rupturas fallaron como se esperaba.**
+
+![Resultado del script de rupturas](img/e2e/rupturas-final.png)
+
+| Evidencia | Contenido |
+|---|---|
+| [RESUMEN.md](evidencias/e2e-rupturas/RESUMEN.md) | Tabla de las 34 rupturas: prueba, cambio, exit code y resultado |
+| `evidencias/e2e-rupturas/T01.txt` … `T33.txt`, `C1.txt` | Por ruptura: cambio aplicado, comando exacto, exit code y salida completa de Jest |
+
+### Qué demuestra cada grupo
+
+| IDs | Tipo de ruptura | Qué demuestra |
+|---|---|---|
+| T01 | Cuerpo esperado `DOWN` | El health check se compara contra el cuerpo exacto |
+| T02–T04 | JWT de dos partes | Se valida el formato real del token de cada rol |
+| T05, T06, T10, T12 | Status esperado invertido | Los 401 se verifican de forma estricta |
+| T07, T08, T09 | Se mandan credenciales completas | Con datos válidos el login responde 200: el 400 depende de los campos faltantes |
+| T11 | Token válido en lugar del alterado | El 401 se debe a la firma alterada, no a otra causa |
+| T13, T14, T15 | Clave existente agregada a las prohibidas | El escáner recursivo sí encuentra claves en login, `/me` y `/users` |
+| T16, T19 | Status esperado invertido | Admin borra y user lee su orden de verdad |
+| T17 | Se agrega `name` al cuerpo | El 400 depende del campo faltante |
+| T18, T20, T21 | Token de admin en lugar de sales/user | El `403` lo decide el RBAC según el rol: con admin la misma petición responde 200 |
+| T22–T33 | Se cambia el idioma pedido o el esperado | El mensaje y `Content-Language` cambian según `Accept-Language`, `?lang` y el idioma por defecto |
+| C1 | Id inválido en la limpieza | Si un borrado falla, la suite falla y Jest sale con código 1 |
+
+> `scripts/e2e-rupturas.js` es un script auxiliar de evidencia, escrito con ayuda de Claude. No es código de prueba ni forma parte de las suites; las suites de `test/e2e/` son las generadas con Antigravity.
+
+### Rupturas manuales previas
+
+Antes del script, el equipo hizo 15 rupturas a mano. Se conservan como evidencia complementaria:
+
+| Pruebas | Capturas |
+|---|---|
+| T01 health | [h1](img/e2e/h1.png), [h2](img/e2e/h2.png) (API apagada) |
+| T02–T04 login por rol | [a1](img/e2e/a1.png), [a1-2](img/e2e/a1-2.png) |
+| T05 contraseña incorrecta | [a2](img/e2e/a2.png) |
+| T10 ruta sin token | [a3](img/e2e/a3.png) |
+| T14 `/api/auth/me` sin campos sensibles | [a4](img/e2e/a4.png) |
+| T16–T21 RBAC | [r1](img/e2e/r1.png), [r6](img/e2e/r6.png), [r2](img/e2e/r2.png), [r3](img/e2e/r3.png), [r4](img/e2e/r4.png), [r5](img/e2e/r5.png) |
+| T22, T24, T26 i18n | [i3](img/e2e/i3.png), [i1](img/e2e/i1.png), [i2](img/e2e/i2.png) |
 
 ---
 
 ## 7. Limpieza de datos
 
-- Cada suite borra en `afterAll`, con el token de admin y en orden inverso (órdenes, customers, productos), todo lo que crea.
-- Un `DELETE` que responde distinto de 200 o 404 genera un `console.warn` con recurso, id, status y mensaje.
+- Cada suite borra en `afterAll` todo lo que crea, con `cleanup()` de `helpers.js`, el token de admin y en orden inverso (órdenes, customers, productos).
+- `cleanup()` intenta todos los borrados aunque alguno falle. Acepta 200 y 404; cualquier otro status o error de red se acumula, y al final lanza un error que hace fallar la suite (exit code 1).
 - Los customers que ya existían antes de la corrida se reutilizan y no se borran.
-- Se verificó corriendo `npm run test:e2e` dos veces seguidas: ambas en verde y sin avisos de limpieza.
+- Verificado con la ruptura C1 y con dos corridas seguidas de `npm run test:e2e` en verde, sin datos residuales.
 
 ---
 
@@ -148,6 +191,7 @@ R2, R4 y R5 demuestran que el `403` lo decide el RBAC según el rol: con el toke
 | `npm test` | ✅ 16 suites, 363 pruebas |
 | `npm run test:e2e` (1.ª corrida) | ✅ 4 suites, 33 pruebas |
 | `npm run test:e2e` (2.ª corrida) | ✅ 4 suites, 33 pruebas |
+| `node scripts/e2e-rupturas.js` | ✅ 34/34 rupturas fallaron como se esperaba |
 
 ---
 
@@ -155,7 +199,7 @@ R2, R4 y R5 demuestran que el `403` lo decide el RBAC según el rol: con el toke
 
 1. **`GET /api/auth/me`** responde `res.json(req.user)`, sin el formato `{ message, data }` del resto de la API.
 2. **`auth.invalidCredentials`**: los textos son `"credenciales invalidas"` (es) y `"Invalid Credentials"` (en); conviene corregir la redacción a `"Credenciales inválidas"` / `"Invalid credentials"`. Las pruebas leen los textos de `locales/`, así que no se rompen con el cambio.
-3. **Ejecución contra Render**: `database/seed-postgres.js` permite cambiar las contraseñas demo con `SEED_<ROL>_PASSWORD` y las exige en producción. Si en Render se siembran contraseñas distintas, `login()` fallará con las credenciales de `helpers.js`; se revisará en la S2-13.
+3. **Ejecución contra Render**: `database/seed-postgres.js` exige las contraseñas demo con `SEED_<ROL>_PASSWORD` en producción. En la S2-13 se sembró Render con las mismas contraseñas demo de `helpers.js`, así que las suites pueden correr contra Render con `E2E_BASE_URL`; esa corrida se valida en la S2-18.
 
 Ninguna de estas observaciones se modificó en este PR: las pruebas E2E no cambian código de la aplicación.
 
@@ -233,4 +277,10 @@ Ajustes a test/e2e/i18n.e2e.test.js: (1) agrega un caso sin Accept-Language ni ?
 
 ```text
 Agrega a la suite más adecuada un caso donde el admin hace POST /products con un cuerpo inválido según controllers/products.js (por ejemplo, sin name) y recibe 400 con data: null; si por error se crea algo, bórralo en afterAll.
+```
+
+### Prompt 8 · Limpieza que falla la corrida
+
+```text
+La limpieza de rbac.e2e.test.js deja la corrida en verde aunque falle un DELETE (solo hace console.warn). Corrígelo así: (1) en test/e2e/helpers.js crea y exporta una función async cleanup(token, resources) donde resources es una lista ordenada de { path, ids } (por ejemplo órdenes, luego customers, luego productos); para cada id hace DELETE con Authorization Bearer y Accept-Language es; acepta 200 y 404 como éxito; cualquier otro status o un error de red (envuelve cada petición en try/catch) se acumula en una lista con recurso, id, status y message o error.code, y continúa con los demás; al terminar, si la lista no está vacía lanza un Error con todos los detalles; (2) usa cleanup en el afterAll de rbac.e2e.test.js en lugar del código actual; (3) no cambies código de la aplicación. Corre npm run lint y npm run test:e2e dos veces.
 ```

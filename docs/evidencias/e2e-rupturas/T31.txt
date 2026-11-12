@@ -1,0 +1,51 @@
+Ruptura:   T31
+Fecha:     2026-11-12T06:17:30.538Z
+Archivo:   test/e2e/i18n.e2e.test.js
+Prueba:    responde con auth.invalidCredentials en inglés mediante ?lang=en
+Cambio:    '/api/auth/login?lang=en'
+       →   '/api/auth/login?lang=es'
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/i18n.e2e.test.js -t "responde con auth\.invalidCredentials en inglés mediante \?lang=en"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/i18n.e2e.test.js
+  E2E - Internacionalización (i18n)
+    Error de autenticación por falta de token (401)
+      ○ skipped responde en el idioma por defecto (es) sin Accept-Language ni ?lang según config/i18n.js
+      ○ skipped responde en español con header Accept-Language: es
+      ○ skipped responde en inglés con header Accept-Language: en
+      ○ skipped responde en español con query param ?lang=es
+      ○ skipped responde en inglés con query param ?lang=en
+      ○ skipped el query param ?lang tiene prioridad sobre el header Accept-Language
+    Error de login con credenciales inválidas (401)
+      × responde con auth.invalidCredentials en inglés mediante ?lang=en (25 ms)
+      ○ skipped responde con auth.invalidCredentials en español mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en inglés mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en español mediante ?lang=es
+    Error de login con campos faltantes (400)
+      ○ skipped responde con auth.requiredCredentials en español con Accept-Language: es
+      ○ skipped responde con auth.requiredCredentials en inglés con Accept-Language: en
+
+  ● E2E - Internacionalización (i18n) › Error de login con credenciales inválidas (401) › responde con auth.invalidCredentials en inglés mediante ?lang=en
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "en"
+    Received: "es"
+
+      151 |
+      152 |       expect(res.status).toBe(401);
+    > 153 |       expect(res.headers['content-language']).toBe('en');
+          |                                               ^
+      154 |       expect(res.body).toEqual({
+      155 |         message: en.auth.invalidCredentials,
+      156 |         data: null,
+
+      at Object.toBe (test/e2e/i18n.e2e.test.js:153:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 11 skipped, 12 total
+Snapshots:   0 total
+Time:        0.781 s, estimated 1 s
+Ran all test suites matching test/e2e/i18n.e2e.test.js with tests matching "responde con auth\.invalidCredentials en inglés mediante \?lang=en".

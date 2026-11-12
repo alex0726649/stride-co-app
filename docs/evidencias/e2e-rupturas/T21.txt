@@ -1,0 +1,47 @@
+Ruptura:   T21
+Fecha:     2026-11-12T06:17:18.514Z
+Archivo:   test/e2e/rbac.e2e.test.js
+Prueba:    user intenta consultar la lista general de órdenes y recibe 403
+Cambio:    `Bearer ${userToken}`
+       →   `Bearer ${adminToken}`
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/rbac.e2e.test.js -t "user intenta consultar la lista general de órdenes y recibe 403"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/rbac.e2e.test.js
+  E2E - Control de Acceso Basado en Roles (RBAC)
+    (1) ADMIN products:delete:any
+      ○ skipped el admin crea un producto y lo elimina exitosamente con código 200
+      ○ skipped el admin envía un cuerpo inválido (sin name) y recibe 400 con data: null
+    (2) SALES products:delete:any
+      ○ skipped sales intenta eliminar un producto creado por admin y recibe 403
+    (3) USER orders:read:own
+      ○ skipped el usuario user crea/usa su customer y su orden propia y la lee con éxito
+    (4) USER orders:read:own sobre la orden de otro
+      ○ skipped user intenta leer la orden de otro customer y recibe 403
+    (5) USER orders:read:any
+      × user intenta consultar la lista general de órdenes y recibe 403 (281 ms)
+
+  ● E2E - Control de Acceso Basado en Roles (RBAC) › (5) USER orders:read:any › user intenta consultar la lista general de órdenes y recibe 403
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      286 |         .set('Authorization', `Bearer ${adminToken}`);
+      287 |
+    > 288 |       expect(res.status).toBe(403);
+          |                          ^
+      289 |       expect(res.headers['content-type']).toMatch(/json/);
+      290 |       expect(res.body).toEqual({
+      291 |         message: es.errors.forbidden,
+
+      at Object.toBe (test/e2e/rbac.e2e.test.js:288:26)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 5 skipped, 6 total
+Snapshots:   0 total
+Time:        1.482 s, estimated 2 s
+Ran all test suites matching test/e2e/rbac.e2e.test.js with tests matching "user intenta consultar la lista general de órdenes y recibe 403".
