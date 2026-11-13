@@ -9,13 +9,13 @@ const { jest: jestMock } = require('@jest/globals');
 const { stripVTControlCharacters } = require('node:util');
 
 describe('App base', () => {
-  it('renderiza los productos activos en HTML público y escapa sus datos', async () => {
+  it('renderiza los productos en HTML público y escapa sus datos', async () => {
     Product.findAll.mockResolvedValue([
-      Product.build({ name: 'Stride Runner', description: '<b>Edición demo</b>', brand: 'Stride & Co', price: '1299.00' }),
+      Product.build({ name: 'Stride Runner', description: '<b>Edición demo</b>', brand: 'Stride & Co', price: '1299.00', active: false }),
     ]);
 
     const res = await request(app).get('/?lang=es').expect(200);
-    expect(Product.findAll).toHaveBeenCalledWith(expect.objectContaining({ where: { active: true } }));
+    expect(Product.findAll).toHaveBeenCalledWith();
     expect(res.headers['content-type']).toMatch(/html/);
     expect(res.text).toContain('<th scope="col">Precio</th>');
     expect(res.text).toContain('<td>Stride Runner</td>');
@@ -31,10 +31,11 @@ describe('App base', () => {
     expect(res.text).toContain('Internal server error');
   });
 
-  it.each(['/health', '/api/health'])('conserva el estado de salud en %s', async path => {
-    const res = await request(app).get(path).expect(200);
+  it('expone el estado de salud en /health', async () => {
+    const res = await request(app).get('/health').expect(200);
     expect(res.body).toEqual({ status: 'UP' });
     expect(Product.findAll).not.toHaveBeenCalled();
+    await request(app).get('/api/health').expect(404);
   });
 
   it('responde con 404 ante una ruta de API inexistente', async () => {
@@ -70,7 +71,7 @@ describe('App base', () => {
   it('oculta los detalles de un error inesperado en producción', async () => {
     let failingApp;
     // Inyectar el fallo solo en esta instancia de prueba, sin rutas de depuración reales.
-    jestMock.doMock('../routes/api', () => function(_req, _res, next) {
+    jestMock.doMock('../routes/api/users', () => function(_req, _res, next) {
       next(new Error('Detalle privado del servidor'));
     });
     try {
@@ -83,7 +84,7 @@ describe('App base', () => {
       expect(res.headers['content-type']).toMatch(/json/);
       expect(res.body).toEqual({ message: 'Error interno del servidor', data: null });
     } finally {
-      jestMock.dontMock('../routes/api');
+      jestMock.dontMock('../routes/api/users');
     }
   });
 

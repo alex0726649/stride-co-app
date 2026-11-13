@@ -18,12 +18,10 @@
     "status": "Estado"
   },
   "products": {
-    "catalog": "Catálogo de productos",
     "name": "Nombre",
     "description": "Descripción",
     "brand": "Marca",
-    "price": "Precio",
-    "empty": "Por el momento no hay productos en el catálogo."
+    "price": "Precio"
   },
   "users": {
     "list": "Lista de usuarios",
