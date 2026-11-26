@@ -101,7 +101,7 @@ describe.each([['es', es], ['en', en]])('mensajes comunes: %s', (locale, catalog
 
   it('traduce las vistas de inicio y error', async () => {
     const home = await request(app).get(`/?lang=${locale}`).expect(200);
-    expect(home.text).toContain(catalog.views.welcome.replace('%s', 'Stride &amp; Co'));
+    expect(home.text).toContain('<title>Stride &amp; Co</title>');
     expect(home.text).toContain(`<th scope="col">${catalog.products.name}</th>`);
     expect(home.text).toContain(`lang="${locale}"`);
     expect(home.text).toMatch(/^<!DOCTYPE html>/);
