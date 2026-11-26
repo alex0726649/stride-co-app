@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/customers');
-const { authenticate } = require('../middlewares/authenticate');
-const { authorize } = require('../middlewares/authorize');
-const validateObjectId = require('../middlewares/validateObjectId');
+const controller = require('../../controllers/customers');
+const { authenticate } = require('../../middlewares/authenticate');
+const { authorize } = require('../../middlewares/authorize');
+const validateObjectId = require('../../middlewares/validateObjectId');
 
 const validId = validateObjectId('customers.invalidId');
 

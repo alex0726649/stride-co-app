@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const variants = require('../controllers/variants');
-const { authenticate } = require('../middlewares/authenticate');
-const { authorize } = require('../middlewares/authorize');
+const variants = require('../../controllers/variants');
+const { authenticate } = require('../../middlewares/authenticate');
+const { authorize } = require('../../middlewares/authorize');
 
 router.get('/', authenticate, authorize('variants', 'read', 'any'), variants.list);
 router.get('/:id', authenticate, authorize('variants', 'read', 'any'), variants.find);

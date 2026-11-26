@@ -1,5 +1,17 @@
 extends layout
 
 block content
-  h1= title
-  p= __('views.welcome', title)
+  table
+    thead
+      tr
+        th(scope='col') #{__('products.name')}
+        th(scope='col') #{__('products.description')}
+        th(scope='col') #{__('products.brand')}
+        th(scope='col') #{__('products.price')}
+    tbody
+      each product in products
+        tr
+          td= product.name
+          td= product.description
+          td= product.brand
+          td= product.price

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/users');
-const { authenticate } = require('../middlewares/authenticate');
-const { authorize } = require('../middlewares/authorize');
+const controller = require('../../controllers/users');
+const { authenticate } = require('../../middlewares/authenticate');
+const { authorize } = require('../../middlewares/authorize');
 
 router.post('/', authenticate, authorize('users', 'create', 'any'), controller.create);
 router.get('/', authenticate, authorize('users', 'read', 'any'), controller.list);
