@@ -1,5 +1,5 @@
 const { Customer, Order } = require('../models/documents');
-const { loadRoleAccess } = require('../utils/rbac');
+const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
 
 const ACTIONS = new Set(['create', 'read', 'update', 'delete']);
 const POSSESSIONS = new Set(['own', 'any']);
@@ -28,7 +28,7 @@ async function customerBelongsToUser(customerId, userId) {
   return Boolean(customer && sameId(customer.userId, userId));
 }
 
-async function ownsResource(resource, action, req, userId) {
+async function ownsResource(resource, action, req, userId, roleAccess) {
   const resourceId = req.params?.id;
 
   if (resource === 'users') {
@@ -59,18 +59,19 @@ async function ownsResource(resource, action, req, userId) {
     const order = resourceId ? await Order.findById(resourceId) : null;
     if (!order) return false;
 
-    const belongsToSalesPerson = sameId(order.salesPersonId, userId);
-    const belongsToCustomer = await customerBelongsToUser(order.customerId, userId);
-    if (!belongsToSalesPerson && !belongsToCustomer) return false;
-
+    const managesAssignedOrders = canManageAssignedOrders(roleAccess);
+    const belongsToSalesPerson = managesAssignedOrders && sameId(order.salesPersonId, userId);
     if (action === 'update') {
+      if (!belongsToSalesPerson) return false;
       if (req.body?.salesPersonId !== undefined
         && !sameId(req.body.salesPersonId, userId)) return false;
       if (req.body?.customerId !== undefined
         && !(await customerBelongsToUser(req.body.customerId, userId))) return false;
+      return true;
     }
 
-    return true;
+    if (managesAssignedOrders) return belongsToSalesPerson;
+    return customerBelongsToUser(order.customerId, userId);
   }
 
   return false;
@@ -86,14 +87,14 @@ function authorize(resource, action, possession) {
     const roleId = req.user?.role_id ?? req.user?.roleId;
 
     if (!userId || roleId === undefined || roleId === null) {
-      return response(res, 401, 'No autorizado');
+      return response(res, 401, req.__('errors.unauthorized'));
     }
 
     try {
       const roleAccess = await loadRoleAccess(roleId);
       // Rol inexistente, o rol sin ningún permiso (accesscontrol no lo registra): 403.
       if (!roleAccess || !roleAccess.accessControl.hasRole(roleAccess.roleName)) {
-        return response(res, 403, 'Prohibido');
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       const checker = roleAccess.accessControl.can(roleAccess.roleName);
@@ -101,15 +102,16 @@ function authorize(resource, action, possession) {
       const ownPermission = checker[`${action}Own`](resource).granted;
 
       if (possession === 'any' && !anyPermission) {
-        return response(res, 403, 'Prohibido');
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       if (possession === 'own' && !anyPermission
-        && (!ownPermission || !(await ownsResource(resource, action, req, userId)))) {
-        return response(res, 403, 'Prohibido');
+        && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess)))) {
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       req.rbac = { resource, action, possession };
+      if (resource === 'orders') req.rbac.scope = anyPermission ? 'any' : 'own';
       return next();
     } catch (error) {
       return next(error);

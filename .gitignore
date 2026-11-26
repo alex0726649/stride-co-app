@@ -1,9 +1,11 @@
 # Dependencias
 node_modules/
+
 # Configuración privada y resultados locales
 .env
-.env.*
-!.env.example
+config/local*.json
+!config/local*.example.json
+
 coverage/
 *.aux
 *.log
@@ -12,4 +14,3 @@ coverage/
 *.toc
 *.fdb_latexmk
 *.synctex.gz
-/config/production.json

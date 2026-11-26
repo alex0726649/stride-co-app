@@ -4,18 +4,39 @@
  * Module dependencies.
  */
 
+const config = require('config');
+const assertJwtSecret = require('../utils/assertJwtSecret');
+/**
+ * Validar que el secreto de JWT exista antes de arrancar.
+ * Esto debe ir ANTES de requerir '../app', porque app.js carga las rutas y
+ * estas, a través de middlewares/authenticate.js, ya intentan leer
+ * config.get('jwt.secret') en cuanto se requieren. Si la validación fuera
+ * posterior, el error real ocurriría antes de mostrar este mensaje claro.
+ */
+try {assertJwtSecret(config);
+} catch (error) {
+  console.error(
+    error.message + '\n' +
+    'Crea config/local-development.json (copiando config/local-development.example.json) ' +
+    'y define jwt.secret con un valor propio.'
+  );
+  process.exit(1);
+}
+
 const app = require('../app');
 const debug = require('debug')('stride-co:server');
 const http = require('http');// esta herramienta ya viene en Node.js
 const { sequelize }=require ('../models/relationals');
 const ensureConstraints = require('../database/ensure-constraints');
 const connectMongo = require('../config/mongoose');
+
 /**
- * Get port from environment and store in Express.
+ * Get port from config (lee server.port; en producción, Render lo sobreescribe
+ * automáticamente vía la variable de entorno PORT, mapeada en
+ * config/custom-environment-variables.json).
  */
 
-var port = normalizePort(process.env.PORT || '3000');// revisa PORT, si no hay nada se usa 3000
-// nomrmalizePort es una funcion definida mas abajo ,string a int y lo guarda en port
+var port = normalizePort(config.get('server.port'));
 app.set('port', port);
 
 /**
@@ -28,7 +49,7 @@ async function start(){
   await sequelize.authenticate();
   await sequelize.sync();
   await ensureConstraints();
-  debug('conexion a mysql generada correctamente.');
+  debug('conexion a PostgreSQL generada correctamente.');
 
   await connectMongo();
   debug('Conexion a mongodb correcta');

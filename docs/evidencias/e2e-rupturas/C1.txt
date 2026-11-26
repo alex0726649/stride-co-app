@@ -1,0 +1,35 @@
+Ruptura:   C1
+Fecha:     2026-11-12T06:17:36.419Z
+Archivo:   test/e2e/rbac.e2e.test.js
+Prueba:    (suite completa: limpieza en afterAll)
+Cambio:    ids: [...createdOrderIds].reverse()
+       →   ids: ['no-es-un-id', ...createdOrderIds].reverse()
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/rbac.e2e.test.js
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/rbac.e2e.test.js
+
+
+  ● Test suite failed to run
+
+    Cleanup falló con 1 error(es):
+      - /api/orders id=no-es-un-id status=400 El ID de la orden no es válido
+
+       98 |       .join('\n');
+       99 |
+    > 100 |     throw new Error(`Cleanup falló con ${errors.length} error(es):\n${details}`);
+          |           ^
+      101 |   }
+      102 | }
+      103 |
+
+      at cleanup (test/e2e/helpers.js:100:11)
+      at Object.<anonymous> (test/e2e/rbac.e2e.test.js:22:5)
+
+Test Suites: 1 failed, 1 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        3.108 s
+Ran all test suites matching test/e2e/rbac.e2e.test.js.

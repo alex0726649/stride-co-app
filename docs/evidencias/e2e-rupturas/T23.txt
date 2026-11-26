@@ -1,0 +1,51 @@
+Ruptura:   T23
+Fecha:     2026-11-12T06:17:21.009Z
+Archivo:   test/e2e/i18n.e2e.test.js
+Prueba:    responde en español con header Accept-Language: es
+Cambio:    .set('Accept-Language', 'es')
+       →   .set('Accept-Language', 'en')
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/i18n.e2e.test.js -t "responde en español con header Accept-Language: es"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/i18n.e2e.test.js
+  E2E - Internacionalización (i18n)
+    Error de autenticación por falta de token (401)
+      × responde en español con header Accept-Language: es (21 ms)
+      ○ skipped responde en el idioma por defecto (es) sin Accept-Language ni ?lang según config/i18n.js
+      ○ skipped responde en inglés con header Accept-Language: en
+      ○ skipped responde en español con query param ?lang=es
+      ○ skipped responde en inglés con query param ?lang=en
+      ○ skipped el query param ?lang tiene prioridad sobre el header Accept-Language
+    Error de login con credenciales inválidas (401)
+      ○ skipped responde con auth.invalidCredentials en español mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en inglés mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en español mediante ?lang=es
+      ○ skipped responde con auth.invalidCredentials en inglés mediante ?lang=en
+    Error de login con campos faltantes (400)
+      ○ skipped responde con auth.requiredCredentials en español con Accept-Language: es
+      ○ skipped responde con auth.requiredCredentials en inglés con Accept-Language: en
+
+  ● E2E - Internacionalización (i18n) › Error de autenticación por falta de token (401) › responde en español con header Accept-Language: es
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "es"
+    Received: "en"
+
+      26 |
+      27 |       expect(res.status).toBe(401);
+    > 28 |       expect(res.headers['content-language']).toBe('es');
+         |                                               ^
+      29 |       expect(res.body).toEqual({
+      30 |         message: es.errors.unauthorized,
+      31 |         data: null,
+
+      at Object.toBe (test/e2e/i18n.e2e.test.js:28:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 11 skipped, 12 total
+Snapshots:   0 total
+Time:        0.781 s, estimated 1 s
+Ran all test suites matching test/e2e/i18n.e2e.test.js with tests matching "responde en español con header Accept-Language: es".

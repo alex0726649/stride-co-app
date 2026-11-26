@@ -1,7 +1,8 @@
 const bcrypt = require('bcrypt');
+const config = require('config');
 
 async function hashPassword(password) {
-    const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS);
+    const saltRounds = config.get('bcrypt.saltRounds');
     const saltKey = await bcrypt.genSalt(saltRounds);
     const securePassword = await bcrypt.hash(password, saltKey);
     return { securePassword, saltKey}
@@ -9,7 +10,7 @@ async function hashPassword(password) {
 }
 function verifyPassword(password, passwordHash) {
     return bcrypt.compare(password, passwordHash);
-    
+
 }
 
 module.exports = { hashPassword, verifyPassword }

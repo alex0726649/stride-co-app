@@ -1,0 +1,47 @@
+Ruptura:   T16
+Fecha:     2026-11-12T06:17:08.624Z
+Archivo:   test/e2e/rbac.e2e.test.js
+Prueba:    el admin crea un producto y lo elimina exitosamente con código 200
+Cambio:    expect(deleteRes.status).toBe(200);
+       →   expect(deleteRes.status).toBe(403);
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/rbac.e2e.test.js -t "el admin crea un producto y lo elimina exitosamente con código 200"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/rbac.e2e.test.js
+  E2E - Control de Acceso Basado en Roles (RBAC)
+    (1) ADMIN products:delete:any
+      × el admin crea un producto y lo elimina exitosamente con código 200 (27 ms)
+      ○ skipped el admin envía un cuerpo inválido (sin name) y recibe 400 con data: null
+    (2) SALES products:delete:any
+      ○ skipped sales intenta eliminar un producto creado por admin y recibe 403
+    (3) USER orders:read:own
+      ○ skipped el usuario user crea/usa su customer y su orden propia y la lee con éxito
+    (4) USER orders:read:own sobre la orden de otro
+      ○ skipped user intenta leer la orden de otro customer y recibe 403
+    (5) USER orders:read:any
+      ○ skipped user intenta consultar la lista general de órdenes y recibe 403
+
+  ● E2E - Control de Acceso Basado en Roles (RBAC) › (1) ADMIN products:delete:any › el admin crea un producto y lo elimina exitosamente con código 200
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      49 |         .set('Authorization', `Bearer ${adminToken}`);
+      50 |
+    > 51 |       expect(deleteRes.status).toBe(403);
+         |                                ^
+      52 |       expect(deleteRes.body).toEqual({
+      53 |         message: es.products.deleted,
+      54 |         data: null,
+
+      at Object.toBe (test/e2e/rbac.e2e.test.js:51:32)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 5 skipped, 6 total
+Snapshots:   0 total
+Time:        1.096 s
+Ran all test suites matching test/e2e/rbac.e2e.test.js with tests matching "el admin crea un producto y lo elimina exitosamente con código 200".
