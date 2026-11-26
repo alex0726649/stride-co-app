@@ -1,6 +1,7 @@
 const { jest: mock } = require('@jest/globals');
 
 mock.mock('../utils/rbac', () => ({
+  ...mock.requireActual('../utils/rbac'),
   loadRoleAccess: mock.fn(),
 }));
 
@@ -34,7 +35,7 @@ function accessFor(roleName, permissions) {
   });
 
   const { AccessControl } = require('accesscontrol');
-  return { roleName, accessControl: new AccessControl(grants) };
+  return { roleName, keys: permissions, accessControl: new AccessControl(grants) };
 }
 
 describe('authorize middleware', () => {
@@ -68,7 +69,7 @@ describe('authorize middleware', () => {
   });
 
   it('valida que un recurso own pertenezca al usuario', async () => {
-    loadRoleAccess.mockResolvedValue(accessFor('sales', ['orders:read:own']));
+    loadRoleAccess.mockResolvedValue(accessFor('sales', ['orders:read:own', 'orders:update:own']));
     Order.findById.mockResolvedValue({ salesPersonId: 7, customerId: 'customer-1' });
     const next = mock.fn();
 
@@ -82,7 +83,7 @@ describe('authorize middleware', () => {
   });
 
   it('responde 403 para un recurso own de otro usuario', async () => {
-    loadRoleAccess.mockResolvedValue(accessFor('sales', ['orders:read:own']));
+    loadRoleAccess.mockResolvedValue(accessFor('sales', ['orders:read:own', 'orders:update:own']));
     Order.findById.mockResolvedValue({ salesPersonId: 99, customerId: 'customer-1' });
     Customer.findById.mockResolvedValue({ userId: 99 });
     const res = responseContext();

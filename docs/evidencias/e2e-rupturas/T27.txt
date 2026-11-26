@@ -1,0 +1,51 @@
+Ruptura:   T27
+Fecha:     2026-11-12T06:17:25.623Z
+Archivo:   test/e2e/i18n.e2e.test.js
+Prueba:    el query param ?lang tiene prioridad sobre el header Accept-Language
+Cambio:    '/api/products?lang=en'
+       →   '/api/products'
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/i18n.e2e.test.js -t "el query param \?lang tiene prioridad sobre el header Accept-Language"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/i18n.e2e.test.js
+  E2E - Internacionalización (i18n)
+    Error de autenticación por falta de token (401)
+      × el query param ?lang tiene prioridad sobre el header Accept-Language (20 ms)
+      ○ skipped responde en el idioma por defecto (es) sin Accept-Language ni ?lang según config/i18n.js
+      ○ skipped responde en español con header Accept-Language: es
+      ○ skipped responde en inglés con header Accept-Language: en
+      ○ skipped responde en español con query param ?lang=es
+      ○ skipped responde en inglés con query param ?lang=en
+    Error de login con credenciales inválidas (401)
+      ○ skipped responde con auth.invalidCredentials en español mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en inglés mediante Accept-Language
+      ○ skipped responde con auth.invalidCredentials en español mediante ?lang=es
+      ○ skipped responde con auth.invalidCredentials en inglés mediante ?lang=en
+    Error de login con campos faltantes (400)
+      ○ skipped responde con auth.requiredCredentials en español con Accept-Language: es
+      ○ skipped responde con auth.requiredCredentials en inglés con Accept-Language: en
+
+  ● E2E - Internacionalización (i18n) › Error de autenticación por falta de token (401) › el query param ?lang tiene prioridad sobre el header Accept-Language
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: "en"
+    Received: "es"
+
+      82 |
+      83 |       expect(res.status).toBe(401);
+    > 84 |       expect(res.headers['content-language']).toBe('en');
+         |                                               ^
+      85 |       expect(res.body).toEqual({
+      86 |         message: en.errors.unauthorized,
+      87 |         data: null,
+
+      at Object.toBe (test/e2e/i18n.e2e.test.js:84:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 11 skipped, 12 total
+Snapshots:   0 total
+Time:        0.723 s, estimated 1 s
+Ran all test suites matching test/e2e/i18n.e2e.test.js with tests matching "el query param \?lang tiene prioridad sobre el header Accept-Language".

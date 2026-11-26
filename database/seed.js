@@ -7,8 +7,8 @@ const seedMongo = require('./seed-mongo');
 async function seed() {
   try {
     await connectMongo();
-    const users = await seedPostgres();
-    await seedMongo(users);
+    const { users, demoProductId } = await seedPostgres();
+    await seedMongo(users, demoProductId);
   } finally {
     await Promise.all([mongoose.disconnect(), sequelize.close()]);
   }

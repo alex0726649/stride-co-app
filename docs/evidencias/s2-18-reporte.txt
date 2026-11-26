@@ -1,0 +1,361 @@
+Reporte de validación S2-18
+Fecha: 2026-11-12 12:43:30 -0600
+
+
+==================== 1. Clonación limpia de staging ====================
+Cloning into 'C:/Users/apere/desktop/stride-check'...
+Commit validado: e2939b4 - Merge pull request #111 from alex0726649/fix/restaurar-anexos-e2e
+
+
+==================== 2. npm install ====================
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+npm warn install-scripts 4 packages have install scripts not yet covered by allowScripts:
+npm warn install-scripts   @parcel/watcher@2.6.0 (install: node scripts/build-from-source.js)
+npm warn install-scripts   bcrypt@6.0.0 (install: node-gyp-build)
+npm warn install-scripts   core-js@2.6.12 (postinstall: node -e "try{require('./postinstall')}catch(e){}")
+npm warn install-scripts   unrs-resolver@1.12.2 (postinstall: node postinstall.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+exit code: 0
+
+
+==================== 3. npm run lint ====================
+
+> stride-co@0.0.0 lint
+> eslint .
+
+exit code: 0
+
+
+==================== 4. npm test ====================
+[0mGET /api [33m404 [0m0.379 ms - 44[0m
+[0mGET /api/roles/999 [33m404 [0m2.053 ms - 43[0m
+[0mPOST /api/users [33m400 [0m12.090 ms - 47[0m
+PASS test/app.test.js
+[0mGET /api/users [31m500 [0m1.937 ms - 52[0m
+PASS test/authorize.test.js
+PASS test/rbac-loader.test.js
+PASS test/startup.test.js
+PASS test/fixtures.test.js
+
+Test Suites: 16 passed, 16 total
+Tests:       363 passed, 363 total
+Snapshots:   0 total
+Time:        17.749 s
+Ran all test suites.
+exit code: 0
+
+
+==================== 5. Health de Render (despertar el servicio) ====================
+Intento 1: {"status":"UP"}
+
+
+==================== 6. npm run test:e2e contra Render ====================
+      √ GET /api/users no contiene password_hash ni salt_key en ningún nivel (2032 ms)
+
+PASS test/e2e/i18n.e2e.test.js
+  E2E - Internacionalización (i18n)
+    Error de autenticación por falta de token (401)
+      √ responde en el idioma por defecto (es) sin Accept-Language ni ?lang según config/i18n.js (399 ms)
+      √ responde en español con header Accept-Language: es (340 ms)
+      √ responde en inglés con header Accept-Language: en (370 ms)
+      √ responde en español con query param ?lang=es (294 ms)
+      √ responde en inglés con query param ?lang=en (526 ms)
+      √ el query param ?lang tiene prioridad sobre el header Accept-Language (407 ms)
+    Error de login con credenciales inválidas (401)
+      √ responde con auth.invalidCredentials en español mediante Accept-Language (314 ms)
+      √ responde con auth.invalidCredentials en inglés mediante Accept-Language (296 ms)
+      √ responde con auth.invalidCredentials en español mediante ?lang=es (414 ms)
+      √ responde con auth.invalidCredentials en inglés mediante ?lang=en (307 ms)
+    Error de login con campos faltantes (400)
+      √ responde con auth.requiredCredentials en español con Accept-Language: es (511 ms)
+      √ responde con auth.requiredCredentials en inglés con Accept-Language: en (309 ms)
+
+PASS test/e2e/orders.e2e.test.js (8.117 s)
+  E2E Mongo - Órdenes
+    √ completa el ciclo de una orden, incluye datos de su cliente, actualiza, borra y confirma 404 (2661 ms)
+    √ rechaza una orden con datos inválidos (sin artículos) devolviendo 400 y mensaje traducido (415 ms)
+    √ rechaza un identificador mal formado devolviendo 400 y mensaje traducido (520 ms)
+
+PASS test/e2e/sql/products.e2e.test.js (6.861 s)
+  E2E SQL - Products
+    √ completa el ciclo de vida: 201, variante asociada, GET por id, GET lista, PUT, verificación de persistencia, DELETE en orden y GET 404 (3491 ms)
+    √ rechaza la creación con 400 y mensaje traducido cuando el cuerpo es inválido (603 ms)
+
+PASS test/e2e/customers.e2e.test.js (6.193 s)
+  E2E Mongo - Clientes
+    √ completa el ciclo de vida: crea, consulta por id, lista, actualiza, verifica persistencia, borra y confirma 404 (2541 ms)
+    √ rechaza datos inválidos (correo inválido) devolviendo 400 y mensaje traducido (614 ms)
+    √ rechaza un identificador mal formado devolviendo 400 y mensaje traducido (321 ms)
+
+PASS test/e2e/sql/variants.e2e.test.js (6.345 s)
+  E2E SQL - Variants
+    √ completa el ciclo de vida: 201, detalle con producto e inventario, GET lista, PUT, verificación de persistencia, DELETE y GET 404 (3290 ms)
+    √ rechaza la creación con 400 y mensaje traducido si product_id es inválido (394 ms)
+
+PASS test/e2e/sql/users.e2e.test.js (6.965 s)
+  E2E SQL - Users
+    √ completa el ciclo de vida: 201, GET por id, GET lista, PUT, verificación de persistencia, DELETE, GET 404 y exclusión de claves sensibles (4024 ms)
+    √ rechaza la creación con 400 y mensaje traducido ante datos inválidos (274 ms)
+
+PASS test/e2e/sql/permissions.e2e.test.js (5.042 s)
+  E2E SQL - Permissions
+    √ completa el ciclo de vida: 201, GET por id, GET lista, PUT, verificación de persistencia, DELETE y GET 404 (2348 ms)
+    √ rechaza la creación con 400 y mensaje traducido cuando la clave tiene formato inválido (406 ms)
+
+PASS test/e2e/sql/inventory.e2e.test.js (6.029 s)
+  E2E SQL - Inventory
+    √ completa el flujo de inventario: cantidades iniciales, listado, ajuste de stock y reserved, persistencia y 400 por reserved mayor que stock (3087 ms)
+
+PASS test/e2e/sql/roles.e2e.test.js (5.465 s)
+  E2E SQL - Roles
+    √ completa el ciclo de vida: 201, GET por id, GET lista, PUT, verificación de persistencia, DELETE y GET 404 (2565 ms)
+    √ rechaza la creación con 400 y mensaje traducido cuando falta el nombre (401 ms)
+
+PASS test/e2e/health.e2e.test.js
+  E2E - Health check
+    √ GET /health responde 200 con estado UP sin requerir token (331 ms)
+
+Test Suites: 12 passed, 12 total
+Tests:       50 passed, 50 total
+Snapshots:   0 total
+Time:        92.157 s
+Ran all test suites.
+exit code: 0
+
+
+==================== 7. Secretos en el código actual (jwt, mongodb+srv, postgres://) ====================
+README.md:98:- La plantilla [`config/local-production.example.json`](config/local-production.example.json) muestra la forma del archivo sin valores reales: `jwt.secret`, los datos de conexión de Render PostgreSQL y la URI de Atlas.
+README.md:106:HTTP Request → Express → authenticate (JWT) → authorize (RBAC) → Controller → Modelo (Sequelize / Mongoose) → PostgreSQL / MongoDB
+README.md:111:- **Autenticación:** contraseñas con bcrypt, login que emite un JWT y middleware `authenticate` con `express-jwt`. Ver [Autenticación](#autenticación).
+README.md:121:**Ejecución:** Node.js y Express · PostgreSQL con Sequelize (`pg`) · MongoDB con Mongoose · bcrypt · jsonwebtoken y express-jwt · accesscontrol (RBAC) · i18n · config (configuración por entornos) · Morgan · Pug · cookie-parser, debug, http-errors.
+README.md:152:3. Abrir `config/local-development.json` y reemplazar los valores de ejemplo: `jwt.secret` (cualquier texto largo y aleatorio) y `db.postgres.password` (la contraseña de tu PostgreSQL local). Si usas Atlas para MongoDB, agrega también `db.mongo.uri`. Este archivo está excluido de Git: no lo compartas.
+README.md:184:| `default.json` | Sí | Valores comunes sin secretos: puerto, opciones de JWT, costo de bcrypt, conexiones locales por defecto y URL base de las E2E. |
+README.md:186:| `local-development.json`, `local-production.json` | **No** | Secretos de cada entorno: `jwt.secret`, contraseñas y URIs de las bases. |
+README.md:190:Si falta `jwt.secret`, el servidor no arranca y muestra un mensaje que indica qué configurar.
+README.md:268:| Middleware | `middlewares/` | `authenticate` (JWT) y `authorize` (RBAC). |
+README.md:306:| POST | `/api/auth/login` | Público | Inicia sesión y devuelve un JWT. |
+README.md:307:| GET | `/api/auth/me` | Solo JWT | Datos del usuario autenticado. |
+README.md:376:El token se firma con `HS256` usando `jwt.secret`. Lleva el identificador del usuario en `sub`, además de emisión, expiración, emisor (`jwt.issuer`) y destinatario (`jwt.audience`); nunca contraseñas ni hashes.
+README.md:386:En Postman: **Authorization → Bearer Token**. `middlewares/authenticate.js` verifica con `express-jwt` la firma, el algoritmo, la expiración, el emisor y el destinatario; después busca al usuario de `sub`, comprueba que exista y esté activo, y lo asigna a `req.user`. Un usuario eliminado o desactivado no puede usar un token emitido antes.
+README.md:588:| `test/auth.test.js` | Login, firma del JWT, tokens inválidos o expirados y `/api/auth/me`. |
+README.md:589:| `test/startup.test.js` | Arranque sin `jwt.secret` y uso de `PORT`. |
+README.md:664:|   |-- authenticate.js        Verificación de JWT y carga del usuario
+app.js:8://const {expressjwt}=require('express-jwt');
+app.js:27:// Código de clase: la verificación JWT ahora está en
+bin/www:8:const assertJwtSecret = require('../utils/assertJwtSecret');
+bin/www:10: * Validar que el secreto de JWT exista antes de arrancar.
+bin/www:13: * config.get('jwt.secret') en cuanto se requieren. Si la validación fuera
+bin/www:16:try {assertJwtSecret(config);
+bin/www:21:    'y define jwt.secret con un valor propio.'
+config/default.json:8:  "jwt": {
+config/local-development.example.json:2:  "jwt": {
+config/local-production.example.json:2:  "jwt": {
+config/local-production.example.json:18:      "uri": "mongodb+srv://USUARIO:CONTRASEÑA@CLUSTER.mongodb.net/stride_co?retryWrites=true&w=majority"
+config/test.json:2:  "jwt": {
+controllers/auth.js:4:const jwt = require('jsonwebtoken');
+controllers/auth.js:7:  const jwtOptions = {
+controllers/auth.js:8:    expiresIn: config.get('jwt.expiresIn'),
+controllers/auth.js:9:    issuer: config.get('jwt.issuer'),
+controllers/auth.js:10:    audience: config.get('jwt.audience'),
+controllers/auth.js:14:  const secret = config.get('jwt.secret');
+controllers/auth.js:15:  return jwt.sign({ sub: String(user.id) }, secret, jwtOptions);
+controllers/auth.js:54:        expiresIn: config.get('jwt.expiresIn'),
+docs/api.md:238:Se requiere un JWT con `users:read:any` para GET, `users:create:any` para POST,
+docs/api.md:262:Todas las rutas requieren JWT y el permiso `variants:read:any`,
+docs/deploy-render.md:36:                     └── MongoDB Atlas M0 (mongodb+srv, TLS)
+docs/deploy-render.md:55:4. `bin/www` valida que exista `jwt.secret` antes de cargar la aplicación.
+docs/deploy-render.md:61:| `jwt.secret` | Secreto propio de producción (distinto al de desarrollo) |
+docs/deploy-render.md:65:| `db.mongo.uri` | URI `mongodb+srv` de Atlas a la base `stride_co` |
+docs/deploy-render.md:105:| Login admin | `POST /api/auth/login` con el usuario demo admin | ✅ 200, `Inicio de sesión correcto` y JWT |
+docs/deploy-render.md:116:- **Rotación de secretos**: para cambiar `jwt.secret` o una contraseña de base, se edita el secret file en Render y se redepliega. Al cambiar `jwt.secret`, los tokens emitidos dejan de ser válidos.
+docs/e2e-antigravity.md:132:| T02 | auth | Login `admin`: JWT de tres partes | `toHaveLength(2)` | Received length 3 | ✅ Sí | [log](evidencias/e2e-rupturas/T02.txt), [a1](img/e2e/a1.png), [a1-2](img/e2e/a1-2.png) |
+docs/e2e-antigravity.md:133:| T03 | auth | Login `sales`: JWT de tres partes | `toHaveLength(2)` | Received length 3 | ✅ Sí | [log](evidencias/e2e-rupturas/T03.txt), [a1](img/e2e/a1.png), [a1-2](img/e2e/a1-2.png) |
+docs/e2e-antigravity.md:134:| T04 | auth | Login `user`: JWT de tres partes | `toHaveLength(2)` | Received length 3 | ✅ Sí | [log](evidencias/e2e-rupturas/T04.txt), [a1](img/e2e/a1.png), [a1-2](img/e2e/a1-2.png) |
+docs/e2e-antigravity.md:227:Crea test/e2e/helpers.js. La URL base es process.env.E2E_BASE_URL || config.get('e2e.baseUrl'); ningún otro archivo debe leer process.env. Exporta api() que regrese supertest(baseUrl) (NO importes app.js) y login(rol) que acepte 'admin', 'sales' o 'user', haga POST al endpoint real de login con las credenciales demo que siembra database/seed-postgres.js y regrese el token JWT; si el login no responde 200, lanza un error claro. Revisa en routes/ y controllers/ la ruta y la forma exacta del cuerpo y de la respuesta; no las inventes.
+docs/e2e-antigravity.md:239:Crea test/e2e/auth.e2e.test.js usando helpers.js: (1) login válido con cada rol demo regresa 200 y un JWT con formato de tres partes; (2) contraseña incorrecta regresa 401; (3) cuerpo de login inválido (faltan campos) regresa 400 si el controlador lo valida, revísalo; (4) una ruta protegida real (por ejemplo GET /products o la que corresponda en routes/) sin token regresa 401 y con un token alterado regresa 401; (5) ninguna respuesta de login ni de usuarios contiene password_hash ni salt_key (revisa el JSON completo de forma recursiva). Usa los mensajes reales de locales/ solo si el controlador los regresa.
+Binary file docs/img/e2e/r4.png matches
+middlewares/authenticate.js:2:const { expressjwt } = require('express-jwt');
+middlewares/authenticate.js:5:const verifyToken = expressjwt({
+middlewares/authenticate.js:6:  secret: config.get('jwt.secret'),
+middlewares/authenticate.js:8:  issuer: config.get('jwt.issuer'),
+middlewares/authenticate.js:9:  audience: config.get('jwt.audience'),
+package.json:21:    "express-jwt": "^8.5.1",
+scripts/e2e-rupturas.js:35:  { id: 'T02', file: AUTH, test: 'rol "admin" regresa 200, mensaje traducido y JWT de tres partes',
+scripts/e2e-rupturas.js:37:  { id: 'T03', file: AUTH, test: 'rol "sales" regresa 200, mensaje traducido y JWT de tres partes',
+scripts/e2e-rupturas.js:39:  { id: 'T04', file: AUTH, test: 'rol "user" regresa 200, mensaje traducido y JWT de tres partes',
+tareas_sprint_2.md:7:En el Sprint 1 cada recurso se construyó con datos mock. En este sprint cada recurso deja el mock y pasa a su base de datos real, protegido con JWT + RBAC y con mensajes en español e inglés. Alrededor de los recursos hay cuatro tarjetas de base (configuración, PostgreSQL, i18n y seed) y cuatro de cierre (despliegue, E2E, README y entrega).
+tareas_sprint_2.md:17:- **Configuración:** existe `config/` pero `config/default.json` contiene una contraseña de base de datos y está en git. `controllers/auth.js` y `middlewares/authenticate.js` todavía leen `process.env.JWT_*`. `dotenv` y `.env.example` siguen en el proyecto. Se instaló `config@5`; el PDF recomienda `config@4` con Jest.
+tareas_sprint_2.md:20:- **Ya existen y se conservan:** `GET /health`, `Dockerfile`, despliegue de la Actividad 3, login con JWT, `GET /api/auth/me`.
+tareas_sprint_2.md:117:- [ ] Si falta `jwt.secret`, el servidor no arranca y muestra un mensaje claro.
+tareas_sprint_2.md:118:- [ ] `config/test.json` con un `jwt.secret` de prueba y costo de bcrypt bajo: `npm test` funciona sin archivos locales.
+tareas_sprint_2.md:122:- [ ] Pruebas: arranque sin `jwt.secret` falla; `PORT` se respeta.
+tareas_sprint_2.md:372:- [ ] No hay secretos en el repositorio: buscar `jwt`, `mongodb+srv`, `postgres://` en el código y en `config/`.
+test/app.test.js:9:const jwt = require('jsonwebtoken');
+test/app.test.js:19:  return jwt.sign({ sub: '101' }, config.get('jwt.secret'), {
+test/app.test.js:20:    issuer: config.get('jwt.issuer'),
+test/app.test.js:21:    audience: config.get('jwt.audience'),
+test/auth.test.js:2:const jwt = require('jsonwebtoken');
+test/auth.test.js:14:function token(options = {}, secret = config.get('jwt.secret')) {
+test/auth.test.js:15:  return jwt.sign({ sub: '7' }, secret, {
+test/auth.test.js:16:    algorithm: 'HS256', expiresIn: '15m', issuer: config.get('jwt.issuer'),
+test/auth.test.js:17:    audience: config.get('jwt.audience'), ...options,
+test/auth.test.js:46:it.each(['json', 'form'])('login %s firma JWT verificable con los claims requeridos', async type => {
+test/auth.test.js:49:  const payload = jwt.verify(res.body.data.token, config.get('jwt.secret'), {
+test/auth.test.js:50:    algorithms: ['HS256'], issuer: config.get('jwt.issuer'), audience: config.get('jwt.audience'),
+test/customers.test.js:3:const jwt = require('jsonwebtoken');
+test/customers.test.js:36:  const token = jwt.sign({ sub: String(userId) }, config.get('jwt.secret'), {
+test/customers.test.js:37:    issuer: config.get('jwt.issuer'),
+test/customers.test.js:38:    audience: config.get('jwt.audience'),
+test/customers.test.js:206:  ])('exige JWT: %s %s', async (method, path) => {
+test/e2e/auth.e2e.test.js:4:describe('E2E - Autenticación y JWT', () => {
+test/e2e/auth.e2e.test.js:9:      it(`rol "${role}" regresa 200, mensaje traducido y JWT de tres partes`, async () => {
+test/i18n.test.js:2:const jwt = require('jsonwebtoken');
+test/i18n.test.js:18:  return jwt.sign({ sub: '7' }, config.get('jwt.secret'), {
+test/i18n.test.js:20:    issuer: config.get('jwt.issuer'), audience: config.get('jwt.audience'),
+test/inventory.test.js:3:const jwt = require('jsonwebtoken');
+test/inventory.test.js:13:  const token = jwt.sign({ sub: String(roleId) }, config.get('jwt.secret'), {
+test/inventory.test.js:14:    issuer: config.get('jwt.issuer'),
+test/inventory.test.js:15:    audience: config.get('jwt.audience'),
+test/inventory.test.js:62:])('rechaza solicitudes sin JWT: %s %s', async (method, path) => {
+test/orders.test.js:3:const jwt = require('jsonwebtoken');
+test/orders.test.js:24:  const token = jwt.sign({ sub: String(user) }, config.get('jwt.secret'), {
+test/orders.test.js:25:    issuer: config.get('jwt.issuer'),
+test/orders.test.js:26:    audience: config.get('jwt.audience'),
+test/permissions.test.js:3:const jwt = require('jsonwebtoken');
+test/permissions.test.js:17:  return jwt.sign({ sub: id }, config.get('jwt.secret'), {
+test/permissions.test.js:18:    issuer: config.get('jwt.issuer'),
+test/permissions.test.js:19:    audience: config.get('jwt.audience'),
+test/products.test.js:3:const jwt = require('jsonwebtoken');
+test/products.test.js:15:  return jwt.sign({ sub: String(id) }, config.get('jwt.secret'), {
+test/products.test.js:16:    issuer: config.get('jwt.issuer'),
+test/products.test.js:17:    audience: config.get('jwt.audience'),
+test/rbac.test.js:3:const jwt = require('jsonwebtoken');
+test/rbac.test.js:8:function createToken(userId, options = {}, secret = config.get('jwt.secret')) {
+test/rbac.test.js:9:  return jwt.sign({ sub: String(userId) }, secret, {
+test/rbac.test.js:12:    issuer: config.get('jwt.issuer'),
+test/rbac.test.js:13:    audience: config.get('jwt.audience'),
+test/roles.test.js:3:const jwt = require('jsonwebtoken');
+test/roles.test.js:16:  return jwt.sign({ sub: id }, config.get('jwt.secret'), {
+test/roles.test.js:17:    issuer: config.get('jwt.issuer'),
+test/roles.test.js:18:    audience: config.get('jwt.audience'),
+test/startup.test.js:1:const assertJwtSecret = require('../utils/assertJwtSecret');
+test/startup.test.js:4:  test('lanza error si falta jwt.secret (config real sin el valor)', () => {
+test/startup.test.js:6:    expect(() => assertJwtSecret(configSinSecreto)).toThrow(/jwt\.secret/);
+test/startup.test.js:9:  test('no lanza error si jwt.secret sí está definido', () => {
+test/startup.test.js:11:    expect(() => assertJwtSecret(configConSecreto)).not.toThrow();
+test/users.test.js:4:const jwt = require('jsonwebtoken');
+test/users.test.js:15:  return jwt.sign({ sub: id }, config.get('jwt.secret'), {
+test/users.test.js:16:    issuer: config.get('jwt.issuer'),
+test/users.test.js:17:    audience: config.get('jwt.audience'),
+test/users.test.js:154:])('exige JWT y permiso de administrador en %s %s', async (method, path) => {
+test/variants.test.js:3:const jwt = require('jsonwebtoken');
+test/variants.test.js:21:  const token = jwt.sign({ sub: String(roleId) }, config.get('jwt.secret'), {
+test/variants.test.js:22:    issuer: config.get('jwt.issuer'),
+test/variants.test.js:23:    audience: config.get('jwt.audience'),
+test/variants.test.js:172:])('exige JWT en %s %s', async (method, path) => {
+utils/assertJwtSecret.js:1:function assertJwtSecret(config) {
+utils/assertJwtSecret.js:2:  if (!config.has('jwt.secret') || !config.get('jwt.secret')) {
+utils/assertJwtSecret.js:3:    throw new Error('No se pudo iniciar el servidor: falta "jwt.secret" en la configuración.');
+utils/assertJwtSecret.js:7:module.exports = assertJwtSecret;
+
+
+==================== 7b. Valores sospechosos en config/ (todo lo que no sea placeholder) ====================
+--- config/custom-environment-variables.json
+(sin claves secret/password/uri)
+--- config/default.json
+18:      "uri": "mongodb://localhost:27017/stride_co"
+25:      "password": "",
+--- config/development.json
+(sin claves secret/password/uri)
+--- config/local-development.example.json
+3:    "secret": "REEMPLAZA CON TU PROPIO SECRETO"
+7:      "password": "REEMPLAZA CON TU CONTRASEÑA DE POSTGRESQL",
+--- config/local-production.example.json
+3:    "secret": "REEMPLAZA_CON_UN_SECRETO_LARGO_Y_ALEATORIO"
+11:      "password": "CONTRASEÑA_DE_LA_BASE",
+18:      "uri": "mongodb+srv://USUARIO:CONTRASEÑA@CLUSTER.mongodb.net/stride_co?retryWrites=true&w=majority"
+--- config/production.json
+(sin claves secret/password/uri)
+--- config/test.json
+3:    "secret": "test-secret-not-for-production",
+17:      "password": "test",
+
+
+==================== 8. Secretos en TODO el historial (debe quedar vacío) ====================
+ATENCIÓN, revisar:
++      "uri": "mongodb+srv://USUARIO:***@CLUSTER.mongodb.net/stride_co?retryWrites=true&w=majority"
+
+
+==================== 9. Archivos locales de secretos en git (debe quedar vacío) ====================
+OK: ningún local-*.json versionado.
+OK: ningún .env versionado.
+
+
+==================== 10. Ramas feat/s2-* en el remoto ====================
+feat/s2-01-config
+feat/s2-02-postgres
+feat/s2-03-i18n
+feat/s2-04-seed
+feat/s2-05-users
+feat/s2-06-roles
+feat/s2-07-permissions
+feat/s2-08-products
+feat/s2-09-variants
+feat/s2-10-inventory
+feat/s2-11-customers
+feat/s2-12-orders
+feat/s2-13-render-deploy
+feat/s2-14-e2e-base
+feat/s2-15-e2e-sql
+feat/s2-16-e2e-mongo
+feat/s2-17-readme
+feat/s2-18-cierre
+
+
+==================== 11. Commits por integrante en staging ====================
+    59	alex0726649 <alexperezmillan26@gmail.com>
+    39	Osvaldo Hernandez <osvaldo.hernandezj@gmail.com>
+    21	Armando Velazquez Barroso <armando_uabc@hotmail.com>
+    21	armando-velazquez <144549972+armando-velazquez@users.noreply.github.com>
+    14	Jenny Quintana <160675241+sopita13@users.noreply.github.com>
+     8	Jenny Quintana <a374366@gmail.com>
+     7	OsvaExe <osvaldo.hernandezj@gmail.com>
+     6	sopita13 <jennyquintana153@gmail.com>
+     1	Jenny Quintana <jennyquintana153@gmail.com>
+     1	a374366-commits <a374366@uach.mx>
+
+
+==================== 12. Últimos merges en staging ====================
+e2939b4 Merge pull request #111 from alex0726649/fix/restaurar-anexos-e2e
+e5b6e8c Merge pull request #110 from alex0726649/feat/s2-14-e2e-base
+9893bbe Merge branch 'staging' into feat/s2-14-e2e-base
+d85b1a8 Merge pull request #105 from alex0726649/fix/s2-16-docs
+1d7bb70 docs(e2e): corregir tabla de rupturas y observación del seed
+0b48eb3 Merge branch 'staging' into feat/s2-14-e2e-base
+94eb494 Merge pull request #106 from alex0726649/feat/s2-18-cierre
+a852c73 Merge branch 'staging' into fix/s2-16-docs
+647ddfb Merge pull request #109 from alex0726649/fix/s2-16-antigravity
+caa08dc Merge pull request #107 from alex0726649/chore/absorber-revert-s2-09
+ff1b9d9 Merge remote-tracking branch 'origin/staging' into feat/s2-18-cierre
+c3ec86d Merge pull request #108 from alex0726649/feat/s2-13-render-deploy
+0b110ac chore: registrar el revert de S2-09 en main sin aplicarlo en staging
+b576cd0 Merge pull request #104 from alex0726649/feat/s2-17-readme
+590a767 Merge pull request #103 from alex0726649/feat/s2-16-e2e-mongo
+dc52cec Merge pull request #102 from alex0726649/feat/s2-15-e2e-sql
+44d54a4 Merge pull request #101 from alex0726649/feat/s2-14-e2e-base
+cd6ccb2 Merge pull request #100 from alex0726649/feat/s2-13-render-deploy
+e08c349 Merge pull request #98 from alex0726649/feat/s2-12-orders
+7c49929 Merge pull request #99 from alex0726649/fix/orders-rbac
+b6b9e37 Merge remote-tracking branch 'origin/staging' into feat/s2-12-orders
+3eb1f81 Merge pull request #97 from alex0726649/feat/s2-11-customers
+3c3c2e5 Merge pull request #95 from alex0726649/feat/s2-09-variants
+f2dac93 Merge pull request #96 from alex0726649/revert-94-feat/s2-09-variants
+b56b19d Merge pull request #94 from alex0726649/feat/s2-09-variants

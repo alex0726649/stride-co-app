@@ -64,4 +64,9 @@ async function loadRoleAccess(roleId) {
   };
 }
 
-module.exports = { parsePermissionKey, buildAccessControl, loadRoleAccess };
+function canManageAssignedOrders(roleAccess) {
+  // El permiso explícito distingue a quien gestiona órdenes asignadas de quien puede editar cualquiera.
+  return roleAccess?.keys.includes('orders:update:own') ?? false;
+}
+
+module.exports = { parsePermissionKey, buildAccessControl, loadRoleAccess, canManageAssignedOrders };

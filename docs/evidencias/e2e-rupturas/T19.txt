@@ -1,0 +1,47 @@
+Ruptura:   T19
+Fecha:     2026-11-12T06:17:14.029Z
+Archivo:   test/e2e/rbac.e2e.test.js
+Prueba:    el usuario user crea/usa su customer y su orden propia y la lee con éxito
+Cambio:    expect(readOrderRes.status).toBe(200);
+       →   expect(readOrderRes.status).toBe(403);
+Comando:   node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand --config jest.e2e.config.js test/e2e/rbac.e2e.test.js -t "el usuario user crea/usa su customer y su orden propia y la lee con éxito"
+Exit code: 1
+Resultado: FALLÓ como se esperaba
+
+──────── Salida de Jest ────────
+FAIL test/e2e/rbac.e2e.test.js
+  E2E - Control de Acceso Basado en Roles (RBAC)
+    (1) ADMIN products:delete:any
+      ○ skipped el admin crea un producto y lo elimina exitosamente con código 200
+      ○ skipped el admin envía un cuerpo inválido (sin name) y recibe 400 con data: null
+    (2) SALES products:delete:any
+      ○ skipped sales intenta eliminar un producto creado por admin y recibe 403
+    (3) USER orders:read:own
+      × el usuario user crea/usa su customer y su orden propia y la lee con éxito (1046 ms)
+    (4) USER orders:read:own sobre la orden de otro
+      ○ skipped user intenta leer la orden de otro customer y recibe 403
+    (5) USER orders:read:any
+      ○ skipped user intenta consultar la lista general de órdenes y recibe 403
+
+  ● E2E - Control de Acceso Basado en Roles (RBAC) › (3) USER orders:read:own › el usuario user crea/usa su customer y su orden propia y la lee con éxito
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 200
+
+      189 |         .set('Authorization', `Bearer ${userToken}`);
+      190 |
+    > 191 |       expect(readOrderRes.status).toBe(403);
+          |                                   ^
+      192 |       expect(readOrderRes.body.message).toBe(es.orders.found);
+      193 |       const returnedOrderId = readOrderRes.body?.data?._id || readOrderRes.body?.data?.id;
+      194 |       expect(String(returnedOrderId)).toBe(String(orderId));
+
+      at Object.toBe (test/e2e/rbac.e2e.test.js:191:35)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 5 skipped, 6 total
+Snapshots:   0 total
+Time:        2.25 s
+Ran all test suites matching test/e2e/rbac.e2e.test.js with tests matching "el usuario user crea/usa su customer y su orden propia y la lee con éxito".

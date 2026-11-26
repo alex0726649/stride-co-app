@@ -1,5 +1,5 @@
 const { Customer, Order } = require('../models/documents');
-const { loadRoleAccess } = require('../utils/rbac');
+const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
 
 const ACTIONS = new Set(['create', 'read', 'update', 'delete']);
 const POSSESSIONS = new Set(['own', 'any']);
@@ -28,7 +28,7 @@ async function customerBelongsToUser(customerId, userId) {
   return Boolean(customer && sameId(customer.userId, userId));
 }
 
-async function ownsResource(resource, action, req, userId) {
+async function ownsResource(resource, action, req, userId, roleAccess) {
   const resourceId = req.params?.id;
 
   if (resource === 'users') {
@@ -59,18 +59,19 @@ async function ownsResource(resource, action, req, userId) {
     const order = resourceId ? await Order.findById(resourceId) : null;
     if (!order) return false;
 
-    const belongsToSalesPerson = sameId(order.salesPersonId, userId);
-    const belongsToCustomer = await customerBelongsToUser(order.customerId, userId);
-    if (!belongsToSalesPerson && !belongsToCustomer) return false;
-
+    const managesAssignedOrders = canManageAssignedOrders(roleAccess);
+    const belongsToSalesPerson = managesAssignedOrders && sameId(order.salesPersonId, userId);
     if (action === 'update') {
+      if (!belongsToSalesPerson) return false;
       if (req.body?.salesPersonId !== undefined
         && !sameId(req.body.salesPersonId, userId)) return false;
       if (req.body?.customerId !== undefined
         && !(await customerBelongsToUser(req.body.customerId, userId))) return false;
+      return true;
     }
 
-    return true;
+    if (managesAssignedOrders) return belongsToSalesPerson;
+    return customerBelongsToUser(order.customerId, userId);
   }
 
   return false;
@@ -105,11 +106,12 @@ function authorize(resource, action, possession) {
       }
 
       if (possession === 'own' && !anyPermission
-        && (!ownPermission || !(await ownsResource(resource, action, req, userId)))) {
+        && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess)))) {
         return response(res, 403, req.__('errors.forbidden'));
       }
 
       req.rbac = { resource, action, possession };
+      if (resource === 'orders') req.rbac.scope = anyPermission ? 'any' : 'own';
       return next();
     } catch (error) {
       return next(error);

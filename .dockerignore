@@ -3,5 +3,7 @@ npm-debug.log
 .git
 .gitignore
 .env
-config/local*.json
-!config/local*.example.json
+# Secretos: nunca dentro de la imagen, ni en config/ ni en la raíz del contexto
+# (Render deja los secret files en la raíz del contexto de build en servicios Docker).
+**/local*.json
+!**/local*.example.json

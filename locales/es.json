@@ -17,6 +17,22 @@
     "errorTitle": "Error",
     "status": "Estado"
   },
+  "orders": {
+    "list": "Lista de órdenes",
+    "found": "Orden encontrada",
+    "created": "Orden creada",
+    "updated": "Orden actualizada",
+    "deleted": "Orden eliminada",
+    "notFound": "Orden no encontrada",
+    "invalidId": "El ID de la orden no es válido",
+    "invalidBody": "Los datos de la orden son inválidos",
+    "invalidCustomer": "El cliente indicado no es válido",
+    "invalidSalesPerson": "El ID debe corresponder a una cuenta de vendedor",
+    "invalidPayment": "El método de pago no es válido",
+    "invalidStatus": "El estado de la orden no es válido",
+    "invalidItems": "La orden requiere artículos con producto y cantidad válidos",
+    "invalidProduct": "Uno de los productos no existe en el catálogo"
+  },
   "users": {
     "list": "Lista de usuarios",
     "found": "Usuario encontrado",
@@ -77,6 +93,22 @@
     "invalidBody": "Los datos del producto son inválidos: name, description y brand son obligatorios",
     "invalidPrice": "El price debe ser un número mayor o igual a cero",
     "inUse": "No se puede eliminar un producto con variantes asociadas; elimina primero sus variantes"
+  },
+  "customers": {
+  "list": "Lista de clientes",
+  "found": "Cliente encontrado",
+  "created": "Cliente creado",
+  "updated": "Cliente actualizado",
+  "deleted": "Cliente eliminado",
+  "notFound": "Cliente no encontrado",
+  "invalidId": "El ID debe ser un ObjectId válido",
+  "invalidBody": "Los datos del cliente son inválidos",
+  "invalidUserId": "userId es obligatorio y debe ser un entero positivo",
+  "invalidEmail": "El email no tiene un formato válido",
+  "invalidAddressType": "El tipo de dirección debe ser SHIPPING o BILLING",
+  "duplicate": "Ya existe un cliente con esos datos",
+  "userNotFound": "El usuario indicado no existe",
+  "hasOrders": "No se puede eliminar un cliente con órdenes registradas"
   },
   "variants": {
     "list": "Lista de variantes",

@@ -20,14 +20,9 @@ async function seedUsers(roles, transaction) {
     let user = await User.findOne({ where: { email }, transaction });
 
     if (!user) {
-      const passwordVariable = `SEED_${roleName.toUpperCase()}_PASSWORD`;
-      const demoPassword = process.env[passwordVariable]
-        || (process.env.NODE_ENV === 'production' ? '' : password);
-      if (!demoPassword.trim()) {
-        throw new Error(`Define ${passwordVariable} para crear la cuenta demo ${email}.`);
-      }
-
-      const { securePassword, saltKey } = await hashPassword(demoPassword);
+      // Contraseñas ficticias, exclusivas de estas cuentas y documentadas en el README.
+      // Son las mismas en todos los entornos para que las pruebas E2E también corran contra Render.
+      const { securePassword, saltKey } = await hashPassword(password);
       user = await User.create({
         first_name: firstName,
         last_name: 'Demo',
@@ -54,7 +49,7 @@ async function seedCatalog(transaction) {
       defaults: { stock: DEMO_STOCK },
       transaction,
     });
-    return;
+    return existingVariant.product_id;
   }
 
   const [product] = await Product.findOrCreate({
@@ -71,6 +66,7 @@ async function seedCatalog(transaction) {
 
   // El hook de la variante ya creó su inventario con stock cero.
   await Inventory.update({ stock: DEMO_STOCK }, { where: { variant_id: variant.id }, transaction });
+  return product.id;
 }
 
 async function seedPostgres() {
@@ -81,8 +77,8 @@ async function seedPostgres() {
 
     const roles = await loadRbacMatrix(transaction);
     const users = await seedUsers(roles, transaction);
-    await seedCatalog(transaction);
-    return users;
+    const demoProductId = await seedCatalog(transaction);
+    return { users, demoProductId };
   });
 }
 
