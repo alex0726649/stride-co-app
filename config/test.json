@@ -1,0 +1,24 @@
+{
+  "jwt": {
+    "secret": "test-secret-not-for-production",
+    "expiresIn": "15m",
+    "issuer": "stride-co",
+    "audience": "stride-co-api"
+  },
+  "bcrypt": {
+    "saltRounds": 1
+  },
+  "db": {
+    "postgres": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "stride_co_test",
+      "user": "postgres",
+      "password": "test",
+      "ssl": {
+        "enabled": false,
+        "rejectUnauthorized": false
+      }
+    }
+  }
+}

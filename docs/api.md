@@ -232,51 +232,42 @@ Los errores inesperados responderán `Error interno del servidor`, sin exponer d
 
 Este documento describe el comportamiento acordado. Su existencia no significa que los endpoints ya estén implementados.
 
-## 9. Usuarios implementados (S1-03)
+## 9. Usuarios (S2-05)
 
 `/api/users` admite GET y POST; `/api/users/:id` admite GET, PUT y DELETE.
-Los registros fijos tienen IDs 1 y 2, ambos con `role_id: 1` como referencia
-para el mock de roles. POST devuelve el ID de ejemplo 3, sin guardarlo.
+Se requiere un JWT con `users:read:any` para GET, `users:create:any` para POST,
+`users:update:any` para PUT y `users:delete:any` para DELETE. La matriz asigna
+estos permisos a `admin`.
 
-Los campos públicos son `id`, `first_name`, `last_name`, `email` y `role_id`.
-POST y PUT requieren los cuatro últimos campos: los textos deben ser cadenas
-no vacías (ni solo espacios) y `role_id` un número entero positivo seguro.
-En este sprint no se valida el formato de email ni la existencia del rol.
-Los campos adicionales se ignoran; nunca se reflejan contraseñas, hashes o salts.
-El ID del cuerpo se ignora: POST asigna 3 y PUT conserva el ID de la ruta.
-Los IDs de ruta se comparan con la representación decimal exacta del fixture.
-Un ID desconocido en PUT devuelve 404 antes de validar sus campos.
+Los usuarios se guardan en PostgreSQL y las respuestas incluyen `role`.
+POST requiere `first_name`, `last_name`, `email`, `role_id` y `password`.
+PUT acepta los mismos campos de forma parcial y conserva la contraseña si
+se omite. El rol debe existir. Un ID inválido, un cuerpo inválido o un correo
+duplicado devuelve 400. Un ID válido sin usuario devuelve 404.
+Las respuestas usan `{ message, data }` en el idioma solicitado y excluyen
+`password`, `password_hash` y `salt_key`.
 
-Ejemplo de cuerpo válido para POST o PUT:
+Ejemplo de cuerpo válido para POST:
 
 ```json
-{"first_name":"Eva","last_name":"Ejemplo","email":"eva@example.com","role_id":1}
+{"first_name":"Eva","last_name":"Ejemplo","email":"eva@example.com","role_id":1,"password":"ClaveDemo123!"}
 ```
 
-Las pruebas en `test/users.test.js` verifican éxito, errores y que ninguna
-escritura modifica los registros originales. Ejecutar `npm run lint` y
-`npm test -- --runInBand` desde la raíz del repositorio.
+Las pruebas en `test/users.test.js` simulan las consultas SQL y verifican
+acceso, validaciones, traducciones y campos públicos.
 
-## 10. Variantes implementadas (S1-07)
+## 10. Variantes persistidas (S2-09)
 
-`/api/variants` admite GET (`list`) y POST (`create`);
-`/api/variants/:id` admite GET (`find`), PUT (`update`) y DELETE (`destroy`).
-Las funciones se exportan desde `controllers/variants.js`.
+`/api/variants` admite GET y POST. `/api/variants/:id` admite GET, PUT y DELETE.
+Todas las rutas requieren JWT y el permiso `variants:read:any`,
+`variants:create:any`, `variants:update:any` o `variants:delete:any`,
+según la operación.
 
-Los campos de ProductVariant en la figura 1 son `id`, `product_id`, `sku`,
-`size`, `color` y `active`. Los fixtures tienen IDs 1 y 2 y referencian el
-producto 1 (Tenis Deportivos Stride). POST asigna el ID fijo 3.
-
-POST y PUT requieren `product_id` como número entero positivo seguro y
-`sku`, `size` y `color` como textos no vacíos ni compuestos solo por espacios.
-`active` es opcional y debe ser booleano: por defecto es `true` al crear;
-al actualizar se conserva el valor del fixture si se omite.
-El SKU es único contra los fixtures mediante comparación exacta, conforme
-al modelo; PUT puede conservar su propio SKU. Un duplicado devuelve 400.
-No se consulta la existencia del producto al escribir en este sprint.
-Los campos adicionales se ignoran y el ID del cuerpo no reemplaza el asignado
-por el controlador. Los IDs de ruta se comparan con su representación decimal
-exacta; cualquier ID no encontrado devuelve 404, antes de validar campos en PUT.
+POST y PUT requieren un `product_id` entero positivo que exista en PostgreSQL,
+y `sku`, `size` y `color` como textos no vacíos de hasta 100, 30 y 50 caracteres,
+respectivamente. El SKU es único. `active` es opcional y booleano. Al crear
+se activa por defecto y en PUT conserva su valor si se omite. El ID lo genera
+la base de datos y los campos ajenos a este contrato se ignoran.
 
 Ejemplo de cuerpo para POST o PUT:
 
@@ -284,12 +275,13 @@ Ejemplo de cuerpo para POST o PUT:
 {"product_id":1,"sku":"STRIDE-28-AZUL","size":"28","color":"Azul","active":true}
 ```
 
-POST devuelve 201 con `message: "Creación de variante simulada"` y `data`
-con esos campos e `id: 3`. PUT devuelve 200 con el ID de la ruta; DELETE
-responde 200 con `message: "Eliminación de variante simulada"` y `data: null`.
-Ninguna escritura persiste: GET mantiene los fixtures y GET `/api/variants/3`
-sigue devolviendo 404. Las pruebas en `test/variants.test.js` cubren las cinco
-operaciones, referencias, validaciones y ausencia de persistencia.
+POST responde 201 y crea el inventario con cero existencias y reservas
+en la misma transacción. GET por ID devuelve `product` e `inventory`
+junto a los campos de la variante. DELETE responde 200 y elimina también
+el inventario vacío. Si hay existencias o reservas, devuelve 400.
+Un ID inválido, un SKU duplicado o un producto inexistente devuelven 400.
+Un ID de variante válido que no existe devuelve 404. Los mensajes están
+disponibles en español e inglés.
 
 ## 11. Productos implementados (S1-06)
 

@@ -86,14 +86,14 @@ function authorize(resource, action, possession) {
     const roleId = req.user?.role_id ?? req.user?.roleId;
 
     if (!userId || roleId === undefined || roleId === null) {
-      return response(res, 401, 'No autorizado');
+      return response(res, 401, req.__('errors.unauthorized'));
     }
 
     try {
       const roleAccess = await loadRoleAccess(roleId);
       // Rol inexistente, o rol sin ningún permiso (accesscontrol no lo registra): 403.
       if (!roleAccess || !roleAccess.accessControl.hasRole(roleAccess.roleName)) {
-        return response(res, 403, 'Prohibido');
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       const checker = roleAccess.accessControl.can(roleAccess.roleName);
@@ -101,12 +101,12 @@ function authorize(resource, action, possession) {
       const ownPermission = checker[`${action}Own`](resource).granted;
 
       if (possession === 'any' && !anyPermission) {
-        return response(res, 403, 'Prohibido');
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       if (possession === 'own' && !anyPermission
         && (!ownPermission || !(await ownsResource(resource, action, req, userId)))) {
-        return response(res, 403, 'Prohibido');
+        return response(res, 403, req.__('errors.forbidden'));
       }
 
       req.rbac = { resource, action, possession };
