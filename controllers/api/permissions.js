@@ -1,6 +1,6 @@
-const { Permission, Role } = require('../models/relationals');
-const { parsePermissionKey } = require('../utils/rbac');
-const response = require('../utils/response');
+const { Permission, Role } = require('../../models/relationals');
+const { parsePermissionKey } = require('../../utils/rbac');
+const response = require('../../utils/response');
 
 // Cada permiso se devuelve con los roles que lo tienen, sin la tabla intermedia.
 const withRoles = {

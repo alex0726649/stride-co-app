@@ -1,5 +1,5 @@
 const express = require('express');
-const controller = require('../../controllers/index');
+const controller = require('../../controllers/web/store');
 const router = express.Router();
 
 router.get('/', controller.home);

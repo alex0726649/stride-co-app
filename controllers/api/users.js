@@ -1,7 +1,7 @@
 const { Validator } = require('sequelize');
-const { User, Role } = require('../models/relationals');
-const { hashPassword } = require('../utils/password');
-const response = require('../utils/response');
+const { User, Role } = require('../../models/relationals');
+const { hashPassword } = require('../../utils/password');
+const response = require('../../utils/response');
 
 const withRole = { include: { model: Role, as: 'role' } };
 const publicFields = ['id', 'first_name', 'last_name', 'email', 'role_id'];

@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
-const { Role, Permission, User } = require('../models/relationals');
-const response = require('../utils/response');
+const { Role, Permission, User } = require('../../models/relationals');
+const response = require('../../utils/response');
 
 // Los permisos se devuelven sin las columnas de la tabla intermedia role_permission.
 const withPermissions = {
