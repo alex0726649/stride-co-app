@@ -51,6 +51,17 @@ module.exports = [
     },
   },
   {
+    // JavaScript del navegador (mejoras progresivas de las vistas SSR)
+    files: ['public/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+      },
+    },
+  },
+  {
     ignores: ['node_modules/', 'coverage/'],
   },
 ];

@@ -1,0 +1,19 @@
+//- Tarjeta de producto del prototipo. Enlaza al detalle (/products/:id).
+//- El prototipo usa un emoji y un color de fondo por producto; como Product no tiene
+//- esos campos, el color sale de la categoría.
+mixin productCard(product)
+  - const CATEGORY_COLORS = { Running: '#e9f1fd', Urbanos: '#f3e9df', Training: '#e6f0e9' }
+  .col-sm-6.col-lg-3
+    a.product-tile(href='/products/' + product.id)
+      .shoe-art(style='background:' + (CATEGORY_COLORS[product.category_id] || '#eae8f6'))
+        if product.category_id
+          span.tag.badge.text-bg-light= product.category_id
+        span.shoe(aria-hidden='true') 👟
+      .p-3
+        .tiny= product.brand
+        h3.h5.fw-bold.my-1= product.name
+        .d-flex.justify-content-between.align-items-center
+          strong= formatPrice(product.price)
+          span.text-decoration-underline.tiny
+            | #{__('store.card.details')}
+            i.bi.bi-arrow-up-right.ms-1

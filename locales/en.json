@@ -128,5 +128,83 @@
     "skuTaken": "This sku already exists",
     "productNotFound": "The specified product does not exist",
     "inUse": "A variant with stock or reserved units cannot be deleted"
+  },
+  "site": {
+    "name": "Stride & Co",
+    "tagline": "MOVE YOUR WAY",
+    "description": "Urban, sports and everyday sneakers from Stride & Co."
+  },
+  "nav": {
+    "label": "Store navigation",
+    "home": "Home",
+    "products": "Products",
+    "orders": "My orders",
+    "cart": "Bag",
+    "admin": "Admin",
+    "logout": "Log out"
+  },
+  "footer": {
+    "label": "Footer links",
+    "rights": "© %s Stride & Co. All rights reserved."
+  },
+  "lang": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "admin": {
+    "panel": "Admin panel",
+    "description": "Stride & Co. admin panel.",
+    "breadcrumb": "Stride & Co / Administration",
+    "viewStore": "View store",
+    "nav": {
+      "products": "Products",
+      "inventory": "Inventory"
+    }
+  },
+  "store": {
+    "card": {
+      "details": "View details"
+    }
+  },
+  "pages": {
+    "comingSoon": {
+      "title": "Coming soon",
+      "heading": "This section will be available soon",
+      "text": "We are still working on this part of the store.",
+      "back": "Back to the store"
+    },
+    "errors": {
+      "back": "Back to the store",
+      "forbidden": {
+        "title": "Access denied",
+        "text": "Your account does not have permission to view this page."
+      },
+      "notFound": {
+        "title": "Page not found",
+        "text": "The page you are looking for does not exist or is no longer available."
+      },
+      "internal": {
+        "title": "Server error",
+        "text": "Something went wrong while processing your request. Please try again later."
+      }
+    }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "form": {
+    "errorsTitle": "Please check the highlighted fields."
+  },
+  "common": {
+    "close": "Close",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "soldOut": "Sold out",
+      "low": "Low stock"
+    }
   }
 }

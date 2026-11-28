@@ -1,17 +1,22 @@
-extends layout
+//- Inicio provisional de la clase (tabla de productos). Lo reemplaza S3-05 (F2) con
+//- el inicio y el catálogo del prototipo; mientras tanto ya usa el layout de la tienda.
+extends layouts/store
 
 block content
-  table
-    thead
-      tr
-        th(scope='col') #{__('products.name')}
-        th(scope='col') #{__('products.description')}
-        th(scope='col') #{__('products.brand')}
-        th(scope='col') #{__('products.price')}
-    tbody
-      each product in products
-        tr
-          td= product.name
-          td= product.description
-          td= product.brand
-          td= product.price
+  .container.py-5
+    .store-panel
+      .table-responsive
+        table.table.align-middle.mb-0
+          thead
+            tr
+              th(scope='col') #{__('products.name')}
+              th(scope='col') #{__('products.description')}
+              th(scope='col') #{__('products.brand')}
+              th(scope='col') #{__('products.price')}
+          tbody
+            each product in products
+              tr
+                td= product.name
+                td= product.description
+                td= product.brand
+                td= product.price

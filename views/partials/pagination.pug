@@ -1,0 +1,22 @@
+//- Paginación. Espera `page` y `totalPages`; conserva `q` y `category` en los enlaces.
+//- `basePath` es opcional (por defecto, la ruta actual).
+- const pageHref = n => { const params = new URLSearchParams(); if (locals.q) params.set('q', locals.q); if (locals.category) params.set('category', locals.category); if (n > 1) params.set('page', String(n)); const query = params.toString(); return (locals.basePath || currentPath) + (query ? '?' + query : ''); }
+if locals.totalPages > 1
+  nav.mt-4(aria-label=__('pagination.label'))
+    ul.pagination.justify-content-center.flex-wrap
+      li.page-item(class=page <= 1 ? 'disabled' : '')
+        if page > 1
+          a.page-link(href=pageHref(page - 1) rel='prev')= __('pagination.previous')
+        else
+          span.page-link= __('pagination.previous')
+      - for (let n = 1; n <= totalPages; n++)
+        li.page-item(class=n === page ? 'active' : '')
+          if n === page
+            span.page-link(aria-current='page')= n
+          else
+            a.page-link(href=pageHref(n))= n
+      li.page-item(class=page >= totalPages ? 'disabled' : '')
+        if page < totalPages
+          a.page-link(href=pageHref(page + 1) rel='next')= __('pagination.next')
+        else
+          span.page-link= __('pagination.next')

@@ -1,0 +1,18 @@
+//- Tabla del panel. Las filas van en el bloque del mixin; el estado vacío se resuelve
+//- con `each ... else` en la vista:
+//-   +table([__('admin.products.name'), __('admin.products.price')])
+//-     each product in products
+//-       tr ...
+//-     else
+//-       tr: td(colspan=2)= __('admin.products.empty')
+mixin table(headers)
+  .card
+    .table-responsive
+      table.table.align-middle.mb-0
+        thead
+          tr
+            each header in headers
+              th(scope='col')= header
+        tbody
+          if block
+            block

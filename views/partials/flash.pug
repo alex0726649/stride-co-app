@@ -1,0 +1,6 @@
+//- Mensaje de confirmación de un solo uso (res.flash en el controller, antes del redirect).
+if flash
+  .container.mt-3
+    .alert.alert-dismissible.fade.show(class='alert-' + flash.type role='alert')
+      = flash.message
+      button.btn-close(type='button' data-bs-dismiss='alert' aria-label=__('common.close'))

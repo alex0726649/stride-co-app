@@ -1,0 +1,4 @@
+//- Selector ES / EN: conserva la ruta y el query string actuales (langUrl en res.locals).
+.lang-switch.d-flex.align-items-center.gap-1(role='group' aria-label=__('lang.label'))
+  each code in ['es', 'en']
+    a(href=langUrl(code) lang=code hreflang=code title=__('lang.' + code) class=locale === code ? 'active' : '' aria-current=locale === code ? 'true' : false)= code.toUpperCase()
