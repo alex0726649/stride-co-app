@@ -1,0 +1,18 @@
+//- Secciones del prototipo que no se implementan en este entregable (código 200).
+extends layouts/store
+
+block title
+  = __('pages.comingSoon.title') + ' · ' + __('site.name')
+
+block description
+  meta(name='description' content=__('pages.comingSoon.text'))
+
+block content
+  .container
+    section.status-page.store-panel
+      i.bi.bi-hourglass-split.display-4.text-secondary
+      h1.h3.fw-bold.mt-3= __('pages.comingSoon.heading')
+      p.text-secondary= __('pages.comingSoon.text')
+      a.btn.btn-dark(href='/')
+        i.bi.bi-arrow-left.me-1
+        | #{__('pages.comingSoon.back')}

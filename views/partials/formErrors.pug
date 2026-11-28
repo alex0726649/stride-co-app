@@ -1,0 +1,8 @@
+//- Resumen de errores de un formulario. Espera `errors` = { campo: mensajeTraducido }
+//- (utils/validation.js). El detalle de cada campo lo muestra el mixin formField.
+if locals.errors && Object.keys(errors).length
+  .alert.alert-danger(role='alert')
+    strong.d-block.mb-1= __('form.errorsTitle')
+    ul.mb-0.ps-3
+      each message in Object.values(errors)
+        li= message

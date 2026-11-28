@@ -1,0 +1,24 @@
+//- Campo de formulario con etiqueta, valor capturado y error del campo.
+//-   +formField('name', __('admin.products.name'), { value: values.name, error: errors.name, required: true })
+//- Opciones: type, value, error, required, min, max, step, maxlength, as ('textarea' | 'select'),
+//- choices ([{ value, label }]) para select, help (texto de ayuda).
+//- Las contraseñas no se rellenan: pasar value solo en los demás campos.
+mixin formField(name, label, options)
+  - const opts = options || {}
+  - const id = 'field-' + name
+  - const invalid = Boolean(opts.error)
+  - const describedBy = invalid ? id + '-error' : (opts.help ? id + '-help' : false)
+  .mb-3
+    label.form-label.fw-semibold(for=id)= label
+    if opts.as === 'textarea'
+      textarea.form-control(id=id name=name rows=opts.rows || 3 required=opts.required maxlength=opts.maxlength class=invalid ? 'is-invalid' : '' aria-invalid=invalid ? 'true' : false aria-describedby=describedBy)= opts.value == null ? '' : opts.value
+    else if opts.as === 'select'
+      select.form-select(id=id name=name required=opts.required class=invalid ? 'is-invalid' : '' aria-invalid=invalid ? 'true' : false aria-describedby=describedBy)
+        each choice in opts.choices || []
+          option(value=choice.value selected=String(choice.value) === String(opts.value))= choice.label
+    else
+      input.form-control(id=id name=name type=opts.type || 'text' value=opts.type === 'password' ? false : opts.value required=opts.required min=opts.min max=opts.max step=opts.step maxlength=opts.maxlength class=invalid ? 'is-invalid' : '' aria-invalid=invalid ? 'true' : false aria-describedby=describedBy)
+    if invalid
+      .invalid-feedback(id=id + '-error')= opts.error
+    else if opts.help
+      .form-text(id=id + '-help')= opts.help

@@ -1,0 +1,18 @@
+extends ../layouts/store
+
+block title
+  = __('pages.errors.forbidden.title') + ' · ' + __('site.name')
+
+block description
+  meta(name='description' content=__('pages.errors.forbidden.text'))
+
+block content
+  .container
+    section.status-page.store-panel
+      .code.text-secondary 403
+      h1.h3.fw-bold.mt-3= message
+      p.text-secondary= __('pages.errors.forbidden.text')
+      p.small.text-secondary #{__('views.status')}: #{status}
+      a.btn.btn-dark(href='/')
+        i.bi.bi-arrow-left.me-1
+        | #{__('pages.errors.back')}

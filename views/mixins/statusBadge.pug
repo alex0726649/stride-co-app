@@ -1,0 +1,4 @@
+//- Insignia de estado: active, inactive, soldOut o low (pocas existencias).
+mixin statusBadge(status)
+  - const STATUS_STYLES = { active: 'text-bg-success', inactive: 'text-bg-secondary', soldOut: 'text-bg-danger', low: 'text-bg-warning' }
+  span.badge(class=STATUS_STYLES[status] || 'text-bg-light')= __('common.status.' + status)

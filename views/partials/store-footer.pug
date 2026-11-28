@@ -1,0 +1,11 @@
+//- Pie de la tienda (viene de views/includes/footer.pug de la clase).
+footer.shop-footer.py-5
+  .container.d-flex.justify-content-between.flex-wrap.gap-2
+    strong.fs-4 STRIDE-CO
+    nav(aria-label=__('footer.label'))
+      a(href='/products')= __('nav.products')
+      |  · 
+      a(href='/my/orders')= __('nav.orders')
+      |  · 
+      a(href='/cart')= __('nav.cart')
+    small= __('footer.rights', String(new Date().getFullYear()))

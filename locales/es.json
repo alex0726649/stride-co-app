@@ -128,5 +128,83 @@
     "skuTaken": "El sku ya existe",
     "productNotFound": "El producto indicado no existe",
     "inUse": "No se puede eliminar una variante con existencias o unidades reservadas"
+  },
+  "site": {
+    "name": "Stride & Co",
+    "tagline": "MOVE YOUR WAY",
+    "description": "Tienda de tenis urbanos, deportivos y esenciales de Stride & Co."
+  },
+  "nav": {
+    "label": "Navegación de la tienda",
+    "home": "Inicio",
+    "products": "Productos",
+    "orders": "Mis pedidos",
+    "cart": "Bolsa",
+    "admin": "Administrador",
+    "logout": "Cerrar sesión"
+  },
+  "footer": {
+    "label": "Enlaces del pie de página",
+    "rights": "© %s Stride & Co. Todos los derechos reservados."
+  },
+  "lang": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "admin": {
+    "panel": "Panel administrativo",
+    "description": "Panel administrativo de Stride & Co.",
+    "breadcrumb": "Stride & Co / Administración",
+    "viewStore": "Ver tienda",
+    "nav": {
+      "products": "Productos",
+      "inventory": "Inventario"
+    }
+  },
+  "store": {
+    "card": {
+      "details": "Ver detalle"
+    }
+  },
+  "pages": {
+    "comingSoon": {
+      "title": "Próximamente",
+      "heading": "Esta sección estará disponible pronto",
+      "text": "Todavía estamos trabajando en esta parte de la tienda.",
+      "back": "Volver a la tienda"
+    },
+    "errors": {
+      "back": "Volver a la tienda",
+      "forbidden": {
+        "title": "Acceso denegado",
+        "text": "Tu cuenta no tiene permiso para ver esta página."
+      },
+      "notFound": {
+        "title": "Página no encontrada",
+        "text": "La página que buscas no existe o ya no está disponible."
+      },
+      "internal": {
+        "title": "Error del servidor",
+        "text": "Ocurrió un problema al procesar tu solicitud. Inténtalo de nuevo más tarde."
+      }
+    }
+  },
+  "pagination": {
+    "label": "Paginación",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  },
+  "form": {
+    "errorsTitle": "Revisa los campos marcados."
+  },
+  "common": {
+    "close": "Cerrar",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "soldOut": "Agotado",
+      "low": "Pocas piezas"
+    }
   }
 }

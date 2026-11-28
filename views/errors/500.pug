@@ -1,0 +1,22 @@
+//- También se usa para otros códigos sin vista propia (por ejemplo 400).
+extends ../layouts/store
+
+block title
+  = __('pages.errors.internal.title') + ' · ' + __('site.name')
+
+block description
+  meta(name='description' content=__('pages.errors.internal.text'))
+
+block content
+  .container
+    section.status-page.store-panel
+      .code.text-secondary= status
+      h1.h3.fw-bold.mt-3= message
+      p.text-secondary= __('pages.errors.internal.text')
+      p.small.text-secondary #{__('views.status')}: #{status}
+      a.btn.btn-dark(href='/')
+        i.bi.bi-arrow-left.me-1
+        | #{__('pages.errors.back')}
+      //- Solo en desarrollo: el manejador de errores no envía el stack en producción ni en pruebas.
+      if stack
+        pre.text-start.small.bg-light.border.rounded.p-3.mt-4= stack
