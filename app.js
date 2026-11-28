@@ -71,7 +71,7 @@ app.use(function(err, req, res, _next) {// hacemos esto por que los errores de /
       403: 'errors.forbidden',
       404: 'errors.notFound',
     };
-    const message = req.__(keys[status] || 'errors.internal');
+    const message = req.__(err.messageKey || keys[status] || 'errors.internal');
 
     return res.status(status).json({ message, data: null });
   }

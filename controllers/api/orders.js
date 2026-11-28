@@ -1,9 +1,9 @@
 const { isObjectIdOrHexString } = require('mongoose');
-const { Customer, Order } = require('../models/documents');
-const { Product, User } = require('../models/relationals');
-const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
-const response = require('../utils/response');
-const { PAYMENT_METHODS, ORDER_STATUSES, isPositiveInteger } = require('../utils/order-fields');
+const { Customer, Order } = require('../../models/documents');
+const { Product, User } = require('../../models/relationals');
+const { loadRoleAccess, canManageAssignedOrders } = require('../../utils/rbac');
+const response = require('../../utils/response');
+const { PAYMENT_METHODS, ORDER_STATUSES, isPositiveInteger } = require('../../utils/order-fields');
 
 function validateId(req, res, next) {
   if (!isObjectIdOrHexString(req.params.id)) {

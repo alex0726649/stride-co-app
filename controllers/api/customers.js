@@ -1,6 +1,6 @@
-const { Customer, Order } = require('../models/documents');
-const { User } = require('../models/relationals');
-const response = require('../utils/response');
+const { Customer, Order } = require('../../models/documents');
+const { User } = require('../../models/relationals');
+const response = require('../../utils/response');
 
 const MAX_INT = 2147483647; // userId referencia a users.id (INTEGER en PostgreSQL)
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

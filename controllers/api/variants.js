@@ -1,5 +1,5 @@
-const { sequelize, Product, ProductVariant, Inventory } = require('../models/relationals');
-const response = require('../utils/response');
+const { sequelize, Product, ProductVariant, Inventory } = require('../../models/relationals');
+const response = require('../../utils/response');
 
 const MAX_POSTGRES_INTEGER = 2_147_483_647;
 const textLimits = { sku: 100, size: 30, color: 50 };
