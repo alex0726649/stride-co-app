@@ -22,4 +22,21 @@ async function login({ email, password } = {}) {
   return { token: signToken(user), token_type: 'Bearer', expiresIn: config.get('jwt.expiresIn') };
 }
 
-module.exports = { login };
+async function sessionUser(token) {
+  let payload;
+  try {
+    payload = jwt.verify(token, config.get('jwt.secret'), {
+      algorithms: ['HS256'], issuer: config.get('jwt.issuer'), audience: config.get('jwt.audience'),
+    });
+  } catch (error) {
+    if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name)) {
+      throw serviceError(401, 'errors.unauthorized');
+    }
+    throw error;
+  }
+  const user = await User.findByPk(payload.sub);
+  if (!user || !user.active) throw serviceError(401, 'errors.unauthorized');
+  return user;
+}
+
+module.exports = { login, sessionUser };

@@ -10,6 +10,7 @@ const logger = require('morgan');//morgan es una dependencia que registra en la 
 const i18n = require('./config/i18n');
 const viewLocals = require('./middlewares/viewLocals');
 const errorHandler = require('./middlewares/errorHandler');
+const webSession = require('./middlewares/webSession');
 
 const indexRouter = require('./routes/api/index');
 const usersRouter = require('./routes/api/users');
@@ -23,6 +24,7 @@ const ordersRouter = require('./routes/api/orders');
 const authRouter = require('./routes/api/auth');
 const indexWebRouter = require('./routes/web/index');
 const pagesWebRouter = require('./routes/web/pages');
+const authWebRouter = require('./routes/web/auth');
 
 const app = express();// crea y devuelve la aplicacion*** importante ***
 
@@ -57,6 +59,8 @@ app.use('/api/inventory', inventoryRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/auth', authRouter);
+app.use(webSession);
+app.use('/', authWebRouter);
 app.use('/', indexWebRouter);
 app.use('/', pagesWebRouter); // "Próximamente" para las secciones que no se implementan
 

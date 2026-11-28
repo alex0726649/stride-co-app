@@ -1,0 +1,38 @@
+extends ../layouts/store
+include ../mixins/formField
+
+block content
+  .login-shell
+    .card.login-card.border-0.shadow-lg.overflow-hidden
+      .px-4.pt-4.pb-3.bg-dark.text-white
+        .brand.text-white
+          | STRIDE#[span -CO]
+        .small.text-white-50= __('webAuth.panelAccess')
+      .card-body.p-4
+        h1.h4.fw-bold.mb-1= __('webAuth.heading')
+        p.text-secondary.small.mb-4= __('webAuth.intro')
+        include ../partials/formErrors
+        if message
+          .alert.alert-danger(role='alert')= message
+        form(method='post' action='/login?lang=' + locale)
+          input(type='hidden' name='next' value=nextUrl)
+          +formField('email', __('webAuth.email'), { type: 'email', value: values.email, error: errors.email, required: true })
+          +formField('password', __('webAuth.password'), { type: 'password', error: errors.password, required: true })
+          button.btn.btn-dark.w-100.py-2.mt-3.fw-semibold(type='submit')
+            = __('webAuth.submit')
+            i.bi.bi-arrow-right.ms-1(aria-hidden='true')
+        if showDemoAccess
+          .rounded-3.bg-light.border.p-3.small.mt-4
+            .fw-bold.mb-1
+              i.bi.bi-info-circle.me-1(aria-hidden='true')
+              = __('webAuth.demoTitle')
+            div
+              = __('webAuth.email') + ': '
+              code admin@stride-demo.example
+            div
+              = __('webAuth.password') + ': '
+              code StrideDemo-Admin-2026!
+            .text-secondary.mt-1= __('webAuth.demoNotice')
+        a.btn.btn-link.text-dark.w-100.mt-3.text-decoration-none(href='/')
+          i.bi.bi-arrow-left.me-1(aria-hidden='true')
+          = __('webAuth.back')

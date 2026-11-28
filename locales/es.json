@@ -206,5 +206,23 @@
       "soldOut": "Agotado",
       "low": "Pocas piezas"
     }
+  },
+  "webAuth": {
+    "title": "Iniciar sesión · Stride & Co",
+    "description": "Inicia sesión en Stride & Co para acceder a las funciones de tu cuenta.",
+    "panelAccess": "Acceso al panel administrativo",
+    "heading": "Iniciar sesión",
+    "intro": "Ingresa con tu cuenta de Stride & Co.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "back": "Volver a la tienda",
+    "demoTitle": "Acceso de demostración",
+    "demoNotice": "Cuenta de prueba creada por el seed.",
+    "emailRequired": "El correo electrónico es obligatorio",
+    "emailInvalid": "Escribe un correo electrónico válido",
+    "passwordRequired": "La contraseña es obligatoria",
+    "loggedIn": "Inicio de sesión correcto",
+    "loggedOut": "Sesión cerrada"
   }
 }

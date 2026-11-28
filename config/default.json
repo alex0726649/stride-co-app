@@ -28,5 +28,8 @@
         "rejectUnauthorized": false
       }
     }
+  },
+  "web": {
+    "showDemoAccess": true
   }
 }

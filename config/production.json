@@ -1,5 +1,8 @@
 {
   "bcrypt": {
     "saltRounds": 12
+  },
+  "web": {
+    "showDemoAccess": false
   }
 }

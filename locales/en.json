@@ -206,5 +206,23 @@
       "soldOut": "Sold out",
       "low": "Low stock"
     }
+  },
+  "webAuth": {
+    "title": "Sign in · Stride & Co",
+    "description": "Sign in to Stride & Co to access your account features.",
+    "panelAccess": "Administration access",
+    "heading": "Sign in",
+    "intro": "Sign in with your Stride & Co account.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "back": "Back to the store",
+    "demoTitle": "Demo access",
+    "demoNotice": "Test account created by the seed.",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email address",
+    "passwordRequired": "Password is required",
+    "loggedIn": "Signed in successfully",
+    "loggedOut": "Signed out"
   }
 }

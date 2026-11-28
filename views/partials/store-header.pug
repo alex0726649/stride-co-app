@@ -20,6 +20,8 @@ header.store-header
           button.btn.btn-outline-dark.btn-sm(type='submit')
             i.bi.bi-box-arrow-right.me-1
             | #{__('nav.logout')}
+      else
+        a.btn.btn-outline-dark.btn-sm(href='/login')= __('webAuth.heading')
       a.btn.btn-outline-dark.btn-sm(href='/admin')
         i.bi.bi-shield-lock.me-1
         | #{__('nav.admin')}
