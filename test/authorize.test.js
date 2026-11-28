@@ -61,11 +61,13 @@ describe('authorize middleware', () => {
   it('responde 403 cuando el rol no tiene el permiso any', async () => {
     loadRoleAccess.mockResolvedValue(accessFor('sales', ['products:read:any']));
     const res = responseContext();
+    const next = mock.fn();
 
-    await authorize('products', 'delete', 'any')(requestContext(), res, mock.fn());
+    await authorize('products', 'delete', 'any')(requestContext(), res, next);
 
-    expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ message: 'Prohibido', data: null });
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 403 }));
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
   });
 
   it('valida que un recurso own pertenezca al usuario', async () => {
@@ -87,22 +89,26 @@ describe('authorize middleware', () => {
     Order.findById.mockResolvedValue({ salesPersonId: 99, customerId: 'customer-1' });
     Customer.findById.mockResolvedValue({ userId: 99 });
     const res = responseContext();
+    const next = mock.fn();
 
     await authorize('orders', 'read', 'own')(
       requestContext({ params: { id: 'order-1' } }),
       res,
-      mock.fn(),
+      next,
     );
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 403 }));
+    expect(res.status).not.toHaveBeenCalled();
   });
 
   it('responde 401 si no existe usuario autenticado', async () => {
     const res = responseContext();
+    const next = mock.fn();
 
-    await authorize('products', 'read', 'any')(requestContext({ user: null }), res, mock.fn());
+    await authorize('products', 'read', 'any')(requestContext({ user: null }), res, next);
 
-    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }));
+    expect(res.status).not.toHaveBeenCalled();
     expect(loadRoleAccess).not.toHaveBeenCalled();
   });
 

@@ -42,6 +42,18 @@ Tablero de trabajo: [GitHub Project](https://github.com/users/alex0726649/projec
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Flujo de trabajo del equipo](#flujo-de-trabajo-del-equipo)
 
+## Funcionalidades SSR
+
+| ID | Funcionalidad | Rutas | Permiso | Responsable | Evidencia |
+|---|---|---|---|---|---|
+| F1 | Inicio y cierre de sesión | `GET /login`, `POST /login`, `POST /logout` | Públicas; las pantallas protegidas usan `authenticate` y `authorize` | Armando Velázquez Barroso | [Capturas y validación](docs/ssr/f1-auth.md) |
+
+El login web usa el mismo `services/auth.service.js` que `/api/auth/login`. Guarda el JWT en la cookie `access_token` (`HttpOnly`, `SameSite=Lax`, `Secure` en producción). `authenticate` acepta la cookie o el encabezado Bearer, con prioridad del encabezado. En las rutas web, un 401 redirige a `/login?next=...` y un 403 muestra su página de error. El destino `next` solo acepta rutas internas.
+
+El middleware web expone únicamente nombre y email en `currentUser` y calcula `can(...)` con los permisos de la base. Las cookies inválidas, expiradas o de usuarios inactivos se borran. El header cierra sesión mediante un formulario POST, sin JavaScript. Login y logout dejan una confirmación de un solo uso.
+
+Las cuentas de prueba son las de la tabla siguiente. El recuadro de acceso demo se controla con `web.showDemoAccess` y siempre se oculta en producción. Las pruebas de F1 están en `test/web/auth.test.js` y usan servicios simulados sin bases reales.
+
 ## API pública
 
 La API está desplegada en Render desde la rama `staging` (auto-deploy en cada push), con Render PostgreSQL y MongoDB Atlas en sus planes gratuitos. El servicio web y la base PostgreSQL están en la región Oregon. El procedimiento completo para recrear el despliegue está en [`docs/deploy-render.md`](docs/deploy-render.md).

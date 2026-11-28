@@ -1,12 +1,9 @@
 const { Customer, Order } = require('../models/documents');
 const { loadRoleAccess, canManageAssignedOrders } = require('../utils/rbac');
+const createError = require('http-errors');
 
 const ACTIONS = new Set(['create', 'read', 'update', 'delete']);
 const POSSESSIONS = new Set(['own', 'any']);
-
-function response(res, status, message) {
-  return res.status(status).json({ message, data: null });
-}
 
 function getUserId(user) {
   if (!user || typeof user !== 'object') return null;
@@ -87,14 +84,14 @@ function authorize(resource, action, possession) {
     const roleId = req.user?.role_id ?? req.user?.roleId;
 
     if (!userId || roleId === undefined || roleId === null) {
-      return response(res, 401, req.__('errors.unauthorized'));
+      return next(createError(401));
     }
 
     try {
       const roleAccess = await loadRoleAccess(roleId);
       // Rol inexistente, o rol sin ningún permiso (accesscontrol no lo registra): 403.
       if (!roleAccess || !roleAccess.accessControl.hasRole(roleAccess.roleName)) {
-        return response(res, 403, req.__('errors.forbidden'));
+        return next(createError(403));
       }
 
       const checker = roleAccess.accessControl.can(roleAccess.roleName);
@@ -102,12 +99,12 @@ function authorize(resource, action, possession) {
       const ownPermission = checker[`${action}Own`](resource).granted;
 
       if (possession === 'any' && !anyPermission) {
-        return response(res, 403, req.__('errors.forbidden'));
+        return next(createError(403));
       }
 
       if (possession === 'own' && !anyPermission
         && (!ownPermission || !(await ownsResource(resource, action, req, userId, roleAccess)))) {
-        return response(res, 403, req.__('errors.forbidden'));
+        return next(createError(403));
       }
 
       req.rbac = { resource, action, possession };
